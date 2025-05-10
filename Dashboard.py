@@ -17,9 +17,9 @@ def exportar_figura(fig):
 
 # Aquí comenzará la nueva lógica después de cargar el archivo Excel
 
-archivo_excel = st.file_uploader("📁 Sube tu archivo CSV", type=["csv"])
+archivo_excel = st.file_uploader("📁 Sube tu archivo Excel", type=["xlsx"])
 if archivo_excel:
-    df = pd.read_csv(archivo_excel, encoding="utf-8", sep=";")
+    df = pd.read_excel(archivo_excel)
     df.columns = df.columns.str.strip()
     st.subheader("📄 Vista previa de los datos cargados")
     st.dataframe(df.head(50))
@@ -110,6 +110,7 @@ if archivo_excel:
         st.pyplot(fig2)
     except Exception as e:
         st.warning(f"No se pudo generar la gráfica de ganancias netas: {e}")
+
 
 
 
