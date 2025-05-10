@@ -70,6 +70,12 @@ if archivo_excel:
         fig1, ax1 = plt.subplots(figsize=(10, 4))
         ax1.set_facecolor("#f9f9f9")
         ax1.plot(df_agg["Fecha"], df_agg["Capital Invertido"], color="#007acc", linewidth=2.5, marker="o")
+        for x, y in zip(df_agg["Fecha"], df_agg["Capital Invertido"]):
+            ax1.annotate(f'{y:,.2f}',
+                         xy=(x, y),
+                         xytext=(0, 5),
+                         textcoords="offset points",
+                         ha='center', va='bottom', fontsize=8, color="#333")
         ax1.set_title("Capital Invertido en el Tiempo")
         ax1.set_xlabel("Fecha")
         ax1.set_ylabel("$")
@@ -80,18 +86,28 @@ if archivo_excel:
     # Visualización: ganancias netas en el tiempo
     st.subheader("💹 Ganancias Netas por Fecha")
     try:
-        df_gan = df.groupby("Fecha")["Ganancias Netas"].sum().reset_index()
+        df_gan = df[["Fecha", "Ganancias Netas"]].copy()
+        df_gan = df_gan.dropna(subset=["Ganancias Netas"])
+        df_gan = df_gan.groupby("Fecha")["Ganancias Netas"].sum().reset_index()
         st.write("🔍 Datos procesados para Ganancias Netas")
         st.dataframe(df_gan)
         fig2, ax2 = plt.subplots(figsize=(10, 4))
         ax2.set_facecolor("#f9f9f9")
-        ax2.bar(df_gan["Fecha"], df_gan["Ganancias Netas"], color="#4caf50")
+        bars = ax2.bar(df_gan["Fecha"], df_gan["Ganancias Netas"], color="#4caf50")
+        for bar in bars:
+            height = bar.get_height()
+            ax2.annotate(f'{height:,.2f}',
+                         xy=(bar.get_x() + bar.get_width() / 2, height),
+                         xytext=(0, 5),
+                         textcoords="offset points",
+                         ha='center', va='bottom', fontsize=8, color="#333")
         ax2.set_title("Ganancias Netas por Fecha")
         ax2.set_xlabel("Fecha")
         ax2.set_ylabel("$")
         st.pyplot(fig2)
     except Exception as e:
         st.warning(f"No se pudo generar la gráfica de ganancias netas: {e}")
+
 
 
 
