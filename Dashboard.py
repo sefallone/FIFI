@@ -3,8 +3,18 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
+import seaborn as sns
+from io import BytesIO
 
 st.set_page_config(page_title="Dashboard Financiero", layout="wide")
+
+# Función para exportar figuras
+@st.cache_data
+def exportar_figura(fig):
+    buf = BytesIO()
+    fig.savefig(buf, format="png")
+    buf.seek(0)
+    return buf
 
 # Cargar datos desde Excel
 archivo_excel = st.file_uploader("Sube tu archivo de Excel", type=["xlsx"])
@@ -41,6 +51,18 @@ if archivo_excel:
 
     st.title("📈 Dashboard Financiero Interactivo")
 
+    # KPIs principales
+    total_invertido = df["Capital Invertido"].sum()
+    total_ganancias = df["Ganancias Netas"].sum() if "Ganancias Netas" in df.columns else 0
+    capital_actual = df["Capital Acumulado"].iloc[-1] if "Capital Acumulado" in df.columns else 0
+    roi = (total_ganancias / total_invertido * 100) if total_invertido > 0 else 0
+
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("💰 Total Invertido", f"{total_invertido:,.2f} €")
+    col2.metric("📈 Ganancias Netas", f"{total_ganancias:,.2f} €")
+    col3.metric("🏦 Capital Actual", f"{capital_actual:,.2f} €")
+    col4.metric("📊 ROI (%)", f"{roi:.2f} %")
+
     # Filtros
     inversionistas = df["Nombre Inversionista"].unique()
     inversionista_seleccionado = st.selectbox("Selecciona un inversionista", options=["Todos"] + list(inversionistas))
@@ -60,6 +82,7 @@ if archivo_excel:
         ax1.set_xlabel("Fecha")
         ax1.set_ylabel("Capital acumulado")
         st.pyplot(fig1)
+        st.download_button("⬇️ Descargar gráfico", exportar_figura(fig1), file_name="capital_acumulado.png")
 
     # Visualización 2: Ganancias netas por mes
     st.subheader("📈 Ganancias netas por período")
@@ -69,6 +92,7 @@ if archivo_excel:
         ax2.bar(df_plot2["Fecha"], df_plot2["Ganancias Netas"])
         ax2.set_title("Ganancias netas por fecha")
         st.pyplot(fig2)
+        st.download_button("⬇️ Descargar gráfico", exportar_figura(fig2), file_name="ganancias_netas.png")
 
     # Visualización 3: Proyecciones con interés compuesto
     st.subheader("🧮 Proyección de interés compuesto")
@@ -83,7 +107,12 @@ if archivo_excel:
         fig3, ax3 = plt.subplots()
         ax3.plot(fechas, proyeccion, marker='o')
         ax3.set_title("Proyección de capital con interés compuesto")
+        ax3.set_xlabel("Fecha")
+        ax3.set_ylabel("Capital proyectado")
         st.pyplot(fig3)
+        st.download_button("⬇️ Descargar gráfico", exportar_figura(fig3), file_name="proyeccion_interes.png")
 
+    # Las demás visualizaciones pueden seguir el mismo patrón si deseas
 else:
     st.info("Por favor, sube un archivo Excel con tus datos financieros.")
+
