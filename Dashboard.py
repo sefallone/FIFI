@@ -27,11 +27,10 @@ if archivo_excel:
     # KPIs básicos
     st.subheader("📌 Indicadores clave")
     try:
-        df["Capital Invertido"] = df["Capital Invertido"].astype(str).str.replace(".", "", regex=False).str.replace(",", ".", regex=False).astype(float)
-        df["Ganacias Netas"] = df["Ganacias Netas"].astype(str).str.replace(".", "", regex=False).str.replace(",", ".", regex=False).astype(float)
+        df["Ganancias Netas"] = df["Ganancias Netas"].astype(str).str.replace(".", "", regex=False).str.replace(",", ".", regex=False).astype(float)
 
-        total_invertido = df["Capital Invertido"].sum()
-        total_ganancias = df["Ganacias Netas"].sum()
+        total_invertido = df["Capital Invertido"].iloc[-1]  # Ya viene acumulado
+        total_ganancias = df["Ganancias Netas"].sum()
         roi = (total_ganancias / total_invertido * 100) if total_invertido > 0 else 0
 
         col1, col2, col3 = st.columns(3)
