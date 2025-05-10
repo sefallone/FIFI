@@ -46,6 +46,10 @@ if archivo_excel:
         total_ganancias = df["Ganancias Netas"].sum()
         roi = (total_ganancias / total_invertido * 100) if total_invertido > 0 else 0
 
+        # Rellenar NaN con ceros tras la conversión
+        df["Capital Invertido"].fillna(0, inplace=True)
+        df["Ganancias Netas"].fillna(0, inplace=True)
+
         col1, col2, col3 = st.columns(3)
         col1.metric("💰 Total Invertido", f"{total_invertido:,.2f} €")
         col2.metric("📈 Ganancias Netas", f"{total_ganancias:,.2f} €")  # corregido
@@ -61,7 +65,7 @@ if archivo_excel:
         df.sort_values("Fecha", inplace=True)
 
         df_agg = df.groupby("Fecha")["Capital Invertido"].sum().reset_index()
-        fig1, ax1 = plt.subplots()
+        fig1, ax1 = plt.subplots(figsize=(10, 4))
         ax1.plot(df_agg["Fecha"], df_agg["Capital Invertido"], marker="o")
         ax1.set_title("Capital Invertido en el Tiempo")
         ax1.set_xlabel("Fecha")
@@ -74,7 +78,7 @@ if archivo_excel:
     st.subheader("💹 Ganancias Netas por Fecha")
     try:
         df_gan = df.groupby("Fecha")["Ganancias Netas"].sum().reset_index()
-        fig2, ax2 = plt.subplots()
+        fig2, ax2 = plt.subplots(figsize=(10, 4))
         ax2.bar(df_gan["Fecha"], df_gan["Ganancias Netas"], color="green")
         ax2.set_title("Ganancias Netas por Fecha")
         ax2.set_xlabel("Fecha")
@@ -82,6 +86,7 @@ if archivo_excel:
         st.pyplot(fig2)
     except Exception as e:
         st.warning(f"No se pudo generar la gráfica de ganancias netas: {e}")
+
 
 
 
