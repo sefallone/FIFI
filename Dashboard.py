@@ -65,7 +65,9 @@ if archivo_excel:
         df.sort_values("Fecha", inplace=True)
 
         df_agg = df.groupby("Fecha")["Capital Invertido"].sum().reset_index()
-        fig1, ax1 = plt.subplots(figsize=(6, 2))
+        st.write("🔍 Datos procesados para Capital Invertido")
+        st.dataframe(df_agg)
+        fig1, ax1 = plt.subplots(figsize=(10, 4))
         ax1.set_facecolor("#f9f9f9")
         ax1.plot(df_agg["Fecha"], df_agg["Capital Invertido"], color="#007acc", linewidth=2.5, marker="o")
         ax1.set_title("Capital Invertido en el Tiempo")
@@ -79,7 +81,9 @@ if archivo_excel:
     st.subheader("💹 Ganancias Netas por Fecha")
     try:
         df_gan = df.groupby("Fecha")["Ganancias Netas"].sum().reset_index()
-        fig2, ax2 = plt.subplots(figsize=(6, 2))
+        st.write("🔍 Datos procesados para Ganancias Netas")
+        st.dataframe(df_gan)
+        fig2, ax2 = plt.subplots(figsize=(10, 4))
         ax2.set_facecolor("#f9f9f9")
         ax2.bar(df_gan["Fecha"], df_gan["Ganancias Netas"], color="#4caf50")
         ax2.set_title("Ganancias Netas por Fecha")
@@ -88,6 +92,7 @@ if archivo_excel:
         st.pyplot(fig2)
     except Exception as e:
         st.warning(f"No se pudo generar la gráfica de ganancias netas: {e}")
+
 
 
 
