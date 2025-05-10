@@ -9,7 +9,6 @@ from io import BytesIO
 st.set_page_config(page_title="Dashboard Financiero", layout="wide")
 
 # Función para exportar figuras
-@st.cache_data
 def exportar_figura(fig):
     buf = BytesIO()
     fig.savefig(buf, format="png")
@@ -115,4 +114,5 @@ if archivo_excel:
     # Las demás visualizaciones pueden seguir el mismo patrón si deseas
 else:
     st.info("Por favor, sube un archivo Excel con tus datos financieros.")
+
 
