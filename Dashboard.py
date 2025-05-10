@@ -35,7 +35,7 @@ if archivo_excel:
 
     # Conversión de números con coma
     columnas_a_convertir = ["Capital Invertido", "Aumento Capital", "Retiro de Fondos", 
-                            "Ganancias/Pérdidas Brutas", "Comisiones 10 %", "Ganancias Netas"]
+                            "Ganacias/Pérdidas Brutas", "Comisiones 10 %", "Ganacias Netas"]
 
     for col in columnas_a_convertir:
         if col in df.columns:
@@ -53,7 +53,7 @@ if archivo_excel:
 
     # KPIs principales
     total_invertido = df["Capital Invertido"].sum()
-    total_ganancias = df["Ganancias Netas"].sum() if "Ganancias Netas" in df.columns else 0
+    total_ganancias = df["Ganacias Netas"].sum() if "Ganacias Netas" in df.columns else 0
     capital_actual = df["Capital Acumulado"].iloc[-1] if "Capital Acumulado" in df.columns else 0
     roi = (total_ganancias / total_invertido * 100) if total_invertido > 0 else 0
 
@@ -86,10 +86,10 @@ if archivo_excel:
 
     # Visualización 2: Ganancias netas por mes
     st.subheader("📈 Ganancias netas por período")
-    if "Ganancias Netas" in df_filtrado.columns:
-        df_plot2 = df_filtrado.groupby("Fecha")["Ganancias Netas"].sum().reset_index()
+    if "Ganacias Netas" in df_filtrado.columns:
+        df_plot2 = df_filtrado.groupby("Fecha")["Ganacias Netas"].sum().reset_index()
         fig2, ax2 = plt.subplots()
-        ax2.bar(df_plot2["Fecha"], df_plot2["Ganancias Netas"])
+        ax2.bar(df_plot2["Fecha"], df_plot2["Ganacias Netas"])
         ax2.set_title("Ganancias netas por fecha")
         st.pyplot(fig2)
         st.download_button("⬇️ Descargar gráfico", exportar_figura(fig2), file_name="ganancias_netas.png")
