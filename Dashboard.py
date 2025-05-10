@@ -61,16 +61,19 @@ if archivo_excel:
     st.subheader("📈 Evolución del Capital Invertido")
     try:
         df["Fecha"] = pd.to_datetime(df["Fecha"], errors="coerce")
+        df["Mes"] = df["Fecha"].dt.to_period("M").astype(str)
+        st.write("🕒 Fechas después de conversión:")
+        st.dataframe(df["Fecha"].head(10))
         df = df.dropna(subset=["Fecha"])
         df.sort_values("Fecha", inplace=True)
 
-        df_agg = df.groupby("Fecha")["Capital Invertido"].sum().reset_index()
+        df_agg = df.groupby("Mes")["Capital Invertido"].sum().reset_index()
         st.write("🔍 Datos procesados para Capital Invertido")
         st.dataframe(df_agg)
         fig1, ax1 = plt.subplots(figsize=(10, 4))
         ax1.set_facecolor("#f9f9f9")
-        ax1.plot(df_agg["Fecha"], df_agg["Capital Invertido"], color="#007acc", linewidth=2.5, marker="o")
-        for x, y in zip(df_agg["Fecha"], df_agg["Capital Invertido"]):
+        ax1.plot(df_agg["Mes"], df_agg["Capital Invertido"], color="#007acc", linewidth=2.5, marker="o")
+        for x, y in zip(df_agg["Mes"], df_agg["Capital Invertido"]):
             ax1.annotate(f'{y:,.2f}',
                          xy=(x, y),
                          xytext=(0, 5),
@@ -88,12 +91,12 @@ if archivo_excel:
     try:
         df_gan = df[["Fecha", "Ganancias Netas"]].copy()
         df_gan = df_gan.dropna(subset=["Ganancias Netas"])
-        df_gan = df_gan.groupby("Fecha")["Ganancias Netas"].sum().reset_index()
+        df_gan = df_gan.groupby("Mes")["Ganancias Netas"].sum().reset_index()
         st.write("🔍 Datos procesados para Ganancias Netas")
         st.dataframe(df_gan)
         fig2, ax2 = plt.subplots(figsize=(10, 4))
         ax2.set_facecolor("#f9f9f9")
-        bars = ax2.bar(df_gan["Fecha"], df_gan["Ganancias Netas"], color="#4caf50")
+        bars = ax2.bar(df_gan["Mes"], df_gan["Ganancias Netas"], color="#4caf50")
         for bar in bars:
             height = bar.get_height()
             ax2.annotate(f'{height:,.2f}',
