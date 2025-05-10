@@ -27,9 +27,21 @@ if archivo_excel:
     # KPIs básicos
     st.subheader("📌 Indicadores clave")
     try:
-        df["Ganancias Netas"] = pd.to_numeric(df["Ganancias Netas"].astype(str), errors="coerce", thousands=".", decimal=",")
+        df["Ganancias Netas"] = (
+            df["Ganancias Netas"]
+            .astype(str)
+            .str.replace(".", "", regex=False)
+            .str.replace(",", ".", regex=False)
+            .astype(float)
+        ), errors="coerce", thousands=".", decimal=",")
 
-        df["Capital Invertido"] = pd.to_numeric(df["Capital Invertido"].astype(str), errors="coerce", thousands=".", decimal=",")
+        df["Capital Invertido"] = (
+            df["Capital Invertido"]
+            .astype(str)
+            .str.replace(".", "", regex=False)
+            .str.replace(",", ".", regex=False)
+            .astype(float)
+        ), errors="coerce", thousands=".", decimal=",")
         total_invertido = df["Capital Invertido"].iloc[-1]  # Ya viene acumulado
         total_ganancias = df["Ganancias Netas"].sum()
         roi = (total_ganancias / total_invertido * 100) if total_invertido > 0 else 0
@@ -40,6 +52,7 @@ if archivo_excel:
         col3.metric("📊 ROI", f"{roi:.2f} %")
     except Exception as e:
         st.warning(f"No se pudieron calcular los KPIs automáticamente: {e}")
+
 
 
 
