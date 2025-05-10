@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 # Configuración de la página
 st.set_page_config(
-    page_title="Dashboard Financiero Completo",
+    page_title="Dashboard Financiero FIFI",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -48,7 +48,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Título principal
-st.title("📊 Dashboard Financiero Completo")
+st.title("📊 Dashboard Financiero FALLONE INVESTMENT")
 
 # Cargar archivo Excel
 uploaded_file = st.file_uploader("Sube tu archivo Excel", type=['xlsx', 'xls'])
@@ -62,8 +62,8 @@ if uploaded_file is not None:
         df = pd.read_excel(uploaded_file, sheet_name=selected_sheet)
 
         # Verificar columnas requeridas
-        required_columns = ['Capital Invertido', 'Aumento Capital', 'Ganancias/Pérdidas Brutas', 
-                          'Comisiones Pagadas', 'Ganancias/Pérdidas Netas', 'Beneficio %']
+        required_columns = ['Capital Invertido', 'Aumento Capital', 'Ganacias/Pérdidas Brutas', 
+                          'Comisiones Pagadas', 'Ganacias/Pérdidas Netas', 'Beneficio en %']
         
         # Mostrar advertencia si faltan columnas
         missing_cols = [col for col in required_columns if col not in df.columns]
@@ -102,7 +102,7 @@ if uploaded_file is not None:
             st.markdown('<div class="kpi-card">', unsafe_allow_html=True)
             st.markdown('<div class="kpi-title">Capital Inicial</div>', unsafe_allow_html=True)
             if 'Capital Invertido' in df.columns and len(df) > 0:
-                capital_inicial = df['Capital Invertido'].iloc[0]
+                capital_inicial = df['Aumento Capital'].iloc[0]
                 st.markdown(f'<div class="kpi-value">${capital_inicial:,.2f}</div>', unsafe_allow_html=True)
             elif 'Aumento Capital' in df.columns and len(df) > 0:
                 capital_inicial = df['Aumento Capital'].iloc[0]
@@ -115,7 +115,7 @@ if uploaded_file is not None:
             st.markdown('<div class="kpi-card">', unsafe_allow_html=True)
             st.markdown('<div class="kpi-title">Total Ganancias/Pérdidas Brutas</div>', unsafe_allow_html=True)
             if 'Ganancias/Pérdidas Brutas' in df.columns:
-                total_bruto = df['Ganancias/Pérdidas Brutas'].sum()
+                total_bruto = df['Ganacias/Pérdidas Brutas'].sum()
                 color_class = "positive" if total_bruto >= 0 else "negative"
                 st.markdown(f'<div class="kpi-value {color_class}">${total_bruto:,.2f}</div>', unsafe_allow_html=True)
             else:
@@ -139,7 +139,7 @@ if uploaded_file is not None:
             st.markdown('<div class="kpi-card">', unsafe_allow_html=True)
             st.markdown('<div class="kpi-title">Total Ganancias/Pérdidas Netas</div>', unsafe_allow_html=True)
             if 'Ganancias/Pérdidas Netas' in df.columns:
-                total_neto = df['Ganancias/Pérdidas Netas'].sum()
+                total_neto = df['Ganacias/Pérdidas Netas'].sum()
                 color_class = "positive" if total_neto >= 0 else "negative"
                 st.markdown(f'<div class="kpi-value {color_class}">${total_neto:,.2f}</div>', unsafe_allow_html=True)
             else:
@@ -150,7 +150,7 @@ if uploaded_file is not None:
             st.markdown('<div class="kpi-card">', unsafe_allow_html=True)
             st.markdown('<div class="kpi-title">Promedio Beneficio %</div>', unsafe_allow_html=True)
             if 'Beneficio %' in df.columns:
-                avg_beneficio = df['Beneficio %'].mean()
+                avg_beneficio = df['Beneficio en %'].mean()
                 color_class = "positive" if avg_beneficio >= 0 else "negative"
                 st.markdown(f'<div class="kpi-value {color_class}">{avg_beneficio:.2f}%</div>', unsafe_allow_html=True)
             else:
