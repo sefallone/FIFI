@@ -35,10 +35,11 @@ if archivo_excel:
 
         col1, col2, col3 = st.columns(3)
         col1.metric("💰 Total Invertido", f"{total_invertido:,.2f} €")
-        col2.metric("📈 Ganancias Netas", f"{total_ganancias:,.2f} €")
+        col2.metric("📈 Ganancias Netas", f"{total_ganancias:,.2f} €")  # corregido
         col3.metric("📊 ROI", f"{roi:.2f} %")
     except Exception as e:
         st.warning(f"No se pudieron calcular los KPIs automáticamente: {e}")
+
 
 
 
