@@ -53,6 +53,37 @@ if archivo_excel:
     except Exception as e:
         st.warning(f"No se pudieron calcular los KPIs automáticamente: {e}")
 
+    # Visualización: evolución de capital en el tiempo
+    st.subheader("📈 Evolución del Capital Invertido")
+    try:
+        df["Fecha"] = pd.to_datetime(df["Fecha"], errors="coerce")
+        df = df.dropna(subset=["Fecha"])
+        df.sort_values("Fecha", inplace=True)
+
+        df_agg = df.groupby("Fecha")["Capital Invertido"].sum().reset_index()
+        fig1, ax1 = plt.subplots()
+        ax1.plot(df_agg["Fecha"], df_agg["Capital Invertido"], marker="o")
+        ax1.set_title("Capital Invertido en el Tiempo")
+        ax1.set_xlabel("Fecha")
+        ax1.set_ylabel("€")
+        st.pyplot(fig1)
+    except Exception as e:
+        st.warning(f"No se pudo generar la gráfica de capital invertido: {e}")
+
+    # Visualización: ganancias netas en el tiempo
+    st.subheader("💹 Ganancias Netas por Fecha")
+    try:
+        df_gan = df.groupby("Fecha")["Ganancias Netas"].sum().reset_index()
+        fig2, ax2 = plt.subplots()
+        ax2.bar(df_gan["Fecha"], df_gan["Ganancias Netas"], color="green")
+        ax2.set_title("Ganancias Netas por Fecha")
+        ax2.set_xlabel("Fecha")
+        ax2.set_ylabel("€")
+        st.pyplot(fig2)
+    except Exception as e:
+        st.warning(f"No se pudo generar la gráfica de ganancias netas: {e}")
+
+
 
 
 
