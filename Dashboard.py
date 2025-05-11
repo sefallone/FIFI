@@ -5,10 +5,22 @@ from datetime import datetime
 
 # Configuración de la página
 st.set_page_config(
-    page_title="Dashboard Financiero - Error Corregido",
+    page_title="Dashboard Financiero - Columnas Únicas",
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Función para limpiar nombres de columnas duplicadas
+def clean_duplicate_columns(df):
+    """Renombra columnas duplicadas para hacerlas únicas"""
+    cols = pd.Series(df.columns)
+    for dup in cols[cols.duplicated()].unique():
+        cols[cols[cols == dup].index.values.tolist()] = [
+            f"{dup}_{i}" if i != 0 else dup 
+            for i in range(sum(cols == dup))
+        ]
+    df.columns = cols
+    return df
 
 # Función segura para formatear DataFrames
 def safe_format_dataframe(df):
@@ -47,15 +59,26 @@ if uploaded_file is not None:
         sheet_names = xls.sheet_names
         selected_sheet = st.selectbox("Selecciona la hoja a analizar", sheet_names)
         df = pd.read_excel(uploaded_file, sheet_name=selected_sheet)
+        
+        # Limpiar columnas duplicadas
+        df = clean_duplicate_columns(df)
+        
+        # Mostrar advertencia si hubo columnas duplicadas
+        if len(df.columns) != len(set(df.columns)):
+            st.warning("⚠️ Se detectaron y corrigieron columnas con nombres duplicados")
 
         # Renombrar columnas según los nombres correctos
         column_mapping = {
             'Ganacias/Pérdidas Brutas': 'Ganancias/Pérdidas Brutas',
+            'Ganacias/Pérdidas Brutas_1': 'Ganancias/Pérdidas Brutas Acumuladas',
             'Ganacias/Pérdidas Netas': 'Ganancias/Pérdidas Netas',
+            'Ganacias/Pérdidas Netas_1': 'Ganancias/Pérdidas Netas Acumuladas',
             'Beneficio en %': 'Beneficio %',
-            'Comisiones 10 %': 'Comisiones Pagadas'
+            'Comisiones 10 %': 'Comisiones Pagadas',
+            'Comisiones Pagadas_1': 'Comisiones Pagadas Acumuladas'
         }
         
+        # Aplicar solo los mapeos que existen en el DataFrame
         df = df.rename(columns={k: v for k, v in column_mapping.items() if k in df.columns})
 
         # Verificar columnas críticas
@@ -67,7 +90,7 @@ if uploaded_file is not None:
             st.stop()
 
         # =================================================================
-        # SECCIÓN 1: KPIs CON FORMATEO SEGURO
+        # SECCIÓN 1: KPIs CON DATOS LIMPIOS
         # =================================================================
         st.header("📌 KPIs Financieros")
 
@@ -127,7 +150,7 @@ if uploaded_file is not None:
                      delta_color="inverse" if neto and neto < 0 else "normal")
 
         # =================================================================
-        # SECCIÓN 2: GRÁFICOS CON DATOS VALIDADOS
+        # SECCIÓN 2: GRÁFICOS CON DATOS LIMPIOS
         # =================================================================
         st.header("📈 Visualización de Datos")
 
@@ -154,30 +177,14 @@ if uploaded_file is not None:
         except Exception as e:
             st.error(f"Error al generar gráfico: {str(e)}")
 
-        # Gráfico 2: Evolución de Capital Invertido
-        st.subheader("Evolución del Capital Invertido")
-        
-        try:
-            capital_data = df[['Fecha', 'Capital Invertido']].copy()
-            capital_data['Fecha'] = pd.to_datetime(capital_data['Fecha'], errors='coerce')
-            capital_data = capital_data.dropna()
-            
-            if not capital_data.empty:
-                fig = px.line(
-                    capital_data,
-                    x='Fecha',
-                    y='Capital Invertido',
-                    title='Evolución del Capital Invertido',
-                    labels={'Capital Invertido': 'Monto ($)', 'Fecha': 'Fecha'}
-                )
-                st.plotly_chart(fig, use_container_width=True)
-        except Exception as e:
-            st.error(f"Error al generar gráfico: {str(e)}")
-
         # =================================================================
-        # SECCIÓN 3: TABLA DE DATOS CON FORMATEO SEGURO
+        # SECCIÓN 3: TABLA DE DATOS LIMPIA
         # =================================================================
         st.header("📋 Datos Financieros")
+        
+        # Mostrar nombres de columnas para diagnóstico
+        with st.expander("Ver estructura de columnas"):
+            st.write("Columnas disponibles:", list(df.columns))
         
         # Mostrar dataframe con formateo seguro
         try:
@@ -191,7 +198,6 @@ if uploaded_file is not None:
         st.error("Por favor verifica que el archivo tenga el formato correcto.")
 else:
     st.info("👋 Por favor, sube un archivo Excel para comenzar el análisis")
-
 
 
 
