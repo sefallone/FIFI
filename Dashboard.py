@@ -183,7 +183,7 @@ if uploaded_file is not None:
         
         def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False, delta=None):
             if pd.isna(value) or value is None:
-                metric_card(
+                metric_cards(
                     title=f"{icon} {title}",
                     value="N/D",
                     key=f"card_{title}"
@@ -197,7 +197,7 @@ if uploaded_file is not None:
             else:
                 formatted_value = str(value)
             
-            metric_card(
+            metric_cards(
                 title=f"{icon} {title}",
                 value=formatted_value,
                 delta=delta if delta else None,
