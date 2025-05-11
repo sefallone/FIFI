@@ -87,7 +87,7 @@ def advanced_filters(df):
                 float(df['Capital Invertido'].max()),
                 (float(df['Capital Invertido'].min()), float(df['Capital Invertido'].max()))
             df = df[(df['Capital Invertido'] >= min_cap) & (df['Capital Invertido'] <= max_cap)]
-        
+            )
         # Filtro por ganancias
         if 'Ganancias/Pérdidas Brutas' in df.columns:
             profit_filter = st.selectbox(
