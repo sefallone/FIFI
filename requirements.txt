@@ -6,3 +6,4 @@ openpyxl
 seaborn
 plotly
 streamlit_extras
+metric_cards
