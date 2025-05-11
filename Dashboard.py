@@ -248,9 +248,9 @@ if uploaded_file is not None:
             
         with col4:
             # KPI de Porcentaje de Beneficio (Ganancias Brutas / Capital Inicial)
-            if 'Ganancias/Pérdidas Brutas' in filtered_df.columns and capital_inicial != 0:
+            if 'Ganancias/Pérdidas Brutas' in filtered_df.columns and current_capital != 0:
                 ganancias_brutas = filtered_df['Ganancias/Pérdidas Brutas'].sum()
-                porcentaje_beneficio = (ganancias_brutas / capital_inicial) * 100
+                porcentaje_beneficio = (ganancias_brutas / current_capital) * 100
                 display_kpi("Porcentaje Beneficio", porcentaje_beneficio, "📊", is_percentage=True)
             else:
                 display_kpi("Porcentaje Beneficio", None, "📊", is_percentage=True)
