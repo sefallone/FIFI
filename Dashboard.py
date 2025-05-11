@@ -85,7 +85,7 @@ def advanced_filters(df):
                 "Rango de Capital Invertido",
                 float(df['Capital Invertido'].min()),
                 float(df['Capital Invertido'].max()),
-                (float(df['Capital Invertido'].min()), float(df['Capital Invertido'].max()))
+                (float(df['Capital Invertido'].min()), float(df['Capital Invertido'].max())),
             df = df[(df['Capital Invertido'] >= min_cap) & (df['Capital Invertido'] <= max_cap)]
             )
         # Filtro por ganancias
