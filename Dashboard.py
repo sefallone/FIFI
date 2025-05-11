@@ -1,4 +1,5 @@
 import streamlit as st
+from streamlit_extras.metric_cards import metric_card
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
@@ -174,7 +175,7 @@ if uploaded_file is not None:
         st.success(f"✅ Datos cargados correctamente ({len(filtered_df)} registros)")
         
         # =============================================
-        # SECCIÓN DE KPIs ACTUALIZADA CON NUEVO KPI
+        # SECCIÓN DE KPIs CON METRIC CARDS
         # =============================================
         
         st.markdown("---")
@@ -182,7 +183,11 @@ if uploaded_file is not None:
         
         def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False, delta=None):
             if pd.isna(value) or value is None:
-                st.metric(label=f"{icon} {title}", value="N/D")
+                metric_card(
+                    title=f"{icon} {title}",
+                    value="N/D",
+                    key=f"card_{title}"
+                )
                 return
             
             if is_currency:
@@ -192,10 +197,11 @@ if uploaded_file is not None:
             else:
                 formatted_value = str(value)
             
-            st.metric(
-                label=f"{icon} {title}",
+            metric_card(
+                title=f"{icon} {title}",
                 value=formatted_value,
-                delta=delta
+                delta=delta if delta else None,
+                key=f"card_{title}"
             )
 
         # Primera fila de KPIs
@@ -234,11 +240,8 @@ if uploaded_file is not None:
         # Tercera fila de KPIs (con el nuevo KPI)
         col9, col10, col11, col12 = st.columns(4)
         with col9:
-            # NUEVO KPI: Retiro de Dinero
             retiros = filtered_df['Retiro de Fondos'].sum() if 'Retiro de Fondos' in filtered_df.columns else None
-            display_kpi("Retiro de Dinero", retiros, "↘️")  # Usando el emoji de flecha hacia abajo
-        
-        # [El resto del código de gráficos permanece igual...]
+            display_kpi("Retiro de Dinero", retiros, "↘️")
         
         # =============================================
         # SECCIÓN DE GRÁFICOS (se mantiene igual)
@@ -321,31 +324,22 @@ if uploaded_file is not None:
 else:
     st.info("👋 Por favor, sube un archivo Excel para comenzar el análisis")
 
-# Estilos CSS
+# Estilos CSS (actualizado para mantener solo los estilos de gráficos)
 st.markdown("""
 <style>
-    div[data-testid="metric-container"] {
-        background-color: #5ED6DC;
-        border-left: 5px solid #67e4da;
-        border-radius: 10px;
-        padding: 15px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        margin-bottom: 20px;
-    }
-    div[data-testid="metric-container"] > label {
-        color: #2c3e50 !important;
-        font-weight: 600 !important;
-    }
-    div[data-testid="metric-container"] > div {
-        color: #2c3e50 !important;
-        font-weight: 700 !important;
-        font-size: 24px !important;
-    }
     .stPlotlyChart {
         border-radius: 10px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         padding: 15px;
         background-color: white;
+    }
+    /* Estilos para mejorar el aspecto general */
+    .stApp {
+        background-color: #f8f9fa;
+    }
+    .stSidebar {
+        background-color: #ffffff;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
     }
 </style>
 """, unsafe_allow_html=True)
