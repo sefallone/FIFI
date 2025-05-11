@@ -5,4 +5,4 @@ matplotlib
 openpyxl
 seaborn
 plotly
-streamlit_extras.metric_cards
+streamlit_extras
