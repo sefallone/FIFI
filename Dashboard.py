@@ -12,41 +12,7 @@ st.set_page_config(
 )
 
 # =============================================
-# FUNCIÓN PARA ESTILO PERSONALIZADO DE KPIs
-# =============================================
-
-def aplicar_estilo_kpis():
-    """Aplica el estilo personalizado a las tarjetas de métricas"""
-    st.markdown("""
-    <style>
-        div[data-testid="metric-container"] {
-            background-color: #5ED6DC;
-            border-left: 5px solid #67e4da;
-            border-radius: 10px;
-            padding: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        div[data-testid="metric-container"] > label {
-            color: #2c3e50 !important;
-            font-weight: 600 !important;
-            font-size: 14px !important;
-        }
-        div[data-testid="metric-container"] > div {
-            color: #2c3e50 !important;
-            font-weight: 700 !important;
-            font-size: 24px !important;
-        }
-        div[data-testid="metric-container"] > div > span {
-            color: #2c3e50 !important;
-            font-weight: 500 !important;
-            font-size: 14px !important;
-        }
-    </style>
-    """, unsafe_allow_html=True)
-
-# =============================================
-# FUNCIÓN DE FILTROS AVANZADOS
+# FUNCIÓN DE FILTROS AVANZADOS (VERSIÓN ANTERIOR)
 # =============================================
 
 def advanced_filters(df):
@@ -100,7 +66,7 @@ def advanced_filters(df):
     return filtered_df
 
 # =============================================
-# INTERFAZ PRINCIPAL
+# INTERFAZ PRINCIPAL (ESTILO ORIGINAL)
 # =============================================
 
 with st.sidebar:
@@ -154,11 +120,8 @@ if uploaded_file is not None:
         # Aplicar filtros
         filtered_df = advanced_filters(df)
 
-        # Aplicar estilo personalizado a los KPIs
-        aplicar_estilo_kpis()
-
         # =============================================
-        # SECCIÓN DE KPIs CON NUEVO ESTILO
+        # SECCIÓN DE KPIs (ESTILO ORIGINAL)
         # =============================================
         
         st.markdown("---")
@@ -222,3 +185,23 @@ if uploaded_file is not None:
 else:
     st.info("👋 Por favor, sube un archivo Excel para comenzar el análisis")
 
+# Estilos CSS (versión original)
+st.markdown("""
+<style>
+    div[data-testid="metric-container"] {
+        border: 1px solid rgba(28, 131, 225, 0.1);
+        border-radius: 10px;
+        padding: 10px;
+        background-color: rgba(28, 131, 225, 0.1);
+    }
+    div[data-testid="metric-container"] > label {
+        color: rgb(28, 131, 225);
+    }
+    .stPlotlyChart {
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        padding: 15px;
+        background-color: white;
+    }
+</style>
+""", unsafe_allow_html=True)
