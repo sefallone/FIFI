@@ -18,7 +18,7 @@ st.set_page_config(
 # =============================================
 
 def advanced_filters(df):
-    """Función corregida para filtros avanzados con manejo robusto de errores"""
+    """Función corregida para filtros avanzados que evita el error de variables no asociadas"""
     with st.sidebar.expander("🔍 Filtros Avanzados", expanded=False):
         # Creamos una copia del DataFrame para no modificar el original
         filtered_df = df.copy()
@@ -49,7 +49,7 @@ def advanced_filters(df):
             except Exception as e:
                 st.warning(f"No se pudo aplicar el filtro de fechas: {str(e)}")
         
-        # 2. Filtro por capital invertido (VERSIÓN CORREGIDA)
+        # 2. Filtro por capital invertido
         if 'Capital Invertido' in filtered_df.columns:
             try:
                 # Convertimos a numérico y eliminamos NaN
@@ -137,17 +137,32 @@ if uploaded_file is not None:
         selected_sheet = st.selectbox("📋 Seleccionar hoja de trabajo", sheet_names)
         df = pd.read_excel(uploaded_file, sheet_name=selected_sheet)
 
-        # Limpiar nombres de columnas duplicadas
+        # --- CORRECCIÓN PARA COLUMNAS DUPLICADAS ---
+        # 1. Eliminar columnas completamente duplicadas
         df = df.loc[:, ~df.columns.duplicated()]
 
-        # Renombrar columnas
-        column_mapping = {
+        # 2. Renombrar columnas MANUALMENTE verificando existencia
+        rename_dict = {
             'Ganacias/Pérdidas Brutas': 'Ganancias/Pérdidas Brutas',
             'Ganacias/Pérdidas Netas': 'Ganancias/Pérdidas Netas',
-            'Beneficio en %': 'Beneficio %',
-            'Comisiones 10 %': 'Comisiones Pagadas'
+            'Beneficio en %': 'Beneficio %'
         }
-        df = df.rename(columns={k: v for k, v in column_mapping.items() if k in df.columns})
+
+        # Solo renombrar si la columna origen existe y la destino NO existe
+        for old_name, new_name in rename_dict.items():
+            if old_name in df.columns and new_name not in df.columns:
+                df = df.rename(columns={old_name: new_name})
+
+        # 3. Manejar columnas de comisiones ESPECIALMENTE
+        if 'Comisiones 10 %' in df.columns:
+            if 'Comisiones Pagadas' not in df.columns:
+                df = df.rename(columns={'Comisiones 10 %': 'Comisiones Pagadas'})
+            else:
+                # Si ambas existen, conservar solo 'Comisiones Pagadas'
+                df = df.drop(columns=['Comisiones 10 %'])
+
+        # Verificación final
+        st.write("🔍 Columnas finales:", df.columns.tolist())  # Para debug
 
         # Aplicar filtros avanzados (función corregida)
         filtered_df = advanced_filters(df)
