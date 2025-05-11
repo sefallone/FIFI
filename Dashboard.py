@@ -1,11 +1,18 @@
 import streamlit as st
-from streamlit_extras.metric_cards import style_metric_cards
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
 import base64
 from io import BytesIO
 import time
+
+# Configuración para metric cards (con solución alternativa)
+try:
+    from streamlit_extras.metric_cards import metric_card
+    METRIC_CARDS_ENABLED = True
+except ImportError:
+    METRIC_CARDS_ENABLED = False
+    st.warning("Para mejores visualizaciones, instala streamlit-extras: pip install streamlit-extras")
 
 # Configuración inicial de la página
 st.set_page_config(
@@ -112,6 +119,59 @@ def advanced_filters(df):
     return filtered_df
 
 # =============================================
+# FUNCIÓN PARA MOSTRAR KPIs (CON MÉTRICAS MEJORADAS)
+# =============================================
+
+def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False, delta=None):
+    if pd.isna(value) or value is None:
+        value_display = "N/D"
+        delta_display = None
+    else:
+        if is_currency:
+            value_display = f"${value:,.2f}"
+        elif is_percentage:
+            value_display = f"{value:.2f}%"
+        else:
+            value_display = str(value)
+        
+        delta_display = delta
+    
+    if METRIC_CARDS_ENABLED:
+        try:
+            metric_card(
+                title=f"{icon} {title}",
+                value=value_display,
+                delta=delta_display,
+                key=f"card_{title.replace(' ', '_')}"
+            )
+        except:
+            # Fallback si hay algún problema con metric_card
+            st.metric(
+                label=f"{icon} {title}",
+                value=value_display,
+                delta=delta_display
+            )
+    else:
+        # Implementación personalizada con HTML/CSS
+        delta_color = "color: green;" if delta_display and str(delta_display).startswith('+') else "color: red;"
+        delta_html = f"<div style='{delta_color} font-size: 14px;'>{delta_display}</div>" if delta_display else ""
+        
+        st.markdown(f"""
+        <div style="
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            border-left: 4px solid #67e4da;
+        ">
+            <div style="color: #2c3e50; font-weight: 600; font-size: 14px;">{icon} {title}</div>
+            <div style="color: #2c3e50; font-weight: 700; font-size: 24px; margin: 10px 0;">{value_display}</div>
+            {delta_html}
+        </div>
+        """, unsafe_allow_html=True)
+
+# =============================================
 # INTERFAZ PRINCIPAL
 # =============================================
 
@@ -175,34 +235,11 @@ if uploaded_file is not None:
         st.success(f"✅ Datos cargados correctamente ({len(filtered_df)} registros)")
         
         # =============================================
-        # SECCIÓN DE KPIs CON METRIC CARDS
+        # SECCIÓN DE KPIs MEJORADOS
         # =============================================
         
         st.markdown("---")
         st.markdown('<h2 style="color: #2c3e50; border-bottom: 2px solid #67e4da; padding-bottom: 10px;">📊 KPIs Financieros</h2>', unsafe_allow_html=True)
-        
-        def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False, delta=None):
-            if pd.isna(value) or value is None:
-                metric_cards(
-                    title=f"{icon} {title}",
-                    value="N/D",
-                    key=f"card_{title}"
-                )
-                return
-            
-            if is_currency:
-                formatted_value = f"${value:,.2f}"
-            elif is_percentage:
-                formatted_value = f"{value:.2f}%"
-            else:
-                formatted_value = str(value)
-            
-            metric_cards(
-                title=f"{icon} {title}",
-                value=formatted_value,
-                delta=delta if delta else None,
-                key=f"card_{title}"
-            )
 
         # Primera fila de KPIs
         col1, col2, col3, col4 = st.columns(4)
@@ -237,14 +274,16 @@ if uploaded_file is not None:
             comisiones = filtered_df['Comisiones Pagadas'].sum() if 'Comisiones Pagadas' in filtered_df.columns else None
             display_kpi("Comisiones Pagadas", comisiones, "💸")
 
-        # Tercera fila de KPIs (con el nuevo KPI)
+        # Tercera fila de KPIs
         col9, col10, col11, col12 = st.columns(4)
         with col9:
             retiros = filtered_df['Retiro de Fondos'].sum() if 'Retiro de Fondos' in filtered_df.columns else None
             display_kpi("Retiro de Dinero", retiros, "↘️")
         
+        # [El resto de tu código con los gráficos permanece igual]
+        
         # =============================================
-        # SECCIÓN DE GRÁFICOS (se mantiene igual)
+        # SECCIÓN DE GRÁFICOS
         # =============================================
         
         st.markdown("---")
@@ -324,7 +363,7 @@ if uploaded_file is not None:
 else:
     st.info("👋 Por favor, sube un archivo Excel para comenzar el análisis")
 
-# Estilos CSS (actualizado para mantener solo los estilos de gráficos)
+# Estilos CSS mejorados
 st.markdown("""
 <style>
     .stPlotlyChart {
@@ -333,13 +372,17 @@ st.markdown("""
         padding: 15px;
         background-color: white;
     }
-    /* Estilos para mejorar el aspecto general */
+    /* Estilos generales para mejorar la apariencia */
     .stApp {
         background-color: #f8f9fa;
     }
     .stSidebar {
         background-color: #ffffff;
         box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    }
+    /* Estilo para los selectores y controles */
+    .stSelectbox, .stSlider, .stDateInput {
+        margin-bottom: 15px;
     }
 </style>
 """, unsafe_allow_html=True)
