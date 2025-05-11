@@ -1,5 +1,5 @@
 import streamlit as st
-from streamlit_extras.metric_cards import style_metric_card
+from streamlit_extras.metric_cards import style_metric_cards
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
