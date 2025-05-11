@@ -230,25 +230,21 @@ if uploaded_file is not None:
                 delta=delta
             )
 
-        # Primera fila de KPIs (valores fijos y principales)
+                # Primera fila de KPIs (valores fijos y principales)
         col1, col2, col3, col4 = st.columns(4)
         with col1:
-            # KPI de ID Inversionista (segunda casilla de 'ID Inv')
             display_kpi("ID Inversionista", id_inversionista, "🆔", is_currency=False)
             
         with col2:
-            # KPI de Capital Inicial (segunda casilla de 'Aumento Capital')
             display_kpi("Capital Inicial", capital_inicial, "🏁")
             
         with col3:
-            # KPI de Capital Actual (afectado por filtros)
             current_capital = filtered_df['Capital Invertido'].iloc[-1] if len(filtered_df) > 0 else 0
             delta_capital = current_capital - capital_inicial if len(filtered_df) > 0 else 0
             display_kpi("Capital Actual", current_capital, "🏦", delta=f"{delta_capital:+,.2f}")
             
         with col4:
-            # KPI de Porcentaje de Beneficio (Ganancias Brutas / Capital Inicial)
-            if 'Ganancias/Pérdidas Brutas' in filtered_df.columns and current_capital != 0:
+            if 'Ganancias/Pérdidas Brutas' in filtered_df.columns and capital_inicial != 0:
                 ganancias_brutas = filtered_df['Ganancias/Pérdidas Brutas'].sum()
                 porcentaje_beneficio = (ganancias_brutas / (current_capital-ganancias_brutas)) * 100
                 display_kpi("Porcentaje Beneficio", porcentaje_beneficio, "📊", is_percentage=True)
@@ -258,25 +254,28 @@ if uploaded_file is not None:
         # Segunda fila de KPIs (valores afectados por filtros)
         col5, col6, col7, col8 = st.columns(4)
         with col5:
-            # KPI de Total Aumentos
             total_aumentos = filtered_df['Aumento Capital'].sum()
             display_kpi("Total Aumentos", total_aumentos, "📈")
             
         with col6:
-            # KPI de Ganancias Brutas
             ganancias_brutas = filtered_df['Ganancias/Pérdidas Brutas'].sum() if 'Ganancias/Pérdidas Brutas' in filtered_df.columns else None
             display_kpi("Ganancias Brutas", ganancias_brutas, "💵")
             
         with col7:
-            # KPI de Ganancias Netas
             ganancias_netas = filtered_df['Ganancias/Pérdidas Netas'].sum() if 'Ganancias/Pérdidas Netas' in filtered_df.columns else None
             display_kpi("Ganancias Netas", ganancias_netas, "💰")
             
         with col8:
-            # KPI de Comisiones Pagadas
             comisiones = filtered_df['Comisiones Pagadas'].sum() if 'Comisiones Pagadas' in filtered_df.columns else None
             display_kpi("Comisiones Pagadas", comisiones, "💸")
 
+        # Tercera fila de KPIs (nuevos indicadores)
+        col9, col10, col11, col12 = st.columns(4)
+        with col9:
+            # NUEVO KPI: Retiro de Dinero
+            retiros = filtered_df['Retiro de Fondos'].sum() if 'Retiro de Fondos' in filtered_df.columns else None
+            display_kpi("Retiro de Dinero", retiros, "💸")
+            
         # =============================================
         # SECCIÓN DE GRÁFICOS
         # =============================================
