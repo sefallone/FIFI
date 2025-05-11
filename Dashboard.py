@@ -12,7 +12,41 @@ st.set_page_config(
 )
 
 # =============================================
-# FUNCIÓN DE FILTROS AVANZADOS (VERSIÓN ANTERIOR)
+# FUNCIÓN PARA ESTILO PERSONALIZADO DE KPIs
+# =============================================
+
+def style_metric_cards():
+    """Aplica el estilo personalizado a las tarjetas de métricas"""
+    st.markdown("""
+    <style>
+        div[data-testid="metric-container"] {
+            background-color: #5ED6DC;
+            border-left: 5px solid #67e4da;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        div[data-testid="metric-container"] > label {
+            color: #2c3e50 !important;
+            font-weight: 600 !important;
+            font-size: 14px !important;
+        }
+        div[data-testid="metric-container"] > div {
+            color: #2c3e50 !important;
+            font-weight: 700 !important;
+            font-size: 24px !important;
+        }
+        div[data-testid="metric-container"] > div > span {
+            color: #2c3e50 !important;
+            font-weight: 500 !important;
+            font-size: 14px !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+# =============================================
+# FUNCIÓN DE FILTROS AVANZADOS
 # =============================================
 
 def advanced_filters(df):
@@ -66,7 +100,7 @@ def advanced_filters(df):
     return filtered_df
 
 # =============================================
-# INTERFAZ PRINCIPAL (ESTILO ORIGINAL)
+# INTERFAZ PRINCIPAL
 # =============================================
 
 with st.sidebar:
@@ -120,8 +154,11 @@ if uploaded_file is not None:
         # Aplicar filtros
         filtered_df = advanced_filters(df)
 
+        # Aplicar estilo personalizado a los KPIs
+        style_metric_cards()
+
         # =============================================
-        # SECCIÓN DE KPIs (ESTILO ORIGINAL)
+        # SECCIÓN DE KPIs (CON ESTILO PERSONALIZADO)
         # =============================================
         
         st.markdown("---")
@@ -167,36 +204,84 @@ if uploaded_file is not None:
         with col5:
             display_kpi("Total Aumentos", filtered_df['Aumento Capital'].sum(), "📈")
         with col6:
-            display_kpi("Ganancias Brutas", filtered_df['Ganancias/Pérdidas Brutas'].sum() if 'Ganancias/Pérdidas Brutas' in filtered_df.columns else None, "💵")
+            display_kpi("Ganancias Brutas", filtered_df['Ganancias/Pérdidas Brutas'].sum(), "💵")
         with col7:
-            display_kpi("Ganancias Netas", filtered_df['Ganancias/Pérdidas Netas'].sum() if 'Ganancias/Pérdidas Netas' in filtered_df.columns else None, "💰")
+            display_kpi("Ganancias Netas", filtered_df['Ganancias/Pérdidas Netas'].sum(), "💰")
         with col8:
-            display_kpi("Comisiones Pagadas", filtered_df['Comisiones Pagadas'].sum() if 'Comisiones Pagadas' in filtered_df.columns else None, "💸")
+            display_kpi("Comisiones Pagadas", filtered_df['Comisiones Pagadas'].sum(), "💸")
 
         # Tercera fila de KPIs
         col9, col10, col11, col12 = st.columns(4)
         with col9:
-            display_kpi("Retiro de Dinero", filtered_df['Retiro de Fondos'].sum() if 'Retiro de Fondos' in filtered_df.columns else None, "↘️")
+            display_kpi("Retiro de Dinero", filtered_df['Retiro de Fondos'].sum(), "↘️")
 
-        # [Resto del código de gráficos permanece igual...]
+        # =============================================
+        # SECCIÓN DE VISUALIZACIONES GRÁFICAS
+        # =============================================
+        
+        st.markdown("---")
+        st.markdown('<h2 style="color: #2c3e50; border-bottom: 2px solid #67e4da; padding-bottom: 10px;">📈 Visualizaciones</h2>', unsafe_allow_html=True)
+        
+        # Gráfico 1: Evolución del Capital Invertido
+        st.markdown("#### Evolución del Capital Invertido")
+        fig1 = px.line(
+            filtered_df,
+            x='Fecha',
+            y='Capital Invertido',
+            labels={'Capital Invertido': 'Monto ($)', 'Fecha': 'Fecha'},
+            template='plotly_white'
+        )
+        fig1.add_hline(y=capital_inicial, line_dash="dash", line_color="green", 
+                      annotation_text=f"Capital Inicial: ${capital_inicial:,.2f}")
+        st.plotly_chart(fig1, use_container_width=True)
+        
+        # Gráfico 2: Ganancias/Pérdidas por período
+        st.markdown("#### Ganancias/Pérdidas por Período")
+        fig2 = px.bar(
+            filtered_df,
+            x='Fecha',
+            y='Ganancias/Pérdidas Brutas',
+            color='Ganancias/Pérdidas Brutas',
+            color_continuous_scale=px.colors.diverging.RdYlGn,
+            labels={'Ganancias/Pérdidas Brutas': 'Monto ($)'},
+            template='plotly_white'
+        )
+        st.plotly_chart(fig2, use_container_width=True)
+        
+        # Gráfico 3: Relación Capital vs Ganancias
+        st.markdown("#### Relación Capital vs Ganancias")
+        fig3 = px.scatter(
+            filtered_df,
+            x='Capital Invertido',
+            y='Ganancias/Pérdidas Brutas',
+            color='Ganancias/Pérdidas Brutas',
+            size='Ganancias/Pérdidas Brutas',
+            hover_data=['Fecha'],
+            color_continuous_scale=px.colors.diverging.RdYlGn,
+            template='plotly_white'
+        )
+        st.plotly_chart(fig3, use_container_width=True)
+        
+        # Gráfico 4: Comisiones Acumuladas
+        st.markdown("#### Comisiones Pagadas Acumuladas")
+        filtered_df['Comisiones Acumuladas'] = filtered_df['Comisiones Pagadas'].cumsum()
+        fig4 = px.area(
+            filtered_df,
+            x='Fecha',
+            y='Comisiones Acumuladas',
+            labels={'Comisiones Acumuladas': 'Monto ($)'},
+            template='plotly_white'
+        )
+        st.plotly_chart(fig4, use_container_width=True)
 
     except Exception as e:
         st.error(f"🚨 Error crítico al procesar el archivo: {str(e)}")
 else:
     st.info("👋 Por favor, sube un archivo Excel para comenzar el análisis")
 
-# Estilos CSS (versión original)
+# Estilos CSS para los gráficos (no afecta a los KPIs)
 st.markdown("""
 <style>
-    div[data-testid="metric-container"] {
-        border: 1px solid rgba(28, 131, 225, 0.1);
-        border-radius: 10px;
-        padding: 10px;
-        background-color: rgba(28, 131, 225, 0.1);
-    }
-    div[data-testid="metric-container"] > label {
-        color: rgb(28, 131, 225);
-    }
     .stPlotlyChart {
         border-radius: 10px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
