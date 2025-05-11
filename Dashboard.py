@@ -18,7 +18,7 @@ st.set_page_config(
 # =============================================
 
 def advanced_filters(df):
-    """Función corregida para filtros avanzados que evita el error de variables no asociadas"""
+    """Función corregida para filtros avanzados con manejo robusto de errores"""
     with st.sidebar.expander("🔍 Filtros Avanzados", expanded=False):
         # Creamos una copia del DataFrame para no modificar el original
         filtered_df = df.copy()
@@ -49,27 +49,35 @@ def advanced_filters(df):
             except Exception as e:
                 st.warning(f"No se pudo aplicar el filtro de fechas: {str(e)}")
         
-        # 2. Filtro por capital invertido
+        # 2. Filtro por capital invertido (VERSIÓN CORREGIDA)
         if 'Capital Invertido' in filtered_df.columns:
             try:
-                # Calculamos valores mínimos y máximos
-                min_cap = float(filtered_df['Capital Invertido'].min())
-                max_cap = float(filtered_df['Capital Invertido'].max())
+                # Convertimos a numérico y eliminamos NaN
+                capital_series = pd.to_numeric(
+                    filtered_df['Capital Invertido'], 
+                    errors='coerce'
+                ).dropna()
                 
-                # Widget de slider para rango de capital
-                cap_range = st.slider(
-                    "Seleccione rango de capital",
-                    min_value=min_cap,
-                    max_value=max_cap,
-                    value=(min_cap, max_cap),
-                    help="Filtre por rango de capital invertido"
-                )
-                
-                # Aplicamos filtro
-                filtered_df = filtered_df[
-                    (filtered_df['Capital Invertido'] >= cap_range[0]) & 
-                    (filtered_df['Capital Invertido'] <= cap_range[1])
-                ]
+                if not capital_series.empty:
+                    min_cap = float(capital_series.min())
+                    max_cap = float(capital_series.max())
+                    
+                    # Widget de slider para rango de capital
+                    cap_range = st.slider(
+                        "Seleccione rango de capital",
+                        min_value=min_cap,
+                        max_value=max_cap,
+                        value=(min_cap, max_cap),
+                        help="Filtre por rango de capital invertido"
+                    )
+                    
+                    # Aplicamos filtro
+                    filtered_df = filtered_df[
+                        (pd.to_numeric(filtered_df['Capital Invertido'], errors='coerce') >= cap_range[0]) & 
+                        (pd.to_numeric(filtered_df['Capital Invertido'], errors='coerce') <= cap_range[1])
+                    ]
+                else:
+                    st.warning("No hay valores numéricos válidos en 'Capital Invertido'")
             except Exception as e:
                 st.warning(f"No se pudo aplicar el filtro de capital: {str(e)}")
         
@@ -95,7 +103,7 @@ def advanced_filters(df):
     return filtered_df
 
 # =============================================
-# INTERFAZ PRINCIPAL (se mantiene igual)
+# INTERFAZ PRINCIPAL
 # =============================================
 
 # Sidebar con controles
@@ -156,7 +164,7 @@ if uploaded_file is not None:
         st.success(f"✅ Datos cargados correctamente ({len(filtered_df)} registros)")
         
         # =============================================
-        # SECCIÓN DE KPIs (usando filtered_df)
+        # SECCIÓN DE KPIs
         # =============================================
         
         st.markdown("---")
@@ -192,7 +200,7 @@ if uploaded_file is not None:
                        "💵")
 
         # =============================================
-        # SECCIÓN DE GRÁFICOS (usando filtered_df)
+        # SECCIÓN DE GRÁFICOS
         # =============================================
         
         st.markdown("---")
@@ -217,7 +225,7 @@ if uploaded_file is not None:
 else:
     st.info("👋 Por favor, sube un archivo Excel para comenzar el análisis")
 
-# Estilos CSS (se mantienen igual)
+# Estilos CSS
 st.markdown("""
 <style>
     div[data-testid="metric-container"] {
