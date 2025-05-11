@@ -299,7 +299,3 @@ if animations and uploaded_file is not None:
 
 
 
-
-
-
-
