@@ -14,38 +14,63 @@ st.set_page_config(
 )
 
 # =============================================
-# FUNCIÓN DE FILTROS AVANZADOS CORREGIDA
+# FUNCIÓN DE FILTROS AVANZADOS CON SELECTOR POR MES/AÑO
 # =============================================
 
 def advanced_filters(df):
-    """Función corregida para filtros avanzados que evita el error de variables no asociadas"""
+    """Función con selector de fechas por mes y año"""
     with st.sidebar.expander("🔍 Filtros Avanzados", expanded=False):
         # Creamos una copia del DataFrame para no modificar el original
         filtered_df = df.copy()
         
-        # 1. Filtro por rango de fechas
+        # 1. Filtro por rango de fechas (mes y año solamente)
         if 'Fecha' in filtered_df.columns:
             try:
-                # Convertimos a datetime y obtenemos min/max
+                # Convertimos a datetime
                 filtered_df['Fecha'] = pd.to_datetime(filtered_df['Fecha'])
-                min_date = filtered_df['Fecha'].min().date()
-                max_date = filtered_df['Fecha'].max().date()
                 
-                # Widget para selección de rango
-                selected_dates = st.date_input(
-                    "Seleccione rango de fechas",
-                    [min_date, max_date],
-                    min_value=min_date,
-                    max_value=max_date
-                )
+                # Creamos una columna de Mes-Año para filtrado
+                filtered_df['MesAño'] = filtered_df['Fecha'].dt.to_period('M')
                 
-                # Aplicamos filtro solo si se seleccionaron dos fechas
-                if len(selected_dates) == 2:
-                    start_date, end_date = selected_dates
-                    filtered_df = filtered_df[
-                        (filtered_df['Fecha'].dt.date >= start_date) & 
-                        (filtered_df['Fecha'].dt.date <= end_date)
-                    ]
+                # Obtenemos el rango completo de fechas
+                min_date = filtered_df['Fecha'].min().to_pydatetime()
+                max_date = filtered_df['Fecha'].max().to_pydatetime()
+                
+                # Widgets para selección de rango por mes y año
+                st.write("**Seleccione el rango de meses:**")
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    start_date = st.date_input(
+                        "Mes inicial",
+                        value=min_date,
+                        min_value=min_date,
+                        max_value=max_date,
+                        key="start_date"
+                    ).replace(day=1)
+                
+                with col2:
+                    end_date = st.date_input(
+                        "Mes final",
+                        value=max_date,
+                        min_value=min_date,
+                        max_value=max_date,
+                        key="end_date"
+                    ).replace(day=1)
+                
+                # Convertimos a períodos mensuales para comparación
+                start_period = pd.to_datetime(start_date).to_period('M')
+                end_period = pd.to_datetime(end_date).to_period('M')
+                
+                # Aplicamos filtro
+                filtered_df = filtered_df[
+                    (filtered_df['MesAño'] >= start_period) & 
+                    (filtered_df['MesAño'] <= end_period)
+                ]
+                
+                # Eliminamos la columna temporal
+                filtered_df = filtered_df.drop(columns=['MesAño'])
+                
             except Exception as e:
                 st.warning(f"No se pudo aplicar el filtro de fechas: {str(e)}")
         
