@@ -161,11 +161,9 @@ if uploaded_file is not None:
                 # Si ambas existen, conservar solo 'Comisiones Pagadas'
                 df = df.drop(columns=['Comisiones 10 %'])
 
-        # Verificación final
-        st.write("🔍 Columnas finales:", df.columns.tolist())  # Para debug
-
-        # Obtener el capital inicial (segunda casilla de 'Aumento Capital')
+        # Obtener valores fijos (no afectados por filtros)
         capital_inicial = df['Aumento Capital'].iloc[1] if len(df) > 1 else 0
+        id_inversionista = df['ID Inv'].iloc[1] if len(df) > 1 else "N/D"
         
         # Aplicar filtros avanzados (función corregida)
         filtered_df = advanced_filters(df)
@@ -207,15 +205,14 @@ if uploaded_file is not None:
                 delta=delta
             )
 
-        # Mostrar KPIs en columnas
+        # Primera fila de KPIs (valores fijos y principales)
         col1, col2, col3, col4 = st.columns(4)
         with col1:
-            # KPI de ID Inv (siempre visible)
-            unique_ids = filtered_df['ID Inv'].nunique()
-            display_kpi("Inversiones Únicas", unique_ids, "🆔", is_currency=False)
+            # KPI de ID Inversionista (segunda casilla de 'ID Inv')
+            display_kpi("ID Inversionista", id_inversionista, "🆔", is_currency=False)
             
         with col2:
-            # KPI de Capital Inicial (siempre visible, no afectado por filtros)
+            # KPI de Capital Inicial (segunda casilla de 'Aumento Capital')
             display_kpi("Capital Inicial", capital_inicial, "🏁")
             
         with col3:
@@ -225,31 +222,35 @@ if uploaded_file is not None:
             display_kpi("Capital Actual", current_capital, "🏦", delta=f"{delta_capital:+,.2f}")
             
         with col4:
-            # KPI de Total Aumentos (afectado por filtros)
-            total_aumentos = filtered_df['Aumento Capital'].sum()
-            display_kpi("Total Aumentos", total_aumentos, "📈")
+            # KPI de Porcentaje de Beneficio (Ganancias Brutas / Capital Inicial)
+            if 'Ganancias/Pérdidas Brutas' in filtered_df.columns and capital_inicial != 0:
+                ganancias_brutas = filtered_df['Ganancias/Pérdidas Brutas'].sum()
+                porcentaje_beneficio = (ganancias_brutas / capital_inicial) * 100
+                display_kpi("Porcentaje Beneficio", porcentaje_beneficio, "📊", is_percentage=True)
+            else:
+                display_kpi("Porcentaje Beneficio", None, "📊", is_percentage=True)
 
-        # Segunda fila de KPIs
+        # Segunda fila de KPIs (valores afectados por filtros)
         col5, col6, col7, col8 = st.columns(4)
         with col5:
+            # KPI de Total Aumentos
+            total_aumentos = filtered_df['Aumento Capital'].sum()
+            display_kpi("Total Aumentos", total_aumentos, "📈")
+            
+        with col6:
             # KPI de Ganancias Brutas
             ganancias_brutas = filtered_df['Ganancias/Pérdidas Brutas'].sum() if 'Ganancias/Pérdidas Brutas' in filtered_df.columns else None
             display_kpi("Ganancias Brutas", ganancias_brutas, "💵")
             
-        with col6:
+        with col7:
             # KPI de Ganancias Netas
             ganancias_netas = filtered_df['Ganancias/Pérdidas Netas'].sum() if 'Ganancias/Pérdidas Netas' in filtered_df.columns else None
             display_kpi("Ganancias Netas", ganancias_netas, "💰")
             
-        with col7:
+        with col8:
             # KPI de Comisiones Pagadas
             comisiones = filtered_df['Comisiones Pagadas'].sum() if 'Comisiones Pagadas' in filtered_df.columns else None
             display_kpi("Comisiones Pagadas", comisiones, "💸")
-            
-        with col8:
-            # KPI de Beneficio Promedio
-            beneficio_promedio = filtered_df['Beneficio %'].mean() if 'Beneficio %' in filtered_df.columns else None
-            display_kpi("Beneficio Promedio", beneficio_promedio, "📊", is_percentage=True)
 
         # =============================================
         # SECCIÓN DE GRÁFICOS
@@ -259,7 +260,7 @@ if uploaded_file is not None:
         st.markdown('<h2 style="color: #2c3e50; border-bottom: 2px solid #67e4da; padding-bottom: 10px;">📈 Visualizaciones</h2>', unsafe_allow_html=True)
         
         # Gráfico de evolución temporal del capital
-        if 'Fecha' in filtered_df.columns:
+        if 'Fecha' in filtered_df.columns and 'Capital Invertido' in filtered_df.columns:
             try:
                 fig1 = px.line(
                     filtered_df,
@@ -269,6 +270,10 @@ if uploaded_file is not None:
                     labels={'Capital Invertido': 'Monto ($)', 'Fecha': 'Fecha'},
                     template='plotly_white'
                 )
+                # Añadir línea horizontal para el capital inicial
+                fig1.add_hline(y=capital_inicial, line_dash="dash", line_color="green", 
+                              annotation_text=f"Capital Inicial: ${capital_inicial:,.2f}", 
+                              annotation_position="bottom right")
                 fig1.update_layout(height=400)
                 st.plotly_chart(fig1, use_container_width=True)
             except Exception as e:
@@ -361,5 +366,4 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
-
 
