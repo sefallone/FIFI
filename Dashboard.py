@@ -2,7 +2,7 @@ import streamlit as st
 
 # Configuración inicial de la página (DEBE SER EL PRIMER COMANDO)
 st.set_page_config(
-    page_title="Fondo de Inversión FIFI",
+    page_title="Dashboard Financiero Premium",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -171,18 +171,17 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
 def main():
     with st.sidebar:
         st.title("⚙️ Configuración")
-        # Selector de tema sin funcionalidad (solo visual)
         theme = st.radio("Seleccionar tema", ["Claro", "Oscuro"], index=0)
         animations = st.checkbox("Activar animaciones", value=True)
 
     if animations:
         with st.empty():
             for i in range(3):
-                st.title(f"📊 Fondo de Inversión Fallone Investment{'...'[:i]}")
+                st.title(f"📊 Dashboard Financiero Premium{'...'[:i]}")
                 time.sleep(0.3)
-            st.title("📊 Fondo de Inversión Fallone Investment")
+            st.title("📊 Dashboard Financiero Premium")
     else:
-        st.title("📊 Fondo de Inversión Fallone Investment")
+        st.title("📊 Dashboard Financiero Premium")
 
     uploaded_file = st.file_uploader("📤 Subir archivo Excel", type=['xlsx', 'xls'])
 
@@ -238,7 +237,7 @@ def main():
             # =============================================
             
             st.markdown("---")
-            st.markdown('<h2 style="color: 5ED6DC; border-bottom: 2px solid #67e4da; padding-bottom: 10px;">📊 KPIs Financieros</h2>', unsafe_allow_html=True)
+            st.markdown('<h2 style="color: #2c3e50; border-bottom: 2px solid #67e4da; padding-bottom: 10px;">📊 KPIs Financieros</h2>', unsafe_allow_html=True)
 
             # Primera fila de KPIs
             col1, col2, col3, col4 = st.columns(4)
@@ -253,12 +252,31 @@ def main():
             with col4:
                 if 'Ganancias/Pérdidas Brutas' in filtered_df.columns and capital_inicial != 0:
                     ganancias_brutas = filtered_df['Ganancias/Pérdidas Brutas'].sum()
-                    porcentaje_beneficio = (ganancias_brutas / (current_capital-ganancias_brutas)) * 100
-                    display_kpi("Porcentaje de Beneficio del período", porcentaje_beneficio, "📊", is_percentage=True)
+                    porcentaje_beneficio = (ganancias_brutas / capital_inicial) * 100
+                    display_kpi("Porcentaje Beneficio", porcentaje_beneficio, "📊", is_percentage=True)
                 else:
-                    display_kpi("Porcentaje de Beneficio del período", None, "📊", is_percentage=True)
+                    display_kpi("Porcentaje Beneficio", None, "📊", is_percentage=True)
 
-            # Resto del código original...
+            # Segunda fila de KPIs
+            col5, col6, col7, col8 = st.columns(4)
+            with col5:
+                total_aumentos = filtered_df['Aumento Capital'].sum()
+                display_kpi("Total Aumentos", total_aumentos, "📈")
+            with col6:
+                ganancias_brutas = filtered_df['Ganancias/Pérdidas Brutas'].sum() if 'Ganancias/Pérdidas Brutas' in filtered_df.columns else None
+                display_kpi("Ganancias Brutas", ganancias_brutas, "💵")
+            with col7:
+                ganancias_netas = filtered_df['Ganancias/Pérdidas Netas'].sum() if 'Ganancias/Pérdidas Netas' in filtered_df.columns else None
+                display_kpi("Ganancias Netas", ganancias_netas, "💰")
+            with col8:
+                comisiones = filtered_df['Comisiones Pagadas'].sum() if 'Comisiones Pagadas' in filtered_df.columns else None
+                display_kpi("Comisiones Pagadas", comisiones, "💸")
+
+            # Tercera fila de KPIs
+            col9, col10, col11, col12 = st.columns(4)
+            with col9:
+                retiros = filtered_df['Retiro de Fondos'].sum() if 'Retiro de Fondos' in filtered_df.columns else None
+                display_kpi("Retiro de Dinero", retiros, "↘️")
             
             # =============================================
             # SECCIÓN DE GRÁFICOS
@@ -285,14 +303,63 @@ def main():
                 except Exception as e:
                     st.error(f"Error al generar gráfico de capital: {str(e)}")
 
-            # Resto de gráficos originales...
+            if 'Ganancias/Pérdidas Brutas' in filtered_df.columns and 'Fecha' in filtered_df.columns:
+                try:
+                    fig2 = px.bar(
+                        filtered_df,
+                        x='Fecha',
+                        y='Ganancias/Pérdidas Brutas',
+                        title='Ganancias/Pérdidas Brutas por Periodo',
+                        color='Ganancias/Pérdidas Brutas',
+                        color_continuous_scale=px.colors.diverging.RdYlGn,
+                        labels={'Ganancias/Pérdidas Brutas': 'Monto ($)', 'Fecha': 'Fecha'},
+                        template='plotly_white'
+                    )
+                    fig2.update_layout(height=400)
+                    st.plotly_chart(fig2, use_container_width=True)
+                except Exception as e:
+                    st.error(f"Error al generar gráfico de ganancias: {str(e)}")
+
+            if 'Capital Invertido' in filtered_df.columns and 'Ganancias/Pérdidas Brutas' in filtered_df.columns:
+                try:
+                    fig3 = px.scatter(
+                        filtered_df,
+                        x='Capital Invertido',
+                        y='Ganancias/Pérdidas Brutas',
+                        title='Relación entre Capital Invertido y Ganancias',
+                        color='Ganancias/Pérdidas Brutas',
+                        size='Ganancias/Pérdidas Brutas',
+                        hover_data=['Fecha'],
+                        color_continuous_scale=px.colors.diverging.RdYlGn,
+                        template='plotly_white'
+                    )
+                    fig3.update_layout(height=500)
+                    st.plotly_chart(fig3, use_container_width=True)
+                except Exception as e:
+                    st.error(f"Error al generar gráfico de dispersión: {str(e)}")
+
+            if 'Comisiones Pagadas' in filtered_df.columns and 'Fecha' in filtered_df.columns:
+                try:
+                    filtered_df['Comisiones Acumuladas'] = filtered_df['Comisiones Pagadas'].cumsum()
+                    fig4 = px.area(
+                        filtered_df,
+                        x='Fecha',
+                        y='Comisiones Acumuladas',
+                        title='Comisiones Pagadas Acumuladas',
+                        labels={'Comisiones Acumuladas': 'Monto ($)', 'Fecha': 'Fecha'},
+                        template='plotly_white'
+                    )
+                    fig4.update_layout(height=400)
+                    st.plotly_chart(fig4, use_container_width=True)
+                except Exception as e:
+                    st.error(f"Error al generar gráfico de comisiones: {str(e)}")
 
         except Exception as e:
             st.error(f"🚨 Error crítico al procesar el archivo: {str(e)}")
     else:
         st.info("👋 Por favor, sube un archivo Excel para comenzar el análisis")
 
-    # Estilos CSS originales
+    # Estilos CSS
     st.markdown("""
     <style>
         .stPlotlyChart {
