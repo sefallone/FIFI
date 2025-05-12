@@ -1,6 +1,6 @@
 import streamlit as st
 
-# Configuración inicial de la página - PRIMER COMANDO STREAMLIT
+# Configuración inicial de la página (DEBE SER EL PRIMER COMANDO)
 st.set_page_config(
     page_title="Dashboard Financiero Premium",
     layout="wide",
@@ -15,7 +15,7 @@ import base64
 from io import BytesIO
 import time
 
-# Configuración para metric cards (con solución alternativa)
+# Configuración para metric cards
 try:
     from streamlit_extras.metric_cards import metric_card
     METRIC_CARDS_ENABLED = True
@@ -23,7 +23,7 @@ except ImportError:
     METRIC_CARDS_ENABLED = False
 
 # =============================================
-# FUNCIÓN DE FILTROS AVANZADOS CON SELECTOR POR MES/AÑO
+# FUNCIÓN DE FILTROS AVANZADOS
 # =============================================
 
 def advanced_filters(df):
@@ -120,7 +120,7 @@ def advanced_filters(df):
     return filtered_df
 
 # =============================================
-# FUNCIÓN PARA MOSTRAR KPIs (CON MÉTRICAS MEJORADAS)
+# FUNCIÓN PARA MOSTRAR KPIs CON METRIC CARDS
 # =============================================
 
 def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False, delta=None):
@@ -138,27 +138,14 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
         delta_display = delta
     
     if METRIC_CARDS_ENABLED:
-        try:
-            metric_card(
-                title=f"{icon} {title}",
-                value=value_display,
-                delta=delta_display,
-                key=f"card_{title.replace(' ', '_')}"
-            )
-        except:
-            # Fallback si hay algún problema con metric_card
-            st.metric(
-                label=f"{icon} {title}",
-                value=value_display,
-                delta=delta_display
-            )
+        metric_card(
+            title=f"{icon} {title}",
+            value=value_display,
+            delta=delta_display,
+            key=f"card_{title.replace(' ', '_')}"
+        )
     else:
-        # Mostrar advertencia solo una vez
-        if not hasattr(st.session_state, 'metric_warning_shown'):
-            st.warning("Para mejores visualizaciones, instala streamlit-extras: pip install streamlit-extras")
-            st.session_state.metric_warning_shown = True
-        
-        # Implementación personalizada con HTML/CSS
+        # Implementación personalizada si no hay metric cards
         delta_color = "color: green;" if delta_display and str(delta_display).startswith('+') else "color: red;"
         delta_html = f"<div style='{delta_color} font-size: 14px;'>{delta_display}</div>" if delta_display else ""
         
@@ -241,10 +228,12 @@ def main():
 
             st.success(f"✅ Datos cargados correctamente ({len(filtered_df)} registros)")
             
-            # [El resto de tu código permanece igual...]
+            # Mostrar advertencia solo si no hay metric cards
+            if not METRIC_CARDS_ENABLED:
+                st.warning("Para mejores visualizaciones, instala: pip install streamlit-extras")
             
             # =============================================
-            # SECCIÓN DE KPIs MEJORADOS
+            # SECCIÓN DE KPIs
             # =============================================
             
             st.markdown("---")
@@ -268,12 +257,129 @@ def main():
                 else:
                     display_kpi("Porcentaje Beneficio", None, "📊", is_percentage=True)
 
-            # [El resto de tu código con los gráficos permanece igual...]
+            # Segunda fila de KPIs
+            col5, col6, col7, col8 = st.columns(4)
+            with col5:
+                total_aumentos = filtered_df['Aumento Capital'].sum()
+                display_kpi("Total Aumentos", total_aumentos, "📈")
+            with col6:
+                ganancias_brutas = filtered_df['Ganancias/Pérdidas Brutas'].sum() if 'Ganancias/Pérdidas Brutas' in filtered_df.columns else None
+                display_kpi("Ganancias Brutas", ganancias_brutas, "💵")
+            with col7:
+                ganancias_netas = filtered_df['Ganancias/Pérdidas Netas'].sum() if 'Ganancias/Pérdidas Netas' in filtered_df.columns else None
+                display_kpi("Ganancias Netas", ganancias_netas, "💰")
+            with col8:
+                comisiones = filtered_df['Comisiones Pagadas'].sum() if 'Comisiones Pagadas' in filtered_df.columns else None
+                display_kpi("Comisiones Pagadas", comisiones, "💸")
+
+            # Tercera fila de KPIs
+            col9, col10, col11, col12 = st.columns(4)
+            with col9:
+                retiros = filtered_df['Retiro de Fondos'].sum() if 'Retiro de Fondos' in filtered_df.columns else None
+                display_kpi("Retiro de Dinero", retiros, "↘️")
+            
+            # =============================================
+            # SECCIÓN DE GRÁFICOS
+            # =============================================
+            
+            st.markdown("---")
+            st.markdown('<h2 style="color: #2c3e50; border-bottom: 2px solid #67e4da; padding-bottom: 10px;">📈 Visualizaciones</h2>', unsafe_allow_html=True)
+            
+            if 'Fecha' in filtered_df.columns and 'Capital Invertido' in filtered_df.columns:
+                try:
+                    fig1 = px.line(
+                        filtered_df,
+                        x='Fecha',
+                        y='Capital Invertido',
+                        title='Evolución del Capital Invertido',
+                        labels={'Capital Invertido': 'Monto ($)', 'Fecha': 'Fecha'},
+                        template='plotly_white'
+                    )
+                    fig1.add_hline(y=capital_inicial, line_dash="dash", line_color="green", 
+                                annotation_text=f"Capital Inicial: ${capital_inicial:,.2f}", 
+                                annotation_position="bottom right")
+                    fig1.update_layout(height=400)
+                    st.plotly_chart(fig1, use_container_width=True)
+                except Exception as e:
+                    st.error(f"Error al generar gráfico de capital: {str(e)}")
+
+            if 'Ganancias/Pérdidas Brutas' in filtered_df.columns and 'Fecha' in filtered_df.columns:
+                try:
+                    fig2 = px.bar(
+                        filtered_df,
+                        x='Fecha',
+                        y='Ganancias/Pérdidas Brutas',
+                        title='Ganancias/Pérdidas Brutas por Periodo',
+                        color='Ganancias/Pérdidas Brutas',
+                        color_continuous_scale=px.colors.diverging.RdYlGn,
+                        labels={'Ganancias/Pérdidas Brutas': 'Monto ($)', 'Fecha': 'Fecha'},
+                        template='plotly_white'
+                    )
+                    fig2.update_layout(height=400)
+                    st.plotly_chart(fig2, use_container_width=True)
+                except Exception as e:
+                    st.error(f"Error al generar gráfico de ganancias: {str(e)}")
+
+            if 'Capital Invertido' in filtered_df.columns and 'Ganancias/Pérdidas Brutas' in filtered_df.columns:
+                try:
+                    fig3 = px.scatter(
+                        filtered_df,
+                        x='Capital Invertido',
+                        y='Ganancias/Pérdidas Brutas',
+                        title='Relación entre Capital Invertido y Ganancias',
+                        color='Ganancias/Pérdidas Brutas',
+                        size='Ganancias/Pérdidas Brutas',
+                        hover_data=['Fecha'],
+                        color_continuous_scale=px.colors.diverging.RdYlGn,
+                        template='plotly_white'
+                    )
+                    fig3.update_layout(height=500)
+                    st.plotly_chart(fig3, use_container_width=True)
+                except Exception as e:
+                    st.error(f"Error al generar gráfico de dispersión: {str(e)}")
+
+            if 'Comisiones Pagadas' in filtered_df.columns and 'Fecha' in filtered_df.columns:
+                try:
+                    filtered_df['Comisiones Acumuladas'] = filtered_df['Comisiones Pagadas'].cumsum()
+                    fig4 = px.area(
+                        filtered_df,
+                        x='Fecha',
+                        y='Comisiones Acumuladas',
+                        title='Comisiones Pagadas Acumuladas',
+                        labels={'Comisiones Acumuladas': 'Monto ($)', 'Fecha': 'Fecha'},
+                        template='plotly_white'
+                    )
+                    fig4.update_layout(height=400)
+                    st.plotly_chart(fig4, use_container_width=True)
+                except Exception as e:
+                    st.error(f"Error al generar gráfico de comisiones: {str(e)}")
 
         except Exception as e:
             st.error(f"🚨 Error crítico al procesar el archivo: {str(e)}")
     else:
         st.info("👋 Por favor, sube un archivo Excel para comenzar el análisis")
+
+    # Estilos CSS
+    st.markdown("""
+    <style>
+        .stPlotlyChart {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 15px;
+            background-color: white;
+        }
+        .stApp {
+            background-color: #f8f9fa;
+        }
+        .stSidebar {
+            background-color: #ffffff;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+        .stSelectbox, .stSlider, .stDateInput {
+            margin-bottom: 15px;
+        }
+    </style>
+    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
