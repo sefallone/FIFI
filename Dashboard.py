@@ -120,10 +120,10 @@ def advanced_filters(df):
     return filtered_df
 
 # =============================================
-# FUNCIÓN PARA MOSTRAR KPIs CON METRIC CARDS
+# FUNCIÓN PARA MOSTRAR KPIs CON ESTILOS DE TEMA
 # =============================================
 
-def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False, delta=None):
+def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False, delta=None, theme="claro"):
     if pd.isna(value) or value is None:
         value_display = "N/D"
         delta_display = None
@@ -137,29 +137,42 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
         
         delta_display = delta
     
+    # Estilos basados en el tema
+    if theme == "oscuro":
+        bg_color = "#333333"
+        text_color = "#ffffff"
+        border_color = "#67e4da"
+    else:
+        bg_color = "#ffffff"
+        text_color = "#000000"  # Texto negro para tema claro
+        border_color = "#67e4da"
+    
     if METRIC_CARDS_ENABLED:
         metric_card(
             title=f"{icon} {title}",
             value=value_display,
             delta=delta_display,
-            key=f"card_{title.replace(' ', '_')}"
+            key=f"card_{title.replace(' ', '_')}",
+            background=bg_color,
+            border_color=border_color,
+            border_size_px=2
         )
     else:
-        # Implementación personalizada si no hay metric cards
         delta_color = "color: green;" if delta_display and str(delta_display).startswith('+') else "color: red;"
         delta_html = f"<div style='{delta_color} font-size: 14px;'>{delta_display}</div>" if delta_display else ""
         
         st.markdown(f"""
         <div style="
-            background: white;
+            background: {bg_color};
+            color: {text_color};
             border-radius: 10px;
             padding: 15px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             margin-bottom: 20px;
-            border-left: 4px solid #67e4da;
+            border-left: 4px solid {border_color};
         ">
-            <div style="color: #2c3e50; font-weight: 600; font-size: 14px;">{icon} {title}</div>
-            <div style="color: #2c3e50; font-weight: 700; font-size: 24px; margin: 10px 0;">{value_display}</div>
+            <div style="font-weight: 600; font-size: 14px;">{icon} {title}</div>
+            <div style="font-weight: 700; font-size: 24px; margin: 10px 0;">{value_display}</div>
             {delta_html}
         </div>
         """, unsafe_allow_html=True)
@@ -169,9 +182,23 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
 # =============================================
 
 def main():
+    # Inicializar el tema en session_state si no existe
+    if 'theme' not in st.session_state:
+        st.session_state.theme = "claro"
+    
     with st.sidebar:
         st.title("⚙️ Configuración")
-        theme = st.radio("Seleccionar tema", ["Claro", "Oscuro"], index=0)
+        # Usamos un callback para actualizar el tema
+        def update_theme():
+            st.session_state.theme = st.session_state.theme_selector
+        
+        theme = st.radio(
+            "Seleccionar tema",
+            ["Claro", "Oscuro"],
+            index=0 if st.session_state.theme == "claro" else 1,
+            key="theme_selector",
+            on_change=update_theme
+        )
         animations = st.checkbox("Activar animaciones", value=True)
 
     if animations:
@@ -233,57 +260,60 @@ def main():
                 st.warning("Para mejores visualizaciones, instala: pip install streamlit-extras")
             
             # =============================================
-            # SECCIÓN DE KPIs
+            # SECCIÓN DE KPIs CON TEMA APLICADO
             # =============================================
             
             st.markdown("---")
-            st.markdown('<h2 style="color: #2c3e50; border-bottom: 2px solid #67e4da; padding-bottom: 10px;">📊 KPIs Financieros</h2>', unsafe_allow_html=True)
+            st.markdown(f'<h2 style="color: { "#ffffff" if st.session_state.theme == "oscuro" else "#000000" }; border-bottom: 2px solid #67e4da; padding-bottom: 10px;">📊 KPIs Financieros</h2>', unsafe_allow_html=True)
 
             # Primera fila de KPIs
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                display_kpi("ID Inversionista", id_inversionista, "🆔", is_currency=False)
+                display_kpi("ID Inversionista", id_inversionista, "🆔", is_currency=False, theme=st.session_state.theme)
             with col2:
-                display_kpi("Capital Inicial", capital_inicial, "🏁")
+                display_kpi("Capital Inicial", capital_inicial, "🏁", theme=st.session_state.theme)
             with col3:
                 current_capital = filtered_df['Capital Invertido'].iloc[-1] if len(filtered_df) > 0 else 0
                 delta_capital = current_capital - capital_inicial if len(filtered_df) > 0 else 0
-                display_kpi("Capital Actual", current_capital, "🏦", delta=f"{delta_capital:+,.2f}")
+                display_kpi("Capital Actual", current_capital, "🏦", delta=f"{delta_capital:+,.2f}", theme=st.session_state.theme)
             with col4:
                 if 'Ganancias/Pérdidas Brutas' in filtered_df.columns and capital_inicial != 0:
                     ganancias_brutas = filtered_df['Ganancias/Pérdidas Brutas'].sum()
                     porcentaje_beneficio = (ganancias_brutas / capital_inicial) * 100
-                    display_kpi("Porcentaje Beneficio", porcentaje_beneficio, "📊", is_percentage=True)
+                    display_kpi("Porcentaje Beneficio", porcentaje_beneficio, "📊", is_percentage=True, theme=st.session_state.theme)
                 else:
-                    display_kpi("Porcentaje Beneficio", None, "📊", is_percentage=True)
+                    display_kpi("Porcentaje Beneficio", None, "📊", is_percentage=True, theme=st.session_state.theme)
 
             # Segunda fila de KPIs
             col5, col6, col7, col8 = st.columns(4)
             with col5:
                 total_aumentos = filtered_df['Aumento Capital'].sum()
-                display_kpi("Total Aumentos", total_aumentos, "📈")
+                display_kpi("Total Aumentos", total_aumentos, "📈", theme=st.session_state.theme)
             with col6:
                 ganancias_brutas = filtered_df['Ganancias/Pérdidas Brutas'].sum() if 'Ganancias/Pérdidas Brutas' in filtered_df.columns else None
-                display_kpi("Ganancias Brutas", ganancias_brutas, "💵")
+                display_kpi("Ganancias Brutas", ganancias_brutas, "💵", theme=st.session_state.theme)
             with col7:
                 ganancias_netas = filtered_df['Ganancias/Pérdidas Netas'].sum() if 'Ganancias/Pérdidas Netas' in filtered_df.columns else None
-                display_kpi("Ganancias Netas", ganancias_netas, "💰")
+                display_kpi("Ganancias Netas", ganancias_netas, "💰", theme=st.session_state.theme)
             with col8:
                 comisiones = filtered_df['Comisiones Pagadas'].sum() if 'Comisiones Pagadas' in filtered_df.columns else None
-                display_kpi("Comisiones Pagadas", comisiones, "💸")
+                display_kpi("Comisiones Pagadas", comisiones, "💸", theme=st.session_state.theme)
 
             # Tercera fila de KPIs
             col9, col10, col11, col12 = st.columns(4)
             with col9:
                 retiros = filtered_df['Retiro de Fondos'].sum() if 'Retiro de Fondos' in filtered_df.columns else None
-                display_kpi("Retiro de Dinero", retiros, "↘️")
+                display_kpi("Retiro de Dinero", retiros, "↘️", theme=st.session_state.theme)
             
             # =============================================
             # SECCIÓN DE GRÁFICOS
             # =============================================
             
             st.markdown("---")
-            st.markdown('<h2 style="color: #2c3e50; border-bottom: 2px solid #67e4da; padding-bottom: 10px;">📈 Visualizaciones</h2>', unsafe_allow_html=True)
+            st.markdown(f'<h2 style="color: { "#ffffff" if st.session_state.theme == "oscuro" else "#000000" }; border-bottom: 2px solid #67e4da; padding-bottom: 10px;">📈 Visualizaciones</h2>', unsafe_allow_html=True)
+            
+            # Configuración de gráficos según el tema
+            plotly_template = "plotly_dark" if st.session_state.theme == "oscuro" else "plotly_white"
             
             if 'Fecha' in filtered_df.columns and 'Capital Invertido' in filtered_df.columns:
                 try:
@@ -293,7 +323,7 @@ def main():
                         y='Capital Invertido',
                         title='Evolución del Capital Invertido',
                         labels={'Capital Invertido': 'Monto ($)', 'Fecha': 'Fecha'},
-                        template='plotly_white'
+                        template=plotly_template
                     )
                     fig1.add_hline(y=capital_inicial, line_dash="dash", line_color="green", 
                                 annotation_text=f"Capital Inicial: ${capital_inicial:,.2f}", 
@@ -313,7 +343,7 @@ def main():
                         color='Ganancias/Pérdidas Brutas',
                         color_continuous_scale=px.colors.diverging.RdYlGn,
                         labels={'Ganancias/Pérdidas Brutas': 'Monto ($)', 'Fecha': 'Fecha'},
-                        template='plotly_white'
+                        template=plotly_template
                     )
                     fig2.update_layout(height=400)
                     st.plotly_chart(fig2, use_container_width=True)
@@ -331,7 +361,7 @@ def main():
                         size='Ganancias/Pérdidas Brutas',
                         hover_data=['Fecha'],
                         color_continuous_scale=px.colors.diverging.RdYlGn,
-                        template='plotly_white'
+                        template=plotly_template
                     )
                     fig3.update_layout(height=500)
                     st.plotly_chart(fig3, use_container_width=True)
@@ -347,7 +377,7 @@ def main():
                         y='Comisiones Acumuladas',
                         title='Comisiones Pagadas Acumuladas',
                         labels={'Comisiones Acumuladas': 'Monto ($)', 'Fecha': 'Fecha'},
-                        template='plotly_white'
+                        template=plotly_template
                     )
                     fig4.update_layout(height=400)
                     st.plotly_chart(fig4, use_container_width=True)
@@ -359,27 +389,47 @@ def main():
     else:
         st.info("👋 Por favor, sube un archivo Excel para comenzar el análisis")
 
-    # Estilos CSS
-    st.markdown("""
-    <style>
-        .stPlotlyChart {
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            padding: 15px;
-            background-color: white;
-        }
-        .stApp {
-            background-color: #f8f9fa;
-        }
-        .stSidebar {
-            background-color: #ffffff;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-        }
-        .stSelectbox, .stSlider, .stDateInput {
-            margin-bottom: 15px;
-        }
-    </style>
-    """, unsafe_allow_html=True)
+    # Estilos CSS dinámicos según el tema
+    if st.session_state.theme == "oscuro":
+        st.markdown("""
+        <style>
+            .stApp {
+                background-color: #1a1a1a;
+                color: #ffffff;
+            }
+            .stSidebar {
+                background-color: #262626;
+                color: #ffffff;
+            }
+            .stTextInput, .stTextArea, .stSelectbox, .stSlider, .stDateInput {
+                background-color: #333333;
+                color: #ffffff;
+            }
+            .css-1aumxhk {
+                background-color: #333333;
+            }
+        </style>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <style>
+            .stApp {
+                background-color: #f8f9fa;
+                color: #000000;
+            }
+            .stSidebar {
+                background-color: #ffffff;
+                color: #000000;
+            }
+            .stTextInput, .stTextArea, .stSelectbox, .stSlider, .stDateInput {
+                background-color: #ffffff;
+                color: #000000;
+            }
+            .css-1aumxhk {
+                background-color: #ffffff;
+            }
+        </style>
+        """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
