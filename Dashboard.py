@@ -8,7 +8,7 @@ import time
 
 # Configuración para metric cards (con solución alternativa)
 try:
-    from streamlit_extras.metric_cards import metric_card
+    from streamlit_extras.metric_cards import style_metric_card
     METRIC_CARDS_ENABLED = True
 except ImportError:
     METRIC_CARDS_ENABLED = False
@@ -138,7 +138,7 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
     
     if METRIC_CARDS_ENABLED:
         try:
-            metric_card(
+            style_metric_card(
                 title=f"{icon} {title}",
                 value=value_display,
                 delta=delta_display,
