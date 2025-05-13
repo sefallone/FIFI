@@ -2,7 +2,7 @@ import streamlit as st
 
 # Configuración inicial de la página (DEBE SER EL PRIMER COMANDO)
 st.set_page_config(
-    page_title="Dashboard Financiero Premium",
+    page_title="Dashboard Fallone Investments",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -123,7 +123,7 @@ def advanced_filters(df):
 # FUNCIÓN PARA MOSTRAR KPIs CON ESTILOS DE TEMA
 # =============================================
 
-def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False, delta=None, theme="claro"):
+def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False, delta=None, theme="oscuro"):
     if pd.isna(value) or value is None:
         value_display = "N/D"
         delta_display = None
@@ -139,11 +139,11 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
     
     # Estilos basados en el tema
     if theme == "oscuro":
-        bg_color = "#333333"
+        bg_color = "3f33ff"
         text_color = "#ffffff"
         border_color = "#67e4da"
     else:
-        bg_color = "#ffffff"
+        bg_color = "3f33ff"
         text_color = "#000000"  # Texto negro para tema claro
         border_color = "#67e4da"
     
@@ -184,7 +184,7 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
 def main():
     # Inicializar el tema en session_state si no existe
     if 'theme' not in st.session_state:
-        st.session_state.theme = "claro"
+        st.session_state.theme = "oscuro"
     
     with st.sidebar:
         st.title("⚙️ Configuración")
@@ -204,11 +204,11 @@ def main():
     if animations:
         with st.empty():
             for i in range(3):
-                st.title(f"📊 Dashboard Financiero Premium{'...'[:i]}")
+                st.title(f"📊 Fondo de Inversión Fallone Investment{'...'[:i]}")
                 time.sleep(0.3)
-            st.title("📊 Dashboard Financiero Premium")
+            st.title("📊 Fondo de Inversión Fallone Investment")
     else:
-        st.title("📊 Dashboard Financiero Premium")
+        st.title("📊 Fondo de Inversión Fallone Investment")
 
     uploaded_file = st.file_uploader("📤 Subir archivo Excel", type=['xlsx', 'xls'])
 
@@ -264,7 +264,7 @@ def main():
             # =============================================
             
             st.markdown("---")
-            st.markdown(f'<h2 style="color: { "#ffffff" if st.session_state.theme == "oscuro" else "#000000" }; border-bottom: 2px solid #67e4da; padding-bottom: 10px;">📊 KPIs Financieros</h2>', unsafe_allow_html=True)
+            st.markdown(f'<h2 style="color: { "3f33ff" if st.session_state.theme == "oscuro" else "3f33ff" }; border-bottom: 2px solid #67e4da; padding-bottom: 10px;">📊 KPIs Financieros</h2>', unsafe_allow_html=True)
 
             # Primera fila de KPIs
             col1, col2, col3, col4 = st.columns(4)
@@ -279,16 +279,16 @@ def main():
             with col4:
                 if 'Ganancias/Pérdidas Brutas' in filtered_df.columns and capital_inicial != 0:
                     ganancias_brutas = filtered_df['Ganancias/Pérdidas Brutas'].sum()
-                    porcentaje_beneficio = (ganancias_brutas / capital_inicial) * 100
-                    display_kpi("Porcentaje Beneficio", porcentaje_beneficio, "📊", is_percentage=True, theme=st.session_state.theme)
+                    porcentaje_beneficio = (ganancias_brutas / (current_capital-ganancias_brutas)) * 100
+                    display_kpi("Porcentaje de Beneficio", porcentaje_beneficio, "📊", is_percentage=True, theme=st.session_state.theme)
                 else:
-                    display_kpi("Porcentaje Beneficio", None, "📊", is_percentage=True, theme=st.session_state.theme)
+                    display_kpi("Porcentaje de Beneficio", None, "📊", is_percentage=True, theme=st.session_state.theme)
 
             # Segunda fila de KPIs
             col5, col6, col7, col8 = st.columns(4)
             with col5:
                 total_aumentos = filtered_df['Aumento Capital'].sum()
-                display_kpi("Total Aumentos", total_aumentos, "📈", theme=st.session_state.theme)
+                display_kpi("Total Aumentos de Capital", total_aumentos, "📈", theme=st.session_state.theme)
             with col6:
                 ganancias_brutas = filtered_df['Ganancias/Pérdidas Brutas'].sum() if 'Ganancias/Pérdidas Brutas' in filtered_df.columns else None
                 display_kpi("Ganancias Brutas", ganancias_brutas, "💵", theme=st.session_state.theme)
@@ -310,7 +310,7 @@ def main():
             # =============================================
             
             st.markdown("---")
-            st.markdown(f'<h2 style="color: { "#ffffff" if st.session_state.theme == "oscuro" else "#000000" }; border-bottom: 2px solid #67e4da; padding-bottom: 10px;">📈 Visualizaciones</h2>', unsafe_allow_html=True)
+            st.markdown(f'<h2 style="color: { "3f33ff" if st.session_state.theme == "oscuro" else "3f33ff" }; border-bottom: 2px solid #67e4da; padding-bottom: 10px;">📈 Visualizaciones</h2>', unsafe_allow_html=True)
             
             # Configuración de gráficos según el tema
             plotly_template = "plotly_dark" if st.session_state.theme == "oscuro" else "plotly_white"
