@@ -4,6 +4,7 @@ import plotly.express as px
 from datetime import datetime
 import base64
 from io import BytesIO
+import numpy as np
 
 # Configuración inicial de la página (DEBE SER EL PRIMER COMANDO)
 st.set_page_config(
@@ -176,87 +177,166 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
         """, unsafe_allow_html=True)
 
 # =============================================
-# ANÁLISIS TÉCNICO - MEDIAS MÓVILES
+# ANÁLISIS TÉCNICO CORREGIDO - MEDIAS MÓVILES
 # =============================================
 
-def plot_moving_averages(df, capital_col='Capital Invertido'):
+def plot_moving_averages(df, price_col='Capital Invertido'):
+    """Función corregida para calcular y mostrar medias móviles"""
     st.subheader("📊 Análisis Técnico - Medias Móviles")
     
+    # Verificar que tenemos los datos necesarios
+    if price_col not in df.columns or 'Fecha' not in df.columns:
+        st.warning("Se requieren columnas 'Fecha' y 'Capital Invertido' para el análisis técnico")
+        return
+    
+    # Ordenar por fecha para cálculos correctos
+    df = df.sort_values('Fecha').copy()
+    
+    # Configuración de períodos
     col1, col2 = st.columns(2)
     with col1:
-        ma_short = st.slider("Media Móvil Corta (días)", 5, 50, 20)
+        ma_short = st.slider("Media Móvil Corta (días)", 5, 50, 20, key="ma_short")
     with col2:
-        ma_long = st.slider("Media Móvil Larga (días)", 50, 200, 100)
+        ma_long = st.slider("Media Móvil Larga (días)", 50, 200, 100, key="ma_long")
     
-    df = df.sort_values('Fecha')
-    df['MA_short'] = df[capital_col].rolling(ma_short).mean()
-    df['MA_long'] = df[capital_col].rolling(ma_long).mean()
+    # Calcular medias móviles
+    df['MA_Corta'] = df[price_col].rolling(window=ma_short, min_periods=1).mean()
+    df['MA_Larga'] = df[price_col].rolling(window=ma_long, min_periods=1).mean()
     
+    # Crear gráfico
     fig = px.line(
         df,
         x='Fecha',
-        y=[capital_col, 'MA_short', 'MA_long'],
+        y=[price_col, 'MA_Corta', 'MA_Larga'],
         title=f'Medias Móviles ({ma_short}/{ma_long} días)',
-        labels={'value': 'Capital', 'variable': 'Indicador'},
-        template="plotly_dark"
+        labels={'value': 'Valor ($)', 'variable': 'Serie'},
+        template="plotly_dark",
+        color_discrete_map={
+            price_col: '#3f33ff',
+            'MA_Corta': '#67e4da',
+            'MA_Larga': '#ff6b6b'
+        }
     )
     
-    # Personalizar colores
-    fig.update_traces(line=dict(width=2.5))
+    # Personalizar gráfico
     fig.update_layout(
         hovermode="x unified",
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1
-        )
+        legend_title_text='Indicadores',
+        height=500
     )
     
+    # Mostrar gráfico
     st.plotly_chart(fig, use_container_width=True)
+    
+    # Señales de trading básicas
+    df['Signal'] = 0
+    df.loc[df['MA_Corta'] > df['MA_Larga'], 'Signal'] = 1
+    df.loc[df['MA_Corta'] <= df['MA_Larga'], 'Signal'] = -1
+    df['Signal_Change'] = df['Signal'].diff()
+    
+    # Mostrar estadísticas de señales
+    st.markdown("**Señales de Trading**")
+    col_stats1, col_stats2, col_stats3 = st.columns(3)
+    
+    with col_stats1:
+        st.metric("Señales Alcistas", len(df[df['Signal'] == 1]))
+    
+    with col_stats2:
+        st.metric("Señales Bajistas", len(df[df['Signal'] == -1]))
+    
+    with col_stats3:
+        buy_signals = len(df[df['Signal_Change'] == 2])
+        st.metric("Señales de Compra", buy_signals)
 
 # =============================================
-# ANÁLISIS DE RIESGO
+# ANÁLISIS DE RIESGO CORREGIDO
 # =============================================
 
-def risk_analysis(df):
+def risk_analysis(df, price_col='Capital Invertido', returns_col='Ganancias/Pérdidas Brutas'):
+    """Función corregida para análisis de riesgo"""
     st.subheader("📉 Análisis de Riesgo")
     
-    if 'Ganancias/Pérdidas Brutas' not in df.columns:
-        st.warning("No hay datos de ganancias/pérdidas para análisis de riesgo")
+    # Verificar columnas requeridas
+    required_cols = [price_col, 'Fecha']
+    missing_cols = [col for col in required_cols if col not in df.columns]
+    
+    if missing_cols:
+        st.warning(f"Faltan columnas requeridas: {', '.join(missing_cols)}")
         return
+    
+    # Ordenar por fecha
+    df = df.sort_values('Fecha').copy()
+    
+    # Calcular retornos diarios (usando el capital invertido si no hay columna de ganancias)
+    if returns_col in df.columns:
+        df['Retorno'] = df[returns_col].pct_change().fillna(0)
+    else:
+        df['Retorno'] = df[price_col].pct_change().fillna(0)
     
     # Calcular métricas de riesgo
-    returns = df['Ganancias/Pérdidas Brutas'].pct_change().dropna()
+    volatility = df['Retorno'].std() * (252 ** 0.5)  # Volatilidad anualizada
     
-    if len(returns) < 2:
-        st.warning("No hay suficientes datos para calcular métricas de riesgo")
-        return
+    # Calcular drawdown
+    df['Capital_Acumulado'] = (1 + df['Retorno']).cumprod()
+    df['Max_Anterior'] = df['Capital_Acumulado'].cummax()
+    df['Drawdown'] = (df['Capital_Acumulado'] / df['Max_Anterior']) - 1
+    max_drawdown = df['Drawdown'].min()
     
-    volatility = returns.std() * (252 ** 0.5)  # Volatilidad anualizada
-    max_drawdown = (returns.cumsum().max() - returns.cumsum()[-1]) / returns.cumsum().max()
+    # Calcular ratio de Sharpe (asumiendo tasa libre de riesgo 0)
+    sharpe_ratio = df['Retorno'].mean() / df['Retorno'].std() * (252 ** 0.5) if df['Retorno'].std() != 0 else 0
     
     # Mostrar métricas en cards
     col1, col2, col3 = st.columns(3)
     with col1:
-        display_kpi("Volatilidad Anualizada", volatility, "📊", is_percentage=True)
+        display_kpi("Volatilidad Anualizada", volatility*100, "📉", is_percentage=True)
     with col2:
-        display_kpi("Máximo Drawdown", max_drawdown, "⬇️", is_percentage=True)
+        display_kpi("Máximo Drawdown", max_drawdown*100, "⬇️", is_percentage=True)
     with col3:
-        positive_ratio = len(returns[returns > 0]) / len(returns)
-        display_kpi("Ratio Positivos", positive_ratio, "✅", is_percentage=True)
+        display_kpi("Ratio de Sharpe", sharpe_ratio, "📈", is_percentage=False)
+    
+    # Gráfico de evolución del drawdown
+    st.markdown("**Evolución del Drawdown**")
+    fig_drawdown = px.area(
+        df,
+        x='Fecha',
+        y='Drawdown',
+        title='Drawdown Histórico',
+        labels={'Drawdown': 'Drawdown (%)', 'Fecha': 'Fecha'},
+        template="plotly_dark"
+    )
+    fig_drawdown.update_yaxes(tickformat=".1%")
+    fig_drawdown.update_layout(height=400)
+    st.plotly_chart(fig_drawdown, use_container_width=True)
     
     # Gráfico de distribución de rendimientos
+    st.markdown("**Distribución de Rendimientos Diarios**")
     fig_dist = px.histogram(
-        returns,
-        nbins=30,
-        title="Distribución de Rendimientos Diarios",
-        labels={'value': 'Rendimiento', 'count': 'Frecuencia'},
+        df,
+        x='Retorno',
+        nbins=50,
+        title="Distribución de Rendimientos",
+        labels={'Retorno': 'Rendimiento', 'count': 'Frecuencia'},
         template="plotly_dark"
     )
     fig_dist.add_vline(x=0, line_dash="dash", line_color="red")
+    fig_dist.update_xaxes(tickformat=".1%")
+    fig_dist.update_layout(height=400, bargap=0.1)
     st.plotly_chart(fig_dist, use_container_width=True)
+    
+    # Mostrar estadísticas adicionales
+    positive_returns = len(df[df['Retorno'] > 0])
+    negative_returns = len(df[df['Retorno'] < 0])
+    neutral_returns = len(df[df['Retorno'] == 0])
+    
+    col_stats1, col_stats2, col_stats3 = st.columns(3)
+    with col_stats1:
+        st.metric("Días con ganancias", f"{positive_returns} ({positive_returns/len(df)*100:.1f}%)")
+    
+    with col_stats2:
+        st.metric("Días con pérdidas", f"{negative_returns} ({negative_returns/len(df)*100:.1f}%)")
+    
+    with col_stats3:
+        st.metric("Días neutrales", f"{neutral_returns} ({neutral_returns/len(df)*100:.1f}%)")
 
 # =============================================
 # INTERFAZ PRINCIPAL MEJORADA
@@ -302,6 +382,19 @@ def main():
         }
         .stButton>button:hover {
             background-color: #4d42ff;
+        }
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 10px;
+        }
+        .stTabs [data-baseweb="tab"] {
+            height: 50px;
+            padding: 0 20px;
+            background-color: #1e1e1e;
+            border-radius: 4px 4px 0 0;
+            border: 1px solid #3f33ff;
+        }
+        .stTabs [aria-selected="true"] {
+            background-color: #3f33ff;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -477,16 +570,12 @@ def main():
                         st.error(f"Error al generar gráfico de comisiones: {str(e)}")
             
             with tab2:
-                if 'Capital Invertido' in filtered_df.columns and 'Fecha' in filtered_df.columns:
-                    plot_moving_averages(filtered_df)
-                else:
-                    st.warning("Se requieren columnas 'Capital Invertido' y 'Fecha' para el análisis técnico")
+                plot_moving_averages(filtered_df)
             
             with tab3:
-                if 'Ganancias/Pérdidas Brutas' in filtered_df.columns:
-                    risk_analysis(filtered_df)
-                else:
-                    st.warning("Se requiere columna 'Ganancias/Pérdidas Brutas' para el análisis de riesgo")
+                # Usamos 'Ganancias/Pérdidas Brutas' para retornos si existe, sino usamos 'Capital Invertido'
+                returns_col = 'Ganancias/Pérdidas Brutas' if 'Ganancias/Pérdidas Brutas' in filtered_df.columns else None
+                risk_analysis(filtered_df, returns_col=returns_col)
             
             # =============================================
             # SECCIÓN DE EXPORTACIÓN DE DATOS
@@ -508,8 +597,8 @@ def main():
                     )
             
             with col_export2:
-                if st.button("📊 Exportar Gráficos a PNG"):
-                    # Implementar exportación de gráficos
+                if st.button("📊 Exportar Reporte Completo"):
+                    # Implementar exportación de reporte
                     st.warning("Funcionalidad en desarrollo - próximamente disponible")
         
         except Exception as e:
