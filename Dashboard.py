@@ -1,4 +1,9 @@
 import streamlit as st
+import pandas as pd
+import plotly.express as px
+from datetime import datetime
+import base64
+from io import BytesIO
 
 # Configuración inicial de la página (DEBE SER EL PRIMER COMANDO)
 st.set_page_config(
@@ -6,14 +11,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
-# Resto de imports
-import pandas as pd
-import plotly.express as px
-from datetime import datetime
-import base64
-from io import BytesIO
-import time
 
 # Configuración para metric cards
 try:
@@ -120,10 +117,10 @@ def advanced_filters(df):
     return filtered_df
 
 # =============================================
-# FUNCIÓN PARA MOSTRAR KPIs CON ESTILOS DE TEMA
+# FUNCIÓN PARA MOSTRAR KPIs CON ESTILOS MEJORADOS
 # =============================================
 
-def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False, delta=None, theme="oscuro"):
+def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False, delta=None):
     if pd.isna(value) or value is None:
         value_display = "N/D"
         delta_display = None
@@ -137,15 +134,11 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
         
         delta_display = delta
     
-    # Estilos basados en el tema
-    if theme == "oscuro":
-        bg_color = "3f33ff"
-        text_color = "#ffffff"
-        border_color = "#67e4da"
-    else:
-        bg_color = "3f33ff"
-        text_color = "#000000"  # Texto negro para tema claro
-        border_color = "#67e4da"
+    # Estilos mejorados para tema oscuro
+    bg_color = "#1e1e1e"
+    text_color = "#ffffff"
+    border_color = "#3f33ff"
+    highlight_color = "#67e4da"
     
     if METRIC_CARDS_ENABLED:
         metric_card(
@@ -158,8 +151,12 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
             border_size_px=2
         )
     else:
-        delta_color = "color: green;" if delta_display and str(delta_display).startswith('+') else "color: red;"
-        delta_html = f"<div style='{delta_color} font-size: 14px;'>{delta_display}</div>" if delta_display else ""
+        delta_color = "#4CAF50" if delta_display and str(delta_display).startswith('+') else "#F44336"
+        delta_html = f"""
+        <div style='color: {delta_color}; font-size: 14px; margin-top: 5px;'>
+            {delta_display if delta_display else ''}
+        </div>
+        """ if delta_display else ""
         
         st.markdown(f"""
         <div style="
@@ -167,92 +164,187 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
             color: {text_color};
             border-radius: 10px;
             padding: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
             margin-bottom: 20px;
-            border-left: 4px solid {border_color};
+            border-left: 4px solid {highlight_color};
+            transition: transform 0.2s;
         ">
-            <div style="font-weight: 600; font-size: 14px;">{icon} {title}</div>
+            <div style="font-weight: 600; font-size: 14px; color: {highlight_color};">{icon} {title}</div>
             <div style="font-weight: 700; font-size: 24px; margin: 10px 0;">{value_display}</div>
             {delta_html}
         </div>
         """, unsafe_allow_html=True)
 
 # =============================================
-# INTERFAZ PRINCIPAL
+# ANÁLISIS TÉCNICO - MEDIAS MÓVILES
+# =============================================
+
+def plot_moving_averages(df, capital_col='Capital Invertido'):
+    st.subheader("📊 Análisis Técnico - Medias Móviles")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        ma_short = st.slider("Media Móvil Corta (días)", 5, 50, 20)
+    with col2:
+        ma_long = st.slider("Media Móvil Larga (días)", 50, 200, 100)
+    
+    df = df.sort_values('Fecha')
+    df['MA_short'] = df[capital_col].rolling(ma_short).mean()
+    df['MA_long'] = df[capital_col].rolling(ma_long).mean()
+    
+    fig = px.line(
+        df,
+        x='Fecha',
+        y=[capital_col, 'MA_short', 'MA_long'],
+        title=f'Medias Móviles ({ma_short}/{ma_long} días)',
+        labels={'value': 'Capital', 'variable': 'Indicador'},
+        template="plotly_dark"
+    )
+    
+    # Personalizar colores
+    fig.update_traces(line=dict(width=2.5))
+    fig.update_layout(
+        hovermode="x unified",
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1
+        )
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+
+# =============================================
+# ANÁLISIS DE RIESGO
+# =============================================
+
+def risk_analysis(df):
+    st.subheader("📉 Análisis de Riesgo")
+    
+    if 'Ganancias/Pérdidas Brutas' not in df.columns:
+        st.warning("No hay datos de ganancias/pérdidas para análisis de riesgo")
+        return
+    
+    # Calcular métricas de riesgo
+    returns = df['Ganancias/Pérdidas Brutas'].pct_change().dropna()
+    
+    if len(returns) < 2:
+        st.warning("No hay suficientes datos para calcular métricas de riesgo")
+        return
+    
+    volatility = returns.std() * (252 ** 0.5)  # Volatilidad anualizada
+    max_drawdown = (returns.cumsum().max() - returns.cumsum()[-1]) / returns.cumsum().max()
+    
+    # Mostrar métricas en cards
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        display_kpi("Volatilidad Anualizada", volatility, "📊", is_percentage=True)
+    with col2:
+        display_kpi("Máximo Drawdown", max_drawdown, "⬇️", is_percentage=True)
+    with col3:
+        positive_ratio = len(returns[returns > 0]) / len(returns)
+        display_kpi("Ratio Positivos", positive_ratio, "✅", is_percentage=True)
+    
+    # Gráfico de distribución de rendimientos
+    fig_dist = px.histogram(
+        returns,
+        nbins=30,
+        title="Distribución de Rendimientos Diarios",
+        labels={'value': 'Rendimiento', 'count': 'Frecuencia'},
+        template="plotly_dark"
+    )
+    fig_dist.add_vline(x=0, line_dash="dash", line_color="red")
+    st.plotly_chart(fig_dist, use_container_width=True)
+
+# =============================================
+# INTERFAZ PRINCIPAL MEJORADA
 # =============================================
 
 def main():
-    # Inicializar el tema en session_state si no existe
-    if 'theme' not in st.session_state:
-        st.session_state.theme = "oscuro"
+    st.title("📊 Fondo de Inversión Fallone Investment")
     
-    with st.sidebar:
-        st.title("⚙️ Configuración")
-        # Usamos un callback para actualizar el tema
-        def update_theme():
-            st.session_state.theme = st.session_state.theme_selector
-        
-        theme = st.radio(
-            "Seleccionar tema",
-            ["Claro", "Oscuro"],
-            index=0 if st.session_state.theme == "claro" else 1,
-            key="theme_selector",
-            on_change=update_theme
-        )
-        animations = st.checkbox("Activar animaciones", value=True)
-
-    if animations:
-        with st.empty():
-            for i in range(3):
-                st.title(f"📊 Fondo de Inversión Fallone Investment{'...'[:i]}")
-                time.sleep(0.3)
-            st.title("📊 Fondo de Inversión Fallone Investment")
-    else:
-        st.title("📊 Fondo de Inversión Fallone Investment")
-
+    # Aplicar tema oscuro global
+    st.markdown("""
+    <style>
+        .stApp {
+            background-color: #121212;
+            color: #ffffff;
+        }
+        .stSidebar {
+            background-color: #1e1e1e !important;
+            color: #ffffff;
+        }
+        .css-1aumxhk {
+            background-color: #1e1e1e;
+            color: #ffffff;
+        }
+        .st-b7 {
+            color: #ffffff;
+        }
+        .stTextInput, .stTextArea, .stSelectbox, .stSlider, .stDateInput {
+            background-color: #2d2d2d;
+            color: #ffffff;
+        }
+        .st-bb {
+            background-color: transparent;
+        }
+        .st-cb {
+            background-color: #2d2d2d;
+        }
+        .stButton>button {
+            background-color: #3f33ff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 0.5rem 1rem;
+        }
+        .stButton>button:hover {
+            background-color: #4d42ff;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    
     uploaded_file = st.file_uploader("📤 Subir archivo Excel", type=['xlsx', 'xls'])
-
+    
     if uploaded_file is not None:
-        if animations:
-            with st.spinner('Cargando datos...'):
-                time.sleep(1)
-        
         try:
             xls = pd.ExcelFile(uploaded_file)
             sheet_names = xls.sheet_names
             selected_sheet = st.selectbox("📋 Seleccionar hoja de trabajo", sheet_names)
             df = pd.read_excel(uploaded_file, sheet_name=selected_sheet)
-
+            
             df = df.loc[:, ~df.columns.duplicated()]
-
+            
             rename_dict = {
                 'Ganacias/Pérdidas Brutas': 'Ganancias/Pérdidas Brutas',
                 'Ganacias/Pérdidas Netas': 'Ganancias/Pérdidas Netas',
                 'Beneficio en %': 'Beneficio %'
             }
-
+            
             for old_name, new_name in rename_dict.items():
                 if old_name in df.columns and new_name not in df.columns:
                     df = df.rename(columns={old_name: new_name})
-
+            
             if 'Comisiones 10 %' in df.columns:
                 if 'Comisiones Pagadas' not in df.columns:
                     df = df.rename(columns={'Comisiones 10 %': 'Comisiones Pagadas'})
                 else:
                     df = df.drop(columns=['Comisiones 10 %'])
-
+            
             capital_inicial = df['Aumento Capital'].iloc[1] if len(df) > 1 else 0
             id_inversionista = df['ID Inv'].iloc[1] if len(df) > 1 else "N/D"
             
             filtered_df = advanced_filters(df)
-
+            
             required_columns = ['Fecha', 'Capital Invertido', 'Aumento Capital', 'ID Inv', 'Retiro de Fondos']
             missing_cols = [col for col in required_columns if col not in filtered_df.columns]
             
             if missing_cols:
                 st.error(f"🚨 Error: Faltan columnas críticas: {', '.join(missing_cols)}")
                 st.stop()
-
+            
             st.success(f"✅ Datos cargados correctamente ({len(filtered_df)} registros)")
             
             # Mostrar advertencia solo si no hay metric cards
@@ -260,176 +352,170 @@ def main():
                 st.warning("Para mejores visualizaciones, instala: pip install streamlit-extras")
             
             # =============================================
-            # SECCIÓN DE KPIs CON TEMA APLICADO
+            # SECCIÓN DE KPIs MEJORADA
             # =============================================
             
             st.markdown("---")
-            st.markdown(f'<h2 style="color: { "3f33ff" if st.session_state.theme == "oscuro" else "3f33ff" }; border-bottom: 2px solid #67e4da; padding-bottom: 10px;">📊 KPIs Financieros</h2>', unsafe_allow_html=True)
-
+            st.markdown('<h2 style="color: #3f33ff; border-bottom: 2px solid #67e4da; padding-bottom: 10px;">📊 KPIs Financieros</h2>', unsafe_allow_html=True)
+            
             # Primera fila de KPIs
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                display_kpi("ID Inversionista", id_inversionista, "🆔", is_currency=False, theme=st.session_state.theme)
+                display_kpi("ID Inversionista", id_inversionista, "🆔", is_currency=False)
             with col2:
-                display_kpi("Capital Inicial", capital_inicial, "🏁", theme=st.session_state.theme)
+                display_kpi("Capital Inicial", capital_inicial, "🏁")
             with col3:
                 current_capital = filtered_df['Capital Invertido'].iloc[-1] if len(filtered_df) > 0 else 0
                 delta_capital = current_capital - capital_inicial if len(filtered_df) > 0 else 0
-                display_kpi("Capital Actual", current_capital, "🏦", delta=f"{delta_capital:+,.2f}", theme=st.session_state.theme)
+                display_kpi("Capital Actual", current_capital, "🏦", delta=f"{delta_capital:+,.2f}")
             with col4:
                 if 'Ganancias/Pérdidas Brutas' in filtered_df.columns and capital_inicial != 0:
                     ganancias_brutas = filtered_df['Ganancias/Pérdidas Brutas'].sum()
                     porcentaje_beneficio = (ganancias_brutas / (current_capital-ganancias_brutas)) * 100
-                    display_kpi("Porcentaje de Beneficio", porcentaje_beneficio, "📊", is_percentage=True, theme=st.session_state.theme)
+                    display_kpi("Porcentaje de Beneficio", porcentaje_beneficio, "📊", is_percentage=True)
                 else:
-                    display_kpi("Porcentaje de Beneficio", None, "📊", is_percentage=True, theme=st.session_state.theme)
-
+                    display_kpi("Porcentaje de Beneficio", None, "📊", is_percentage=True)
+            
             # Segunda fila de KPIs
             col5, col6, col7, col8 = st.columns(4)
             with col5:
                 total_aumentos = filtered_df['Aumento Capital'].sum()
-                display_kpi("Total Aumentos de Capital", total_aumentos, "📈", theme=st.session_state.theme)
+                display_kpi("Total Aumentos de Capital", total_aumentos, "📈")
             with col6:
                 ganancias_brutas = filtered_df['Ganancias/Pérdidas Brutas'].sum() if 'Ganancias/Pérdidas Brutas' in filtered_df.columns else None
-                display_kpi("Ganancias Brutas", ganancias_brutas, "💵", theme=st.session_state.theme)
+                display_kpi("Ganancias Brutas", ganancias_brutas, "💵")
             with col7:
                 ganancias_netas = filtered_df['Ganancias/Pérdidas Netas'].sum() if 'Ganancias/Pérdidas Netas' in filtered_df.columns else None
-                display_kpi("Ganancias Netas", ganancias_netas, "💰", theme=st.session_state.theme)
+                display_kpi("Ganancias Netas", ganancias_netas, "💰")
             with col8:
                 comisiones = filtered_df['Comisiones Pagadas'].sum() if 'Comisiones Pagadas' in filtered_df.columns else None
-                display_kpi("Comisiones Pagadas", comisiones, "💸", theme=st.session_state.theme)
-
+                display_kpi("Comisiones Pagadas", comisiones, "💸")
+            
             # Tercera fila de KPIs
             col9, col10, col11, col12 = st.columns(4)
             with col9:
                 retiros = filtered_df['Retiro de Fondos'].sum() if 'Retiro de Fondos' in filtered_df.columns else None
-                display_kpi("Retiro de Dinero", retiros, "↘️", theme=st.session_state.theme)
+                display_kpi("Retiro de Dinero", retiros, "↘️")
             
             # =============================================
-            # SECCIÓN DE GRÁFICOS
+            # SECCIÓN DE GRÁFICOS CON TABS
             # =============================================
             
             st.markdown("---")
-            st.markdown(f'<h2 style="color: { "3f33ff" if st.session_state.theme == "oscuro" else "3f33ff" }; border-bottom: 2px solid #67e4da; padding-bottom: 10px;">📈 Visualizaciones</h2>', unsafe_allow_html=True)
+            tab1, tab2, tab3 = st.tabs(["📈 Visualizaciones Principales", "📊 Análisis Técnico", "📉 Análisis de Riesgo"])
             
-            # Configuración de gráficos según el tema
-            plotly_template = "plotly_dark" if st.session_state.theme == "oscuro" else "plotly_white"
+            with tab1:
+                st.markdown('<h3 style="color: #3f33ff;">Visualizaciones Principales</h3>', unsafe_allow_html=True)
+                
+                if 'Fecha' in filtered_df.columns and 'Capital Invertido' in filtered_df.columns:
+                    try:
+                        fig1 = px.line(
+                            filtered_df,
+                            x='Fecha',
+                            y='Capital Invertido',
+                            title='Evolución del Capital Invertido',
+                            labels={'Capital Invertido': 'Monto ($)', 'Fecha': 'Fecha'},
+                            template="plotly_dark"
+                        )
+                        fig1.add_hline(y=capital_inicial, line_dash="dash", line_color="green", 
+                                    annotation_text=f"Capital Inicial: ${capital_inicial:,.2f}", 
+                                    annotation_position="bottom right")
+                        fig1.update_layout(height=400)
+                        st.plotly_chart(fig1, use_container_width=True)
+                    except Exception as e:
+                        st.error(f"Error al generar gráfico de capital: {str(e)}")
+                
+                if 'Ganancias/Pérdidas Brutas' in filtered_df.columns and 'Fecha' in filtered_df.columns:
+                    try:
+                        fig2 = px.bar(
+                            filtered_df,
+                            x='Fecha',
+                            y='Ganancias/Pérdidas Brutas',
+                            title='Ganancias/Pérdidas Brutas por Periodo',
+                            color='Ganancias/Pérdidas Brutas',
+                            color_continuous_scale=px.colors.diverging.RdYlGn,
+                            labels={'Ganancias/Pérdidas Brutas': 'Monto ($)', 'Fecha': 'Fecha'},
+                            template="plotly_dark"
+                        )
+                        fig2.update_layout(height=400)
+                        st.plotly_chart(fig2, use_container_width=True)
+                    except Exception as e:
+                        st.error(f"Error al generar gráfico de ganancias: {str(e)}")
+                
+                if 'Capital Invertido' in filtered_df.columns and 'Ganancias/Pérdidas Brutas' in filtered_df.columns:
+                    try:
+                        fig3 = px.scatter(
+                            filtered_df,
+                            x='Capital Invertido',
+                            y='Ganancias/Pérdidas Brutas',
+                            title='Relación entre Capital Invertido y Ganancias',
+                            color='Ganancias/Pérdidas Brutas',
+                            size='Ganancias/Pérdidas Brutas',
+                            hover_data=['Fecha'],
+                            color_continuous_scale=px.colors.diverging.RdYlGn,
+                            template="plotly_dark"
+                        )
+                        fig3.update_layout(height=500)
+                        st.plotly_chart(fig3, use_container_width=True)
+                    except Exception as e:
+                        st.error(f"Error al generar gráfico de dispersión: {str(e)}")
+                
+                if 'Comisiones Pagadas' in filtered_df.columns and 'Fecha' in filtered_df.columns:
+                    try:
+                        filtered_df['Comisiones Acumuladas'] = filtered_df['Comisiones Pagadas'].cumsum()
+                        fig4 = px.area(
+                            filtered_df,
+                            x='Fecha',
+                            y='Comisiones Acumuladas',
+                            title='Comisiones Pagadas Acumuladas',
+                            labels={'Comisiones Acumuladas': 'Monto ($)', 'Fecha': 'Fecha'},
+                            template="plotly_dark"
+                        )
+                        fig4.update_layout(height=400)
+                        st.plotly_chart(fig4, use_container_width=True)
+                    except Exception as e:
+                        st.error(f"Error al generar gráfico de comisiones: {str(e)}")
             
-            if 'Fecha' in filtered_df.columns and 'Capital Invertido' in filtered_df.columns:
-                try:
-                    fig1 = px.line(
-                        filtered_df,
-                        x='Fecha',
-                        y='Capital Invertido',
-                        title='Evolución del Capital Invertido',
-                        labels={'Capital Invertido': 'Monto ($)', 'Fecha': 'Fecha'},
-                        template=plotly_template
+            with tab2:
+                if 'Capital Invertido' in filtered_df.columns and 'Fecha' in filtered_df.columns:
+                    plot_moving_averages(filtered_df)
+                else:
+                    st.warning("Se requieren columnas 'Capital Invertido' y 'Fecha' para el análisis técnico")
+            
+            with tab3:
+                if 'Ganancias/Pérdidas Brutas' in filtered_df.columns:
+                    risk_analysis(filtered_df)
+                else:
+                    st.warning("Se requiere columna 'Ganancias/Pérdidas Brutas' para el análisis de riesgo")
+            
+            # =============================================
+            # SECCIÓN DE EXPORTACIÓN DE DATOS
+            # =============================================
+            
+            st.markdown("---")
+            st.markdown('<h3 style="color: #3f33ff;">Exportar Datos</h3>', unsafe_allow_html=True)
+            
+            col_export1, col_export2 = st.columns(2)
+            
+            with col_export1:
+                if st.button("📄 Exportar Datos Filtrados a CSV"):
+                    csv = filtered_df.to_csv(index=False).encode('utf-8')
+                    st.download_button(
+                        label="Descargar CSV",
+                        data=csv,
+                        file_name="datos_filtrados_fallone.csv",
+                        mime="text/csv"
                     )
-                    fig1.add_hline(y=capital_inicial, line_dash="dash", line_color="green", 
-                                annotation_text=f"Capital Inicial: ${capital_inicial:,.2f}", 
-                                annotation_position="bottom right")
-                    fig1.update_layout(height=400)
-                    st.plotly_chart(fig1, use_container_width=True)
-                except Exception as e:
-                    st.error(f"Error al generar gráfico de capital: {str(e)}")
-
-            if 'Ganancias/Pérdidas Brutas' in filtered_df.columns and 'Fecha' in filtered_df.columns:
-                try:
-                    fig2 = px.bar(
-                        filtered_df,
-                        x='Fecha',
-                        y='Ganancias/Pérdidas Brutas',
-                        title='Ganancias/Pérdidas Brutas por Periodo',
-                        color='Ganancias/Pérdidas Brutas',
-                        color_continuous_scale=px.colors.diverging.RdYlGn,
-                        labels={'Ganancias/Pérdidas Brutas': 'Monto ($)', 'Fecha': 'Fecha'},
-                        template=plotly_template
-                    )
-                    fig2.update_layout(height=400)
-                    st.plotly_chart(fig2, use_container_width=True)
-                except Exception as e:
-                    st.error(f"Error al generar gráfico de ganancias: {str(e)}")
-
-            if 'Capital Invertido' in filtered_df.columns and 'Ganancias/Pérdidas Brutas' in filtered_df.columns:
-                try:
-                    fig3 = px.scatter(
-                        filtered_df,
-                        x='Capital Invertido',
-                        y='Ganancias/Pérdidas Brutas',
-                        title='Relación entre Capital Invertido y Ganancias',
-                        color='Ganancias/Pérdidas Brutas',
-                        size='Ganancias/Pérdidas Brutas',
-                        hover_data=['Fecha'],
-                        color_continuous_scale=px.colors.diverging.RdYlGn,
-                        template=plotly_template
-                    )
-                    fig3.update_layout(height=500)
-                    st.plotly_chart(fig3, use_container_width=True)
-                except Exception as e:
-                    st.error(f"Error al generar gráfico de dispersión: {str(e)}")
-
-            if 'Comisiones Pagadas' in filtered_df.columns and 'Fecha' in filtered_df.columns:
-                try:
-                    filtered_df['Comisiones Acumuladas'] = filtered_df['Comisiones Pagadas'].cumsum()
-                    fig4 = px.area(
-                        filtered_df,
-                        x='Fecha',
-                        y='Comisiones Acumuladas',
-                        title='Comisiones Pagadas Acumuladas',
-                        labels={'Comisiones Acumuladas': 'Monto ($)', 'Fecha': 'Fecha'},
-                        template=plotly_template
-                    )
-                    fig4.update_layout(height=400)
-                    st.plotly_chart(fig4, use_container_width=True)
-                except Exception as e:
-                    st.error(f"Error al generar gráfico de comisiones: {str(e)}")
-
+            
+            with col_export2:
+                if st.button("📊 Exportar Gráficos a PNG"):
+                    # Implementar exportación de gráficos
+                    st.warning("Funcionalidad en desarrollo - próximamente disponible")
+        
         except Exception as e:
             st.error(f"🚨 Error crítico al procesar el archivo: {str(e)}")
     else:
         st.info("👋 Por favor, sube un archivo Excel para comenzar el análisis")
-
-    # Estilos CSS dinámicos según el tema
-    if st.session_state.theme == "oscuro":
-        st.markdown("""
-        <style>
-            .stApp {
-                background-color: #1a1a1a;
-                color: #ffffff;
-            }
-            .stSidebar {
-                background-color: #262626;
-                color: #ffffff;
-            }
-            .stTextInput, .stTextArea, .stSelectbox, .stSlider, .stDateInput {
-                background-color: #333333;
-                color: #ffffff;
-            }
-            .css-1aumxhk {
-                background-color: #333333;
-            }
-        </style>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown("""
-        <style>
-            .stApp {
-                background-color: #f8f9fa;
-                color: #000000;
-            }
-            .stSidebar {
-                background-color: #ffffff;
-                color: #000000;
-            }
-            .stTextInput, .stTextArea, .stSelectbox, .stSlider, .stDateInput {
-                background-color: #ffffff;
-                color: #000000;
-            }
-            .css-1aumxhk {
-                background-color: #ffffff;
-            }
-        </style>
-        """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
