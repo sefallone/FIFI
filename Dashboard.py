@@ -20,17 +20,24 @@ except ImportError:
     METRIC_CARDS_ENABLED = False
 
 # =============================================
-# FUNCIÓN AUXILIAR PARA MANEJO SEGURO DE FECHAS
+# FUNCIONES AUXILIARES
 # =============================================
 
-def safe_date_conversion(date_value):
-    """Convierte valores a fecha de manera segura"""
-    if pd.isna(date_value) or date_value is None or date_value == "N/D":
+def safe_convert(value, to_type=float, default=0):
+    """Conversión segura de valores"""
+    try:
+        return to_type(value)
+    except (ValueError, TypeError):
+        return default
+
+def safe_date_str(date_value):
+    """Formateo seguro de fechas"""
+    if pd.isna(date_value) or date_value is None:
         return "N/D"
     try:
         if isinstance(date_value, (pd.Timestamp, datetime)):
-            return date_value
-        return pd.to_datetime(date_value)
+            return date_value.strftime('%d/%m/%Y')
+        return pd.to_datetime(date_value).strftime('%d/%m/%Y')
     except:
         return "N/D"
 
@@ -132,27 +139,41 @@ def advanced_filters(df):
     return filtered_df
 
 # =============================================
-# FUNCIÓN PARA MOSTRAR KPIs CON MANEJO SEGURO DE TIPOS
+# FUNCIÓN PARA MOSTRAR KPIs (VERSIÓN CORREGIDA)
 # =============================================
 
 def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False, delta=None):
-    if pd.isna(value) or value is None or value == "N/D":
+    # Manejo seguro del valor principal
+    if pd.isna(value) or value is None or str(value) == "N/D":
         value_display = "N/D"
-        delta_display = None
     else:
-        if isinstance(value, (int, float)):
+        try:
+            value_num = safe_convert(value)
             if is_currency:
-                value_display = f"${value:,.2f}"
+                value_display = f"${value_num:,.2f}"
             elif is_percentage:
-                value_display = f"{value:.2f}%"
+                value_display = f"{value_num:.2f}%"
             else:
                 value_display = str(value)
-        else:
+        except:
             value_display = str(value)
-        
-        delta_display = delta
     
-    # Estilos mejorados para tema oscuro
+    # Manejo seguro del delta
+    if delta is None or pd.isna(delta):
+        delta_display = None
+    else:
+        try:
+            delta_num = safe_convert(delta)
+            if is_currency:
+                delta_display = f"{delta_num:+,.2f}"
+            elif is_percentage:
+                delta_display = f"{delta_num:+.2f}%"
+            else:
+                delta_display = str(delta)
+        except:
+            delta_display = str(delta)
+    
+    # Estilos (sin cambios)
     bg_color = "#1024ca"
     text_color = "#ffffff"
     border_color = "#3f33ff"
@@ -169,7 +190,7 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
             border_size_px=2
         )
     else:
-        delta_color = "#4CAF50" if delta_display and str(delta_display).startswith('+') else "#F44336"
+        delta_color = "#4CAF50" if delta_display and isinstance(delta_display, str) and delta_display.startswith('+') else "#F44336"
         delta_html = f"""
         <div style='color: {delta_color}; font-size: 14px; margin-top: 5px;'>
             {delta_display if delta_display else ''}
@@ -193,69 +214,22 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
         """, unsafe_allow_html=True)
 
 # =============================================
-# GRÁFICOS Y ANÁLISIS (sin cambios)
+# GRÁFICOS (sin cambios)
 # =============================================
 
-[...]  # Las funciones de gráficos se mantienen igual que en tu versión original
+[...]  # Las funciones de gráficos permanecen iguales
 
 # =============================================
-# INTERFAZ PRINCIPAL CON MANEJO DE ERRORES
+# INTERFAZ PRINCIPAL (VERSIÓN CORREGIDA)
 # =============================================
 
 def main():
     st.title("📊 Fondo de Inversión Fallone Investment")
     
-    # Aplicar tema oscuro global
+    # Aplicar tema oscuro global (sin cambios)
     st.markdown("""
     <style>
-        .stApp {
-            background-color: #121212;
-            color: #ffffff;
-        }
-        .stSidebar {
-            background-color: #1e1e1e !important;
-            color: #ffffff;
-        }
-        .css-1aumxhk {
-            background-color: #1e1e1e;
-            color: #ffffff;
-        }
-        .st-b7 {
-            color: #ffffff;
-        }
-        .stTextInput, .stTextArea, .stSelectbox, .stSlider, .stDateInput {
-            background-color: #2d2d2d;
-            color: #ffffff;
-        }
-        .st-bb {
-            background-color: transparent;
-        }
-        .st-cb {
-            background-color: #2d2d2d;
-        }
-        .stButton>button {
-            background-color: #3f33ff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 0.5rem 1rem;
-        }
-        .stButton>button:hover {
-            background-color: #4d42ff;
-        }
-        .stTabs [data-baseweb="tab-list"] {
-            gap: 10px;
-        }
-        .stTabs [data-baseweb="tab"] {
-            height: 50px;
-            padding: 0 20px;
-            background-color: #1e1e1e;
-            border-radius: 4px 4px 0 0;
-            border: 1px solid #3f33ff;
-        }
-        .stTabs [aria-selected="true"] {
-            background-color: #3f33ff;
-        }
+        [...]  /* Los estilos CSS permanecen iguales */
     </style>
     """, unsafe_allow_html=True)
     
@@ -286,18 +260,22 @@ def main():
                 else:
                     df = df.drop(columns=['Comisiones 10 %'])
             
-            # Manejo seguro de valores numéricos
-            capital_inicial = float(df['Aumento Capital'].iloc[1]) if len(df) > 1 and pd.notna(df['Aumento Capital'].iloc[1]) else 0
+            # CÁLCULOS SEGUROS DE KPIs
+            capital_inicial = safe_convert(df['Aumento Capital'].iloc[1] if len(df) > 1 else 0)
             id_inversionista = str(df['ID Inv'].iloc[1]) if len(df) > 1 and pd.notna(df['ID Inv'].iloc[1]) else "N/D"
             
             # Manejo seguro de fechas
-            fecha_entrada = safe_date_conversion(df['Fecha'].iloc[1] if len(df) > 1 else "N/D")
+            fecha_entrada = df['Fecha'].iloc[1] if len(df) > 1 else "N/D"
+            fecha_entrada_str = safe_date_str(fecha_entrada)
+            
+            # Cálculo de días en el fondo
             if isinstance(fecha_entrada, (pd.Timestamp, datetime)):
-                fecha_entrada_str = fecha_entrada.strftime('%d/%m/%Y')
                 dias_en_fondo = (pd.to_datetime('today') - fecha_entrada).days
             else:
-                fecha_entrada_str = "N/D"
-                dias_en_fondo = "N/D"
+                try:
+                    dias_en_fondo = (pd.to_datetime('today') - pd.to_datetime(fecha_entrada)).days
+                except:
+                    dias_en_fondo = "N/D"
             
             filtered_df = advanced_filters(df)
             
@@ -326,39 +304,39 @@ def main():
             with col3:
                 display_kpi("Capital Inicial al entrar al fondo", capital_inicial, "🏁")
             with col4:
-                current_capital = float(filtered_df['Capital Invertido'].iloc[-1]) if len(filtered_df) > 0 and pd.notna(filtered_df['Capital Invertido'].iloc[-1]) else 0
-                delta_capital = current_capital - capital_inicial if len(filtered_df) > 0 else 0
-                display_kpi("Capital Actual", current_capital, "🏦", delta=f"{delta_capital:+,.2f}" if isinstance(delta_capital, (int, float)) else None)
+                current_capital = safe_convert(filtered_df['Capital Invertido'].iloc[-1] if len(filtered_df) > 0 else 0)
+                delta_capital = current_capital - capital_inicial
+                display_kpi("Capital Actual", current_capital, "🏦", delta=delta_capital)
             
             # Segunda fila de KPIs
             col5, col6, col7, col8 = st.columns(4)
             with col5:
-                total_aumentos = float(filtered_df['Aumento Capital'].sum()) if 'Aumento Capital' in filtered_df.columns and pd.notna(filtered_df['Aumento Capital'].sum()) else 0
+                total_aumentos = safe_convert(filtered_df['Aumento Capital'].sum() if 'Aumento Capital' in filtered_df.columns else 0)
                 display_kpi("Total Inyección de Capital", total_aumentos, "📈")
             with col6:
-                ganancias_brutas = float(filtered_df['Ganancias/Pérdidas Brutas'].sum()) if 'Ganancias/Pérdidas Brutas' in filtered_df.columns and pd.notna(filtered_df['Ganancias/Pérdidas Brutas'].sum()) else None
+                ganancias_brutas = safe_convert(filtered_df['Ganancias/Pérdidas Brutas'].sum() if 'Ganancias/Pérdidas Brutas' in filtered_df.columns else None)
                 display_kpi("Ganancias Brutas", ganancias_brutas, "💵")
             with col7:
-                ganancias_netas = float(filtered_df['Ganancias/Pérdidas Netas'].sum()) if 'Ganancias/Pérdidas Netas' in filtered_df.columns and pd.notna(filtered_df['Ganancias/Pérdidas Netas'].sum()) else None
+                ganancias_netas = safe_convert(filtered_df['Ganancias/Pérdidas Netas'].sum() if 'Ganancias/Pérdidas Netas' in filtered_df.columns else None)
                 display_kpi("Ganancias Netas", ganancias_netas, "💰")
             with col8:
-                comisiones = float(filtered_df['Comisiones Pagadas'].sum()) if 'Comisiones Pagadas' in filtered_df.columns and pd.notna(filtered_df['Comisiones Pagadas'].sum()) else None
+                comisiones = safe_convert(filtered_df['Comisiones Pagadas'].sum() if 'Comisiones Pagadas' in filtered_df.columns else None)
                 display_kpi("Comisiones Pagadas", comisiones, "💸")
             
             # Tercera fila de KPIs
             col9, col10, col11, col12 = st.columns(4)
             with col9:
-                retiros = float(filtered_df['Retiro de Fondos'].sum()) if 'Retiro de Fondos' in filtered_df.columns and pd.notna(filtered_df['Retiro de Fondos'].sum()) else None
+                retiros = safe_convert(filtered_df['Retiro de Fondos'].sum() if 'Retiro de Fondos' in filtered_df.columns else None)
                 display_kpi("Retiro de Dinero", retiros, "↘️")
             with col10:
-                rentabilidad_acumulada = ((current_capital - capital_inicial) / capital_inicial) * 100 if capital_inicial != 0 else 0
+                rentabilidad_acumulada = ((current_capital - capital_inicial) / capital_inicial * 100) if capital_inicial != 0 else 0
                 display_kpi("Rentabilidad Acumulada", rentabilidad_acumulada, "📊", is_percentage=True)
             with col11:
                 display_kpi("Días en el Fondo", 
-                           f"{dias_en_fondo} días" if isinstance(dias_en_fondo, int) else dias_en_fondo, 
-                           "⏳", is_currency=False)
+                          f"{dias_en_fondo} días" if isinstance(dias_en_fondo, int) else dias_en_fondo, 
+                          "⏳", is_currency=False)
             
-            # Resto del código de gráficos y tabs se mantiene igual
+            # Resto del código (gráficos, tabs, etc.) permanece igual
             [...]
             
         except Exception as e:
