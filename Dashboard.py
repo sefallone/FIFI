@@ -4,7 +4,6 @@ import plotly.express as px
 from datetime import datetime
 import base64
 from io import BytesIO
-import numpy as np
 
 # Configuración inicial de la página
 st.set_page_config(
@@ -176,115 +175,41 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
         """, unsafe_allow_html=True)
 
 # =============================================
-# ANÁLISIS TÉCNICO - MEDIAS MÓVILES
+# GRÁFICO DE RELACIÓN CAPITAL-GANANCIAS
 # =============================================
 
-def plot_moving_averages(df, price_col='Capital Invertido'):
-    """Función para calcular y mostrar medias móviles"""
-    st.subheader("📊 Análisis Técnico - Medias Móviles")
-    
-    if price_col not in df.columns or 'Fecha' not in df.columns:
-        st.warning("Se requieren columnas 'Fecha' y 'Capital Invertido' para el análisis técnico")
+def plot_capital_profit_relation(df):
+    """Muestra la relación porcentual entre capital invertido y ganancias brutas"""
+    if 'Capital Invertido' not in df.columns or 'Ganancias/Pérdidas Brutas' not in df.columns:
+        st.warning("No se pueden calcular las métricas de relación. Faltan columnas necesarias.")
         return
     
-    df = df.sort_values('Fecha').copy()
+    # Calcular el porcentaje de ganancias sobre el capital
+    df['Porcentaje_Ganancias'] = (df['Ganancias/Pérdidas Brutas'] / df['Capital Invertido']) * 100
     
-    col1, col2 = st.columns(2)
-    with col1:
-        ma_short = st.slider("Media Móvil Corta (días)", 5, 50, 20, key="ma_short")
-    with col2:
-        ma_long = st.slider("Media Móvil Larga (días)", 50, 200, 100, key="ma_long")
-    
-    df['MA_Corta'] = df[price_col].rolling(window=ma_short, min_periods=1).mean()
-    df['MA_Larga'] = df[price_col].rolling(window=ma_long, min_periods=1).mean()
-    
-    fig = px.line(
+    # Crear el gráfico
+    fig = px.bar(
         df,
         x='Fecha',
-        y=[price_col, 'MA_Corta', 'MA_Larga'],
-        title=f'Medias Móviles ({ma_short}/{ma_long} días)',
-        labels={'value': 'Valor ($)', 'variable': 'Serie'},
-        template="plotly_dark",
-        color_discrete_map={
-            price_col: '#3f33ff',
-            'MA_Corta': '#67e4da',
-            'MA_Larga': '#ff6b6b'
-        }
+        y='Porcentaje_Ganancias',
+        title='Relación Porcentual: Ganancias Brutas / Capital Invertido',
+        labels={'Porcentaje_Ganancias': 'Porcentaje de Ganancias (%)', 'Fecha': 'Fecha'},
+        color='Porcentaje_Ganancias',
+        color_continuous_scale=px.colors.diverging.RdYlGn,
+        template="plotly_dark"
     )
     
+    # Añadir línea en el 0% como referencia
+    fig.add_hline(y=0, line_dash="dash", line_color="white")
+    
+    # Personalizar el gráfico
     fig.update_layout(
-        hovermode="x unified",
-        legend_title_text='Indicadores',
-        height=500
+        height=400,
+        yaxis_title="Porcentaje de Ganancias (%)",
+        coloraxis_colorbar=dict(title="% Ganancias")
     )
     
     st.plotly_chart(fig, use_container_width=True)
-
-# =============================================
-# ANÁLISIS DE RIESGO
-# =============================================
-
-def risk_analysis(df, price_col='Capital Invertido', returns_col='Ganancias/Pérdidas Brutas'):
-    """Función para análisis de riesgo"""
-    st.subheader("📉 Análisis de Riesgo")
-    
-    required_cols = [price_col, 'Fecha']
-    missing_cols = [col for col in required_cols if col not in df.columns]
-    
-    if missing_cols:
-        st.warning(f"Faltan columnas requeridas: {', '.join(missing_cols)}")
-        return
-    
-    df = df.sort_values('Fecha').copy()
-    
-    if returns_col in df.columns:
-        df['Retorno'] = df[returns_col].pct_change().fillna(0)
-    else:
-        df['Retorno'] = df[price_col].pct_change().fillna(0)
-    
-    volatility = df['Retorno'].std() * (252 ** 0.5)
-    
-    df['Capital_Acumulado'] = (1 + df['Retorno']).cumprod()
-    df['Max_Anterior'] = df['Capital_Acumulado'].cummax()
-    df['Drawdown'] = (df['Capital_Acumulado'] / df['Max_Anterior']) - 1
-    max_drawdown = df['Drawdown'].min()
-    
-    sharpe_ratio = df['Retorno'].mean() / df['Retorno'].std() * (252 ** 0.5) if df['Retorno'].std() != 0 else 0
-    
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        display_kpi("Volatilidad Anualizada", volatility*100, "📉", is_percentage=True)
-    with col2:
-        display_kpi("Máximo Drawdown", max_drawdown*100, "⬇️", is_percentage=True)
-    with col3:
-        display_kpi("Ratio de Sharpe", sharpe_ratio, "📈", is_percentage=False)
-    
-    st.markdown("**Evolución del Drawdown**")
-    fig_drawdown = px.area(
-        df,
-        x='Fecha',
-        y='Drawdown',
-        title='Drawdown Histórico',
-        labels={'Drawdown': 'Drawdown (%)', 'Fecha': 'Fecha'},
-        template="plotly_dark"
-    )
-    fig_drawdown.update_yaxes(tickformat=".1%")
-    fig_drawdown.update_layout(height=400)
-    st.plotly_chart(fig_drawdown, use_container_width=True)
-    
-    st.markdown("**Distribución de Rendimientos Diarios**")
-    fig_dist = px.histogram(
-        df,
-        x='Retorno',
-        nbins=50,
-        title="Distribución de Rendimientos",
-        labels={'Retorno': 'Rendimiento', 'count': 'Frecuencia'},
-        template="plotly_dark"
-    )
-    fig_dist.add_vline(x=0, line_dash="dash", line_color="red")
-    fig_dist.update_xaxes(tickformat=".1%")
-    fig_dist.update_layout(height=400, bargap=0.1)
-    st.plotly_chart(fig_dist, use_container_width=True)
 
 # =============================================
 # INTERFAZ PRINCIPAL
@@ -331,19 +256,6 @@ def main():
         .stButton>button:hover {
             background-color: #4d42ff;
         }
-        .stTabs [data-baseweb="tab-list"] {
-            gap: 10px;
-        }
-        .stTabs [data-baseweb="tab"] {
-            height: 50px;
-            padding: 0 20px;
-            background-color: #1e1e1e;
-            border-radius: 4px 4px 0 0;
-            border: 1px solid #3f33ff;
-        }
-        .stTabs [aria-selected="true"] {
-            background-color: #3f33ff;
-        }
     </style>
     """, unsafe_allow_html=True)
     
@@ -377,6 +289,11 @@ def main():
             capital_inicial = df['Aumento Capital'].iloc[1] if len(df) > 1 else 0
             id_inversionista = df['ID Inv'].iloc[1] if len(df) > 1 else "N/D"
             
+            # Obtener fecha de entrada (primera fecha disponible)
+            fecha_entrada = df['Fecha'].iloc[0] if len(df) > 0 else "N/D"
+            if isinstance(fecha_entrada, pd.Timestamp):
+                fecha_entrada = fecha_entrada.strftime('%d/%m/%Y')
+            
             filtered_df = advanced_filters(df)
             
             required_columns = ['Fecha', 'Capital Invertido', 'Aumento Capital', 'ID Inv', 'Retiro de Fondos']
@@ -400,18 +317,13 @@ def main():
             with col1:
                 display_kpi("ID Inversionista", id_inversionista, "🆔", is_currency=False)
             with col2:
-                display_kpi("Capital Inicial", capital_inicial, "🏁")
+                display_kpi("Fecha de Entrada", fecha_entrada, "📅", is_currency=False)
             with col3:
+                display_kpi("Capital Inicial", capital_inicial, "🏁")
+            with col4:
                 current_capital = filtered_df['Capital Invertido'].iloc[-1] if len(filtered_df) > 0 else 0
                 delta_capital = current_capital - capital_inicial if len(filtered_df) > 0 else 0
                 display_kpi("Capital Actual", current_capital, "🏦", delta=f"{delta_capital:+,.2f}")
-            with col4:
-                if 'Ganancias/Pérdidas Brutas' in filtered_df.columns and capital_inicial != 0:
-                    ganancias_brutas = filtered_df['Ganancias/Pérdidas Brutas'].sum()
-                    porcentaje_beneficio = (ganancias_brutas / (current_capital-ganancias_brutas)) * 100
-                    display_kpi("Porcentaje de Beneficio", porcentaje_beneficio, "📊", is_percentage=True)
-                else:
-                    display_kpi("Porcentaje de Beneficio", None, "📊", is_percentage=True)
             
             # Segunda fila de KPIs
             col5, col6, col7, col8 = st.columns(4)
@@ -434,73 +346,67 @@ def main():
                 retiros = filtered_df['Retiro de Fondos'].sum() if 'Retiro de Fondos' in filtered_df.columns else None
                 display_kpi("Retiro de Dinero", retiros, "↘️")
             
-            # SECCIÓN DE GRÁFICOS CON TABS
+            # SECCIÓN DE GRÁFICOS PRINCIPALES
             st.markdown("---")
-            tab1, tab2, tab3 = st.tabs(["📈 Visualizaciones Principales", "📊 Análisis Técnico", "📉 Análisis de Riesgo"])
+            st.markdown('<h2 style="color: #3f33ff; border-bottom: 2px solid #67e4da; padding-bottom: 10px;">📈 Visualizaciones Principales</h2>', unsafe_allow_html=True)
             
-            with tab1:
-                st.markdown('<h3 style="color: #3f33ff;">Visualizaciones Principales</h3>', unsafe_allow_html=True)
-                
-                # Gráfico de evolución del capital (sin gráfico de dispersión)
-                if 'Fecha' in filtered_df.columns and 'Capital Invertido' in filtered_df.columns:
-                    try:
-                        fig1 = px.line(
-                            filtered_df,
-                            x='Fecha',
-                            y='Capital Invertido',
-                            title='Evolución del Capital Invertido',
-                            labels={'Capital Invertido': 'Monto ($)', 'Fecha': 'Fecha'},
-                            template="plotly_dark"
-                        )
-                        fig1.add_hline(y=capital_inicial, line_dash="dash", line_color="green", 
-                                    annotation_text=f"Capital Inicial: ${capital_inicial:,.2f}", 
-                                    annotation_position="bottom right")
-                        fig1.update_layout(height=400)
-                        st.plotly_chart(fig1, use_container_width=True)
-                    except Exception as e:
-                        st.error(f"Error al generar gráfico de capital: {str(e)}")
-                
-                # Gráfico de ganancias/pérdidas
-                if 'Ganancias/Pérdidas Brutas' in filtered_df.columns and 'Fecha' in filtered_df.columns:
-                    try:
-                        fig2 = px.bar(
-                            filtered_df,
-                            x='Fecha',
-                            y='Ganancias/Pérdidas Brutas',
-                            title='Ganancias/Pérdidas Brutas por Periodo',
-                            color='Ganancias/Pérdidas Brutas',
-                            color_continuous_scale=px.colors.diverging.RdYlGn,
-                            labels={'Ganancias/Pérdidas Brutas': 'Monto ($)', 'Fecha': 'Fecha'},
-                            template="plotly_dark"
-                        )
-                        fig2.update_layout(height=400)
-                        st.plotly_chart(fig2, use_container_width=True)
-                    except Exception as e:
-                        st.error(f"Error al generar gráfico de ganancias: {str(e)}")
-                
-                # Gráfico de comisiones acumuladas
-                if 'Comisiones Pagadas' in filtered_df.columns and 'Fecha' in filtered_df.columns:
-                    try:
-                        filtered_df['Comisiones Acumuladas'] = filtered_df['Comisiones Pagadas'].cumsum()
-                        fig4 = px.area(
-                            filtered_df,
-                            x='Fecha',
-                            y='Comisiones Acumuladas',
-                            title='Comisiones Pagadas Acumuladas',
-                            labels={'Comisiones Acumuladas': 'Monto ($)', 'Fecha': 'Fecha'},
-                            template="plotly_dark"
-                        )
-                        fig4.update_layout(height=400)
-                        st.plotly_chart(fig4, use_container_width=True)
-                    except Exception as e:
-                        st.error(f"Error al generar gráfico de comisiones: {str(e)}")
+            # Gráfico de evolución del capital
+            if 'Fecha' in filtered_df.columns and 'Capital Invertido' in filtered_df.columns:
+                try:
+                    fig1 = px.line(
+                        filtered_df,
+                        x='Fecha',
+                        y='Capital Invertido',
+                        title='Evolución del Capital Invertido',
+                        labels={'Capital Invertido': 'Monto ($)', 'Fecha': 'Fecha'},
+                        template="plotly_dark"
+                    )
+                    fig1.add_hline(y=capital_inicial, line_dash="dash", line_color="green", 
+                                annotation_text=f"Capital Inicial: ${capital_inicial:,.2f}", 
+                                annotation_position="bottom right")
+                    fig1.update_layout(height=400)
+                    st.plotly_chart(fig1, use_container_width=True)
+                except Exception as e:
+                    st.error(f"Error al generar gráfico de capital: {str(e)}")
             
-            with tab2:
-                plot_moving_averages(filtered_df)
+            # Gráfico de relación porcentual capital-ganancias
+            if 'Capital Invertido' in filtered_df.columns and 'Ganancias/Pérdidas Brutas' in filtered_df.columns:
+                plot_capital_profit_relation(filtered_df)
             
-            with tab3:
-                returns_col = 'Ganancias/Pérdidas Brutas' if 'Ganancias/Pérdidas Brutas' in filtered_df.columns else None
-                risk_analysis(filtered_df, returns_col=returns_col)
+            # Gráfico de ganancias/pérdidas
+            if 'Ganancias/Pérdidas Brutas' in filtered_df.columns and 'Fecha' in filtered_df.columns:
+                try:
+                    fig3 = px.bar(
+                        filtered_df,
+                        x='Fecha',
+                        y='Ganancias/Pérdidas Brutas',
+                        title='Ganancias/Pérdidas Brutas por Periodo',
+                        color='Ganancias/Pérdidas Brutas',
+                        color_continuous_scale=px.colors.diverging.RdYlGn,
+                        labels={'Ganancias/Pérdidas Brutas': 'Monto ($)', 'Fecha': 'Fecha'},
+                        template="plotly_dark"
+                    )
+                    fig3.update_layout(height=400)
+                    st.plotly_chart(fig3, use_container_width=True)
+                except Exception as e:
+                    st.error(f"Error al generar gráfico de ganancias: {str(e)}")
+            
+            # Gráfico de comisiones acumuladas
+            if 'Comisiones Pagadas' in filtered_df.columns and 'Fecha' in filtered_df.columns:
+                try:
+                    filtered_df['Comisiones Acumuladas'] = filtered_df['Comisiones Pagadas'].cumsum()
+                    fig4 = px.area(
+                        filtered_df,
+                        x='Fecha',
+                        y='Comisiones Acumuladas',
+                        title='Comisiones Pagadas Acumuladas',
+                        labels={'Comisiones Acumuladas': 'Monto ($)', 'Fecha': 'Fecha'},
+                        template="plotly_dark"
+                    )
+                    fig4.update_layout(height=400)
+                    st.plotly_chart(fig4, use_container_width=True)
+                except Exception as e:
+                    st.error(f"Error al generar gráfico de comisiones: {str(e)}")
             
             # SECCIÓN DE EXPORTACIÓN DE DATOS
             st.markdown("---")
