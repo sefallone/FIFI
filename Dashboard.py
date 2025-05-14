@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import numpy as np
 from datetime import datetime
 import base64
 from io import BytesIO
@@ -23,6 +24,7 @@ except ImportError:
 # FUNCIÓN DE FILTROS AVANZADOS
 # =============================================
 
+@st.cache_data
 def advanced_filters(df):
     """Función con selector de fechas por mes y año"""
     with st.sidebar.expander("🔍 Filtros Avanzados", expanded=True):
@@ -30,7 +32,8 @@ def advanced_filters(df):
         
         if 'Fecha' in filtered_df.columns:
             try:
-                filtered_df['Fecha'] = pd.to_datetime(filtered_df['Fecha'])
+                filtered_df['Fecha'] = pd.to_datetime(filtered_df['Fecha'], errors='coerce').dt.normalize()
+                filtered_df = filtered_df.dropna(subset=['Fecha'])
                 filtered_df['MesAño'] = filtered_df['Fecha'].dt.to_period('M')
                 
                 min_date = filtered_df['Fecha'].min().to_pydatetime()
@@ -130,7 +133,7 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
         elif is_percentage:
             value_display = f"{value:.2f}%"
         else:
-            value_display = str(value)
+            value_display = f"{value:.2f}" if isinstance(value, (int, float)) else str(value)
         
         delta_display = delta
     
@@ -175,7 +178,7 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
         """, unsafe_allow_html=True)
 
 # =============================================
-# GRÁFICO DE RELACIÓN CAPITAL-GANANCIAS
+# GRÁFICOS MEJORADOS
 # =============================================
 
 def plot_capital_profit_relation(df):
@@ -184,10 +187,8 @@ def plot_capital_profit_relation(df):
         st.warning("No se pueden calcular las métricas de relación. Faltan columnas necesarias.")
         return
     
-    # Calcular el porcentaje de ganancias sobre el capital
     df['Porcentaje_Ganancias'] = (df['Ganancias/Pérdidas Brutas'] / df['Capital Invertido']) * 100
     
-    # Crear el gráfico
     fig = px.bar(
         df,
         x='Fecha',
@@ -199,17 +200,94 @@ def plot_capital_profit_relation(df):
         template="plotly_dark"
     )
     
-    # Añadir línea en el 0% como referencia
     fig.add_hline(y=0, line_dash="dash", line_color="white")
-    
-    # Personalizar el gráfico
-    fig.update_layout(
-        height=400,
-        yaxis_title="Porcentaje de Ganancias (%)",
-        coloraxis_colorbar=dict(title="% Ganancias")
-    )
-    
+    fig.update_layout(height=400, yaxis_title="Porcentaje de Ganancias (%)")
     st.plotly_chart(fig, use_container_width=True)
+
+def plot_bubble_chart(df):
+    """Gráfico de burbujas para relación capital-ganancias"""
+    if all(col in df.columns for col in ['Capital Invertido', 'Ganancias/Pérdidas Brutas', 'Fecha']):
+        fig = px.scatter(
+            df,
+            x='Fecha',
+            y='Ganancias/Pérdidas Brutas',
+            size='Capital Invertido',
+            color='Ganancias/Pérdidas Brutas',
+            title='Relación Capital vs Ganancias',
+            color_continuous_scale=px.colors.diverging.RdYlGn,
+            template="plotly_dark",
+            hover_data=['Capital Invertido']
+        )
+        fig.update_layout(height=500)
+        st.plotly_chart(fig, use_container_width=True)
+
+def plot_waterfall(df):
+    """Gráfico de cascada para flujo de capital"""
+    if all(col in df.columns for col in ['Aumento Capital', 'Retiro de Fondos', 'Ganancias/Pérdidas Netas']):
+        waterfall_df = pd.DataFrame({
+            'measure': ['relative'] * (len(df)-1) + ['total'],
+            'x': df['Fecha'].astype(str),
+            'text': df['Ganancias/Pérdidas Netas'].apply(lambda x: f"${x:+,.2f}"),
+            'y': df['Ganancias/Pérdidas Netas']
+        })
+        fig = px.waterfall(
+            waterfall_df,
+            x='x',
+            y='y',
+            text='text',
+            title='Flujo de Ganancias/Pérdidas Netas',
+            template="plotly_dark"
+        )
+        fig.update_layout(height=400)
+        st.plotly_chart(fig, use_container_width=True)
+
+def plot_correlation_heatmap(df):
+    """Mapa de calor de correlaciones"""
+    numeric_cols = df.select_dtypes(include=['number']).columns
+    if len(numeric_cols) > 1:
+        corr_matrix = df[numeric_cols].corr()
+        fig = px.imshow(
+            corr_matrix,
+            text_auto=True,
+            color_continuous_scale=px.colors.diverging.RdYlGn,
+            title='Correlación entre Variables',
+            template="plotly_dark"
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+# =============================================
+# FUNCIONES DE ANÁLISIS
+# =============================================
+
+def calculate_roi(df, capital_inicial):
+    """Calcula el ROI basado en ganancias netas"""
+    if 'Ganancias/Pérdidas Netas' in df.columns and capital_inicial != 0:
+        ganancias_netas = df['Ganancias/Pérdidas Netas'].sum()
+        return (ganancias_netas / capital_inicial) * 100
+    return 0
+
+def calculate_cagr(df, capital_inicial, current_capital):
+    """Calcula la tasa de crecimiento anual compuesta"""
+    if len(df) > 1 and capital_inicial != 0:
+        periods = (df['Fecha'].iloc[-1] - df['Fecha'].iloc[0]).days / 30
+        return ((current_capital / capital_inicial) ** (1/periods) - 1) * 100
+    return 0
+
+def calculate_sharpe_ratio(df):
+    """Calcula el ratio Sharpe simplificado"""
+    if 'Ganancias/Pérdidas Netas' in df.columns:
+        returns = df['Ganancias/Pérdidas Netas'].pct_change().dropna()
+        if len(returns) > 0:
+            return returns.mean() / returns.std() * (12**0.5)
+    return 0
+
+def calculate_max_drawdown(df):
+    """Calcula el drawdown máximo"""
+    if 'Capital Invertido' in df.columns:
+        df['Capital Acumulado'] = df['Capital Invertido'].cummax()
+        df['Drawdown'] = (df['Capital Invertido'] - df['Capital Acumulado']) / df['Capital Acumulado']
+        return df['Drawdown'].min() * 100 if len(df) > 0 else 0
+    return 0
 
 # =============================================
 # INTERFAZ PRINCIPAL
@@ -266,8 +344,12 @@ def main():
             xls = pd.ExcelFile(uploaded_file)
             sheet_names = xls.sheet_names
             selected_sheet = st.selectbox("📋 Seleccionar hoja de trabajo", sheet_names)
-            df = pd.read_excel(uploaded_file, sheet_name=selected_sheet)
             
+            @st.cache_data
+            def load_data():
+                return pd.read_excel(uploaded_file, sheet_name=selected_sheet)
+            
+            df = load_data()
             df = df.loc[:, ~df.columns.duplicated()]
             
             rename_dict = {
@@ -289,7 +371,6 @@ def main():
             capital_inicial = df['Aumento Capital'].iloc[1] if len(df) > 1 else 0
             id_inversionista = df['ID Inv'].iloc[1] if len(df) > 1 else "N/D"
             
-            # Obtener fecha de entrada (primera fecha disponible)
             fecha_entrada = df['Fecha'].iloc[1] if len(df) > 1 else "N/D"
             if isinstance(fecha_entrada, pd.Timestamp):
                 fecha_entrada = fecha_entrada.strftime('%d/%m/%Y')
@@ -312,6 +393,20 @@ def main():
             st.markdown("---")
             st.markdown('<h2 style="color: #1024ca; border-bottom: 2px solid #1024ca; padding-bottom: 10px;">📊 KPIs Financieros</h2>', unsafe_allow_html=True)
             
+            # Calcular métricas avanzadas
+            current_capital = filtered_df['Capital Invertido'].iloc[-1] if len(filtered_df) > 0 else 0
+            delta_capital = current_capital - capital_inicial if len(filtered_df) > 0 else 0
+            total_aumentos = filtered_df['Aumento Capital'].sum()
+            ganancias_brutas = filtered_df['Ganancias/Pérdidas Brutas'].sum() if 'Ganancias/Pérdidas Brutas' in filtered_df.columns else None
+            ganancias_netas = filtered_df['Ganancias/Pérdidas Netas'].sum() if 'Ganancias/Pérdidas Netas' in filtered_df.columns else None
+            comisiones = filtered_df['Comisiones Pagadas'].sum() if 'Comisiones Pagadas' in filtered_df.columns else None
+            retiros = filtered_df['Retiro de Fondos'].sum() if 'Retiro de Fondos' in filtered_df.columns else None
+            
+            roi = calculate_roi(filtered_df, capital_inicial)
+            cagr = calculate_cagr(filtered_df, capital_inicial, current_capital)
+            sharpe_ratio = calculate_sharpe_ratio(filtered_df)
+            max_drawdown = calculate_max_drawdown(filtered_df)
+            
             # Primera fila de KPIs
             col1, col2, col3, col4 = st.columns(4)
             with col1:
@@ -319,107 +414,151 @@ def main():
             with col2:
                 display_kpi("Fecha de Entrada al Fondo", fecha_entrada, "📅", is_currency=False)
             with col3:
-                display_kpi("Capital Inicial al entrar al fondo", capital_inicial, "🏁")
+                display_kpi("Capital Inicial", capital_inicial, "🏁")
             with col4:
-                current_capital = filtered_df['Capital Invertido'].iloc[-1] if len(filtered_df) > 0 else 0
-                delta_capital = current_capital - capital_inicial if len(filtered_df) > 0 else 0
                 display_kpi("Capital Actual", current_capital, "🏦", delta=f"{delta_capital:+,.2f}")
             
             # Segunda fila de KPIs
             col5, col6, col7, col8 = st.columns(4)
             with col5:
-                total_aumentos = filtered_df['Aumento Capital'].sum()
                 display_kpi("Total Inyección de Capital", total_aumentos, "📈")
             with col6:
-                ganancias_brutas = filtered_df['Ganancias/Pérdidas Brutas'].sum() if 'Ganancias/Pérdidas Brutas' in filtered_df.columns else None
                 display_kpi("Ganancias Brutas", ganancias_brutas, "💵")
             with col7:
-                ganancias_netas = filtered_df['Ganancias/Pérdidas Netas'].sum() if 'Ganancias/Pérdidas Netas' in filtered_df.columns else None
                 display_kpi("Ganancias Netas", ganancias_netas, "💰")
             with col8:
-                comisiones = filtered_df['Comisiones Pagadas'].sum() if 'Comisiones Pagadas' in filtered_df.columns else None
                 display_kpi("Comisiones Pagadas", comisiones, "💸")
             
             # Tercera fila de KPIs
             col9, col10, col11, col12 = st.columns(4)
             with col9:
-                retiros = filtered_df['Retiro de Fondos'].sum() if 'Retiro de Fondos' in filtered_df.columns else None
                 display_kpi("Retiro de Dinero", retiros, "↘️")
+            with col10:
+                display_kpi("ROI", roi, "📊", is_percentage=True)
+            with col11:
+                display_kpi("CAGR Mensual", cagr, "🚀", is_percentage=True)
+            with col12:
+                display_kpi("Drawdown Máximo", max_drawdown, "📉", is_percentage=True)
+            
+            # Cuarta fila de KPIs
+            col13, col14, col15, col16 = st.columns(4)
+            with col13:
+                display_kpi("Ratio Sharpe", sharpe_ratio, "⚖️", is_percentage=False)
             
             # SECCIÓN DE GRÁFICOS PRINCIPALES
             st.markdown("---")
-            st.markdown('<h2 style="color: #1024ca; border-bottom: 2px solid #67e4da; padding-bottom: 10px;">📈 Visualizaciones Principales</h2>', unsafe_allow_html=True)
+            tab1, tab2, tab3 = st.tabs(["📈 Visualizaciones Principales", "📊 Análisis Avanzado", "🔍 Detalle de Datos"])
             
-            # Gráfico de evolución del capital
-            if 'Fecha' in filtered_df.columns and 'Capital Invertido' in filtered_df.columns:
-                try:
-                    fig1 = px.line(
+            with tab1:
+                # Gráfico de evolución del capital
+                if 'Fecha' in filtered_df.columns and 'Capital Invertido' in filtered_df.columns:
+                    try:
+                        fig1 = px.line(
+                            filtered_df,
+                            x='Fecha',
+                            y='Capital Invertido',
+                            title='Evolución del Capital Invertido',
+                            labels={'Capital Invertido': 'Monto ($)', 'Fecha': 'Fecha'},
+                            template="plotly_dark"
+                        )
+                        fig1.add_hline(y=capital_inicial, line_dash="dash", line_color="green", 
+                                    annotation_text=f"Capital Inicial: ${capital_inicial:,.2f}", 
+                                    annotation_position="bottom right")
+                        fig1.update_layout(height=400)
+                        st.plotly_chart(fig1, use_container_width=True)
+                    except Exception as e:
+                        st.error(f"Error al generar gráfico de capital: {str(e)}")
+                
+                # Gráfico de relación porcentual capital-ganancias
+                if 'Capital Invertido' in filtered_df.columns and 'Ganancias/Pérdidas Brutas' in filtered_df.columns:
+                    plot_capital_profit_relation(filtered_df)
+                
+                # Gráfico de ganancias/pérdidas
+                if 'Ganancias/Pérdidas Brutas' in filtered_df.columns and 'Fecha' in filtered_df.columns:
+                    try:
+                        fig3 = px.bar(
+                            filtered_df,
+                            x='Fecha',
+                            y='Ganancias/Pérdidas Brutas',
+                            title='Ganancias/Pérdidas Brutas por Periodo',
+                            color='Ganancias/Pérdidas Brutas',
+                            color_continuous_scale=px.colors.diverging.RdYlGn,
+                            labels={'Ganancias/Pérdidas Brutas': 'Monto ($)', 'Fecha': 'Fecha'},
+                            template="plotly_dark"
+                        )
+                        fig3.update_layout(height=400)
+                        st.plotly_chart(fig3, use_container_width=True)
+                    except Exception as e:
+                        st.error(f"Error al generar gráfico de ganancias: {str(e)}")
+                
+                # Gráfico de comisiones acumuladas
+                if 'Comisiones Pagadas' in filtered_df.columns and 'Fecha' in filtered_df.columns:
+                    try:
+                        filtered_df['Comisiones Acumuladas'] = filtered_df['Comisiones Pagadas'].cumsum()
+                        fig4 = px.area(
+                            filtered_df,
+                            x='Fecha',
+                            y='Comisiones Acumuladas',
+                            title='Comisiones Pagadas Acumuladas',
+                            labels={'Comisiones Acumuladas': 'Monto ($)', 'Fecha': 'Fecha'},
+                            template="plotly_dark"
+                        )
+                        fig4.update_layout(height=400)
+                        st.plotly_chart(fig4, use_container_width=True)
+                    except Exception as e:
+                        st.error(f"Error al generar gráfico de comisiones: {str(e)}")
+            
+            with tab2:
+                st.markdown("### Análisis Avanzado de Rendimiento")
+                
+                # Gráfico de burbujas
+                plot_bubble_chart(filtered_df)
+                
+                # Gráfico de cascada
+                plot_waterfall(filtered_df)
+                
+                # Mapa de calor de correlaciones
+                plot_correlation_heatmap(filtered_df)
+                
+                # Análisis de drawdown
+                if 'Capital Invertido' in filtered_df.columns:
+                    filtered_df['Capital Acumulado'] = filtered_df['Capital Invertido'].cummax()
+                    filtered_df['Drawdown'] = (filtered_df['Capital Invertido'] - filtered_df['Capital Acumulado']) / filtered_df['Capital Acumulado']
+                    
+                    fig_drawdown = px.area(
                         filtered_df,
                         x='Fecha',
-                        y='Capital Invertido',
-                        title='Evolución del Capital Invertido',
-                        labels={'Capital Invertido': 'Monto ($)', 'Fecha': 'Fecha'},
+                        y='Drawdown',
+                        title='Evolución del Drawdown',
+                        labels={'Drawdown': 'Drawdown (%)', 'Fecha': 'Fecha'},
                         template="plotly_dark"
                     )
-                    fig1.add_hline(y=capital_inicial, line_dash="dash", line_color="green", 
-                                annotation_text=f"Capital Inicial: ${capital_inicial:,.2f}", 
-                                annotation_position="bottom right")
-                    fig1.update_layout(height=400)
-                    st.plotly_chart(fig1, use_container_width=True)
-                except Exception as e:
-                    st.error(f"Error al generar gráfico de capital: {str(e)}")
+                    fig_drawdown.update_yaxes(tickformat=".0%")
+                    fig_drawdown.update_layout(height=400)
+                    st.plotly_chart(fig_drawdown, use_container_width=True)
             
-            # Gráfico de relación porcentual capital-ganancias
-            if 'Capital Invertido' in filtered_df.columns and 'Ganancias/Pérdidas Brutas' in filtered_df.columns:
-                plot_capital_profit_relation(filtered_df)
-            
-            # Gráfico de ganancias/pérdidas
-            if 'Ganancias/Pérdidas Brutas' in filtered_df.columns and 'Fecha' in filtered_df.columns:
-                try:
-                    fig3 = px.bar(
-                        filtered_df,
-                        x='Fecha',
-                        y='Ganancias/Pérdidas Brutas',
-                        title='Ganancias/Pérdidas Brutas por Periodo',
-                        color='Ganancias/Pérdidas Brutas',
-                        color_continuous_scale=px.colors.diverging.RdYlGn,
-                        labels={'Ganancias/Pérdidas Brutas': 'Monto ($)', 'Fecha': 'Fecha'},
-                        template="plotly_dark"
+            with tab3:
+                st.markdown("### Datos Filtrados")
+                st.dataframe(filtered_df.style.format({
+                    'Capital Invertido': '${:,.2f}',
+                    'Ganancias/Pérdidas Brutas': '${:,.2f}',
+                    'Ganancias/Pérdidas Netas': '${:,.2f}',
+                    'Comisiones Pagadas': '${:,.2f}',
+                    'Retiro de Fondos': '${:,.2f}'
+                }), use_container_width=True)
+                
+                # SECCIÓN DE EXPORTACIÓN DE DATOS
+                st.markdown("---")
+                st.markdown('<h3 style="color: #3f33ff;">Exportar Datos</h3>', unsafe_allow_html=True)
+                
+                if st.button("📄 Exportar Datos Filtrados a CSV"):
+                    csv = filtered_df.to_csv(index=False).encode('utf-8')
+                    st.download_button(
+                        label="Descargar CSV",
+                        data=csv,
+                        file_name="datos_filtrados_fallone.csv",
+                        mime="text/csv"
                     )
-                    fig3.update_layout(height=400)
-                    st.plotly_chart(fig3, use_container_width=True)
-                except Exception as e:
-                    st.error(f"Error al generar gráfico de ganancias: {str(e)}")
-            
-            # Gráfico de comisiones acumuladas
-            if 'Comisiones Pagadas' in filtered_df.columns and 'Fecha' in filtered_df.columns:
-                try:
-                    filtered_df['Comisiones Acumuladas'] = filtered_df['Comisiones Pagadas'].cumsum()
-                    fig4 = px.area(
-                        filtered_df,
-                        x='Fecha',
-                        y='Comisiones Acumuladas',
-                        title='Comisiones Pagadas Acumuladas',
-                        labels={'Comisiones Acumuladas': 'Monto ($)', 'Fecha': 'Fecha'},
-                        template="plotly_dark"
-                    )
-                    fig4.update_layout(height=400)
-                    st.plotly_chart(fig4, use_container_width=True)
-                except Exception as e:
-                    st.error(f"Error al generar gráfico de comisiones: {str(e)}")
-            
-            # SECCIÓN DE EXPORTACIÓN DE DATOS
-            st.markdown("---")
-            st.markdown('<h3 style="color: #3f33ff;">Exportar Datos</h3>', unsafe_allow_html=True)
-            
-            if st.button("📄 Exportar Datos Filtrados a CSV"):
-                csv = filtered_df.to_csv(index=False).encode('utf-8')
-                st.download_button(
-                    label="Descargar CSV",
-                    data=csv,
-                    file_name="datos_filtrados_fallone.csv",
-                    mime="text/csv"
-                )
         
         except Exception as e:
             st.error(f"🚨 Error crítico al procesar el archivo: {str(e)}")
