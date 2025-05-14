@@ -25,7 +25,7 @@ except ImportError:
 
 def advanced_filters(df):
     """Función con selector de fechas por mes y año"""
-    with st.sidebar.expander("🔍 Filtros Avanzados", expanded=False):
+    with st.sidebar.expander("🔍 Filtros Avanzados", expanded=True):
         filtered_df = df.copy()
         
         if 'Fecha' in filtered_df.columns:
@@ -138,7 +138,7 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
     bg_color = "#1024ca"
     text_color = "#ffffff"
     border_color = "#3f33ff"
-    highlight_color = "#67e4da"
+    highlight_color = "#1024ca"
     
     if METRIC_CARDS_ENABLED:
         metric_card(
@@ -310,7 +310,7 @@ def main():
             
             # SECCIÓN DE KPIs
             st.markdown("---")
-            st.markdown('<h2 style="color: #3f33ff; border-bottom: 2px solid #67e4da; padding-bottom: 10px;">📊 KPIs Financieros</h2>', unsafe_allow_html=True)
+            st.markdown('<h2 style="color: #1024ca; border-bottom: 2px solid #1024ca; padding-bottom: 10px;">📊 KPIs Financieros</h2>', unsafe_allow_html=True)
             
             # Primera fila de KPIs
             col1, col2, col3, col4 = st.columns(4)
@@ -348,7 +348,7 @@ def main():
             
             # SECCIÓN DE GRÁFICOS PRINCIPALES
             st.markdown("---")
-            st.markdown('<h2 style="color: #3f33ff; border-bottom: 2px solid #67e4da; padding-bottom: 10px;">📈 Visualizaciones Principales</h2>', unsafe_allow_html=True)
+            st.markdown('<h2 style="color: #1024ca; border-bottom: 2px solid #67e4da; padding-bottom: 10px;">📈 Visualizaciones Principales</h2>', unsafe_allow_html=True)
             
             # Gráfico de evolución del capital
             if 'Fecha' in filtered_df.columns and 'Capital Invertido' in filtered_df.columns:
