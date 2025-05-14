@@ -135,7 +135,7 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
         delta_display = delta
     
     # Estilos mejorados para tema oscuro
-    bg_color = "#1e1e1e"
+    bg_color = "#1024ca"
     text_color = "#ffffff"
     border_color = "#3f33ff"
     highlight_color = "#67e4da"
@@ -290,7 +290,7 @@ def main():
             id_inversionista = df['ID Inv'].iloc[1] if len(df) > 1 else "N/D"
             
             # Obtener fecha de entrada (primera fecha disponible)
-            fecha_entrada = df['Fecha'].iloc[0] if len(df) > 0 else "N/D"
+            fecha_entrada = df['Fecha'].iloc[1] if len(df) > 1 else "N/D"
             if isinstance(fecha_entrada, pd.Timestamp):
                 fecha_entrada = fecha_entrada.strftime('%d/%m/%Y')
             
@@ -317,9 +317,9 @@ def main():
             with col1:
                 display_kpi("ID Inversionista", id_inversionista, "🆔", is_currency=False)
             with col2:
-                display_kpi("Fecha de Entrada", fecha_entrada, "📅", is_currency=False)
+                display_kpi("Fecha de Entrada al Fondo", fecha_entrada, "📅", is_currency=False)
             with col3:
-                display_kpi("Capital Inicial", capital_inicial, "🏁")
+                display_kpi("Capital Inicial al entrar al fondo", capital_inicial, "🏁")
             with col4:
                 current_capital = filtered_df['Capital Invertido'].iloc[-1] if len(filtered_df) > 0 else 0
                 delta_capital = current_capital - capital_inicial if len(filtered_df) > 0 else 0
@@ -329,7 +329,7 @@ def main():
             col5, col6, col7, col8 = st.columns(4)
             with col5:
                 total_aumentos = filtered_df['Aumento Capital'].sum()
-                display_kpi("Total Aumentos de Capital", total_aumentos, "📈")
+                display_kpi("Total Inyección de Capital", total_aumentos, "📈")
             with col6:
                 ganancias_brutas = filtered_df['Ganancias/Pérdidas Brutas'].sum() if 'Ganancias/Pérdidas Brutas' in filtered_df.columns else None
                 display_kpi("Ganancias Brutas", ganancias_brutas, "💵")
