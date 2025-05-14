@@ -24,7 +24,6 @@ except ImportError:
 # FUNCIÓN DE FILTROS AVANZADOS
 # =============================================
 
-@st.cache_data
 def advanced_filters(df):
     """Función con selector de fechas por mes y año"""
     with st.sidebar.expander("🔍 Filtros Avanzados", expanded=True):
@@ -32,7 +31,7 @@ def advanced_filters(df):
         
         if 'Fecha' in filtered_df.columns:
             try:
-                filtered_df['Fecha'] = pd.to_datetime(filtered_df['Fecha'], errors='coerce').dt.normalize()
+                filtered_df['Fecha'] = pd.to_datetime(filtered_df['Fecha'], errors='coerce')
                 filtered_df = filtered_df.dropna(subset=['Fecha'])
                 filtered_df['MesAño'] = filtered_df['Fecha'].dt.to_period('M')
                 
@@ -49,7 +48,8 @@ def advanced_filters(df):
                         min_value=min_date,
                         max_value=max_date,
                         key="start_date"
-                    ).replace(day=1)
+                    )
+                    start_date = datetime(start_date.year, start_date.month, 1)
                 
                 with col2:
                     end_date = st.date_input(
@@ -58,10 +58,11 @@ def advanced_filters(df):
                         min_value=min_date,
                         max_value=max_date,
                         key="end_date"
-                    ).replace(day=1)
+                    )
+                    end_date = datetime(end_date.year, end_date.month, 1)
                 
-                start_period = pd.to_datetime(start_date).to_period('M')
-                end_period = pd.to_datetime(end_date).to_period('M')
+                start_period = pd.Period(start_date, freq='M')
+                end_period = pd.Period(end_date, freq='M')
                 
                 filtered_df = filtered_df[
                     (filtered_df['MesAño'] >= start_period) & 
@@ -129,9 +130,9 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
         delta_display = None
     else:
         if is_currency:
-            value_display = f"${value:,.2f}"
+            value_display = f"${float(value):,.2f}"
         elif is_percentage:
-            value_display = f"{value:.2f}%"
+            value_display = f"{float(value):.2f}%"
         else:
             value_display = f"{value:.2f}" if isinstance(value, (int, float)) else str(value)
         
@@ -224,26 +225,35 @@ def plot_bubble_chart(df):
 def plot_waterfall(df):
     """Gráfico de cascada para flujo de capital"""
     if all(col in df.columns for col in ['Aumento Capital', 'Retiro de Fondos', 'Ganancias/Pérdidas Netas']):
-        waterfall_df = pd.DataFrame({
-            'measure': ['relative'] * (len(df)-1) + ['total'],
-            'x': df['Fecha'].astype(str),
-            'text': df['Ganancias/Pérdidas Netas'].apply(lambda x: f"${x:+,.2f}"),
-            'y': df['Ganancias/Pérdidas Netas']
-        })
-        fig = px.waterfall(
+        # Crear datos para el gráfico de cascada
+        changes = []
+        running_total = 0
+        
+        for _, row in df.iterrows():
+            change = row['Ganancias/Pérdidas Netas']
+            changes.append({
+                'Fecha': row['Fecha'],
+                'Cambio': change,
+                'Total Acumulado': running_total + change
+            })
+            running_total += change
+        
+        waterfall_df = pd.DataFrame(changes)
+        
+        fig = px.bar(
             waterfall_df,
-            x='x',
-            y='y',
-            text='text',
+            x='Fecha',
+            y='Cambio',
             title='Flujo de Ganancias/Pérdidas Netas',
             template="plotly_dark"
         )
+        
         fig.update_layout(height=400)
         st.plotly_chart(fig, use_container_width=True)
 
 def plot_correlation_heatmap(df):
     """Mapa de calor de correlaciones"""
-    numeric_cols = df.select_dtypes(include=['number']).columns
+    numeric_cols = df.select_dtypes(include=['number']).columns.tolist()
     if len(numeric_cols) > 1:
         corr_matrix = df[numeric_cols].corr()
         fig = px.imshow(
@@ -261,16 +271,20 @@ def plot_correlation_heatmap(df):
 
 def calculate_roi(df, capital_inicial):
     """Calcula el ROI basado en ganancias netas"""
-    if 'Ganancias/Pérdidas Netas' in df.columns and capital_inicial != 0:
+    if 'Ganancias/Pérdidas Netas' in df.columns and capital_inicial and float(capital_inicial) != 0:
         ganancias_netas = df['Ganancias/Pérdidas Netas'].sum()
-        return (ganancias_netas / capital_inicial) * 100
+        return (float(ganancias_netas) / float(capital_inicial)) * 100
     return 0
 
 def calculate_cagr(df, capital_inicial, current_capital):
     """Calcula la tasa de crecimiento anual compuesta"""
-    if len(df) > 1 and capital_inicial != 0:
-        periods = (df['Fecha'].iloc[-1] - df['Fecha'].iloc[0]).days / 30
-        return ((current_capital / capital_inicial) ** (1/periods) - 1) * 100
+    if len(df) > 1 and capital_inicial and float(capital_inicial) != 0:
+        start_date = df['Fecha'].iloc[0]
+        end_date = df['Fecha'].iloc[-1]
+        months = (end_date.year - start_date.year) * 12 + (end_date.month - start_date.month)
+        if months <= 0:
+            months = 1
+        return ((float(current_capital) / float(capital_inicial)) ** (12/months) - 1) * 100
     return 0
 
 def calculate_sharpe_ratio(df):
@@ -278,7 +292,7 @@ def calculate_sharpe_ratio(df):
     if 'Ganancias/Pérdidas Netas' in df.columns:
         returns = df['Ganancias/Pérdidas Netas'].pct_change().dropna()
         if len(returns) > 0:
-            return returns.mean() / returns.std() * (12**0.5)
+            return (returns.mean() / returns.std()) * (np.sqrt(12))
     return 0
 
 def calculate_max_drawdown(df):
