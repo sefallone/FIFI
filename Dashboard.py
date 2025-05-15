@@ -546,60 +546,60 @@ def main():
         st.header("📤 Carga de Datos")
         uploaded_file = st.file_uploader("Subir archivo Excel", type=['xlsx', 'xls'], help="Suba un archivo Excel con los datos de inversión")
         
-        if uploaded_file is not None:
-            try:
-                xls = pd.ExcelFile(uploaded_file)
-                sheet_names = xls.sheet_names
-                selected_sheet = st.selectbox("Seleccionar hoja de trabajo", sheet_names)
-                
-                @st.cache_data
-                def load_data(file, sheet):
-                    return pd.read_excel(file, sheet_name=sheet)
-
-                df = load_data(uploaded_file, selected_sheet)
-                df = df.loc[:, ~df.columns.duplicated()]
-                
-                rename_dict = {
-                    'Ganacias/Pérdidas Brutas': 'Ganancias/Pérdidas Brutas',
-                    'Ganacias/Pérdidas Netas': 'Ganancias/Pérdidas Netas',
-                    'Beneficio en %': 'Beneficio %'
-                }
-                
-                for old_name, new_name in rename_dict.items():
-                    if old_name in df.columns and new_name not in df.columns:
-                        df = df.rename(columns={old_name: new_name})
-                
-                if 'Comisiones 10 %' in df.columns:
-                    if 'Comisiones Pagadas' not in df.columns:
-                        df = df.rename(columns={'Comisiones 10 %': 'Comisiones Pagadas'})
-                    else:
-                        df = df.drop(columns=['Comisiones 10 %'])
-                
-                capital_inicial = df['Aumento Capital'].iloc[1] if len(df) > 1 else 0
-                id_inversionista = df['ID Inv'].iloc[1] if len(df) > 1 else "N/D"
-                
-                fecha_entrada = df['Fecha'].iloc[1] if len(df) > 1 else "N/D"
-                if isinstance(fecha_entrada, pd.Timestamp):
-                    fecha_entrada = fecha_entrada.strftime('%d/%m/%Y')
-                
-                filtered_df = advanced_filters(df)
-                
-                required_columns = ['Fecha', 'Capital Invertido', 'Aumento Capital', 'ID Inv', 'Retiro de Fondos']
-                missing_cols = [col for col in required_columns if col not in filtered_df.columns]
-                
-                if missing_cols:
-                    st.error(f"🚨 Error: Faltan columnas críticas: {', '.join(missing_cols)}")
-                    st.stop()
-                
-                st.success(f"✅ Datos cargados correctamente ({len(filtered_df)} registros)")
-                
-                if not METRIC_CARDS_ENABLED:
-                    st.warning("Para mejores visualizaciones, instala: pip install streamlit-extras")
-            except Exception as e:
-                st.error(f"🚨 Error crítico al procesar el archivo: {str(e)}")
-                st.stop()
-        else:
+        if uploaded_file is None:
             st.info("👋 Por favor, sube un archivo Excel para comenzar el análisis")
+            st.stop()
+        
+        try:
+            xls = pd.ExcelFile(uploaded_file)
+            sheet_names = xls.sheet_names
+            selected_sheet = st.selectbox("Seleccionar hoja de trabajo", sheet_names)
+            
+            @st.cache_data
+            def load_data(file, sheet):
+                return pd.read_excel(file, sheet_name=sheet)
+
+            df = load_data(uploaded_file, selected_sheet)
+            df = df.loc[:, ~df.columns.duplicated()]
+            
+            rename_dict = {
+                'Ganacias/Pérdidas Brutas': 'Ganancias/Pérdidas Brutas',
+                'Ganacias/Pérdidas Netas': 'Ganancias/Pérdidas Netas',
+                'Beneficio en %': 'Beneficio %'
+            }
+            
+            for old_name, new_name in rename_dict.items():
+                if old_name in df.columns and new_name not in df.columns:
+                    df = df.rename(columns={old_name: new_name})
+            
+            if 'Comisiones 10 %' in df.columns:
+                if 'Comisiones Pagadas' not in df.columns:
+                    df = df.rename(columns={'Comisiones 10 %': 'Comisiones Pagadas'})
+                else:
+                    df = df.drop(columns=['Comisiones 10 %'])
+            
+            capital_inicial = df['Aumento Capital'].iloc[1] if len(df) > 1 else 0
+            id_inversionista = df['ID Inv'].iloc[1] if len(df) > 1 else "N/D"
+            
+            fecha_entrada = df['Fecha'].iloc[1] if len(df) > 1 else "N/D"
+            if isinstance(fecha_entrada, pd.Timestamp):
+                fecha_entrada = fecha_entrada.strftime('%d/%m/%Y')
+            
+            filtered_df = advanced_filters(df)
+            
+            required_columns = ['Fecha', 'Capital Invertido', 'Aumento Capital', 'ID Inv', 'Retiro de Fondos']
+            missing_cols = [col for col in required_columns if col not in filtered_df.columns]
+            
+            if missing_cols:
+                st.error(f"🚨 Error: Faltan columnas críticas: {', '.join(missing_cols)}")
+                st.stop()
+            
+            st.success(f"✅ Datos cargados correctamente ({len(filtered_df)} registros)")
+            
+            if not METRIC_CARDS_ENABLED:
+                st.warning("Para mejores visualizaciones, instala: pip install streamlit-extras")
+        except Exception as e:
+            st.error(f"🚨 Error crítico al procesar el archivo: {str(e)}")
             st.stop()
     
     # =============================================
