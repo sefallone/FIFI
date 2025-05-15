@@ -210,8 +210,55 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
         """, unsafe_allow_html=True)
 
 # =============================================
-# GRÁFICOS MEJORADOS
+# GRÁFICOS MEJORADOS (CON GRÁFICA COMBINADA)
 # =============================================
+
+def plot_combined_capital_withdrawals(df, capital_inicial):
+    """Muestra la evolución del capital invertido junto con retiros de dinero"""
+    if 'Capital Invertido' not in df.columns or 'Retiro de Fondos' not in df.columns:
+        st.warning("No se pueden generar el gráfico combinado. Faltan columnas necesarias.")
+        return
+    
+    fig = px.line(
+        df,
+        x='Fecha',
+        y='Capital Invertido',
+        title='Evolución del Capital Invertido y Retiros',
+        labels={'Capital Invertido': 'Monto ($)', 'Fecha': 'Fecha'},
+        template="plotly_dark"
+    )
+    
+    # Añadir retiros como barras
+    fig.add_bar(
+        x=df['Fecha'],
+        y=df['Retiro de Fondos'],
+        name='Retiros',
+        marker_color='#FF6B6B',
+        opacity=0.7
+    )
+    
+    # Línea de capital inicial
+    fig.add_hline(
+        y=capital_inicial,
+        line_dash="dash",
+        line_color="green",
+        annotation_text=f"Capital Inicial: ${capital_inicial:,.2f}",
+        annotation_position="bottom right"
+    )
+    
+    fig.update_layout(
+        height=400,
+        barmode='overlay',
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1
+        ),
+        hovermode="x unified"
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
 def plot_capital_profit_relation(df):
     """Muestra la relación porcentual entre capital invertido y ganancias brutas"""
@@ -605,24 +652,12 @@ def main():
             tab1, tab2, tab3, tab4 = st.tabs(["📈 Visualizaciones Principales", "📊 Análisis Avanzado", "🔍 Detalle de Datos", "🔮 Proyección Futura"])
             
             with tab1:
-                # Gráfico de evolución del capital
-                if 'Fecha' in filtered_df.columns and 'Capital Invertido' in filtered_df.columns:
+                # Gráfico combinado de capital y retiros (NUEVA VERSIÓN)
+                if 'Fecha' in filtered_df.columns and 'Capital Invertido' in filtered_df.columns and 'Retiro de Fondos' in filtered_df.columns:
                     try:
-                        fig1 = px.line(
-                            filtered_df,
-                            x='Fecha',
-                            y='Capital Invertido',
-                            title='Evolución del Capital Invertido',
-                            labels={'Capital Invertido': 'Monto ($)', 'Fecha': 'Fecha'},
-                            template="plotly_dark"
-                        )
-                        fig1.add_hline(y=capital_inicial, line_dash="dash", line_color="green", 
-                                    annotation_text=f"Capital Inicial: ${capital_inicial:,.2f}", 
-                                    annotation_position="bottom right")
-                        fig1.update_layout(height=400)
-                        st.plotly_chart(fig1, use_container_width=True)
+                        plot_combined_capital_withdrawals(filtered_df, capital_inicial)
                     except Exception as e:
-                        st.error(f"Error al generar gráfico de capital: {str(e)}")
+                        st.error(f"Error al generar gráfico combinado: {str(e)}")
                 
                 # Gráfico de relación porcentual capital-ganancias
                 if 'Capital Invertido' in filtered_df.columns and 'Ganancias/Pérdidas Brutas' in filtered_df.columns:
