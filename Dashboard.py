@@ -177,7 +177,7 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
             delta=delta_display,
             key=f"card_{title.replace(' ', '_')}",
             background="#1024ca",
-            border_color="#3f33ff",
+            border_color="#8f10ca",
             border_size_px=2,
             help=explanation
         )
@@ -593,7 +593,7 @@ def main():
             
             # SECCIÓN DE KPIs
             st.markdown("---")
-            st.markdown('<h2 style="color: #1024ca; border-bottom: 2px solid #1024ca; padding-bottom: 10px;">📊 KPIs Financieros</h2>', unsafe_allow_html=True)
+            st.markdown('<h2 style="color: #1024ca; border-bottom: 2px solid #8f10ca; padding-bottom: 10px;">📊 KPIs Financieros</h2>', unsafe_allow_html=True)
             
             # Calcular métricas avanzadas
             current_capital = filtered_df['Capital Invertido'].iloc[-1] if len(filtered_df) > 0 else 0
