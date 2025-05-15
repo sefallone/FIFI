@@ -330,18 +330,102 @@ def plot_waterfall(df):
         st.plotly_chart(fig, use_container_width=True)
 
 def plot_correlation_heatmap(df):
-    """Mapa de calor de correlaciones"""
+    """Mapa de calor de correlaciones mejorado con análisis"""
     numeric_cols = df.select_dtypes(include=['number']).columns.tolist()
+    
     if len(numeric_cols) > 1:
+        st.markdown("### 🔥 Mapa de Correlación entre Variables")
+        
+        # Calcular matriz de correlación
         corr_matrix = df[numeric_cols].corr()
+        
+        # Crear figura más grande
         fig = px.imshow(
             corr_matrix,
             text_auto=True,
             color_continuous_scale=px.colors.diverging.RdYlGn,
-            title='Correlación entre Variables',
-            template="plotly_dark"
+            title='<b>Correlación entre Variables Financieras</b>',
+            template="plotly_dark",
+            width=800,  # Ancho aumentado
+            height=700  # Alto aumentado
         )
+        
+        # Mejorar formato
+        fig.update_layout(
+            margin=dict(l=50, r=50, t=80, b=150),  # Más espacio abajo para el análisis
+            title_font_size=24,
+            xaxis_title="Variables",
+            yaxis_title="Variables",
+            coloraxis_colorbar=dict(
+                title="Correlación",
+                thickness=20,
+                len=0.75
+            )
+        )
+        
         st.plotly_chart(fig, use_container_width=True)
+        
+        # Análisis de correlaciones
+        st.markdown("""
+        <div style="background-color: #1e1e1e; padding: 15px; border-radius: 10px; margin-top: 20px;">
+            <h4 style="color: #42e8ff;">📊 Análisis de Correlaciones</h4>
+            <p style="text-align: justify;">
+                Este mapa de calor muestra las relaciones estadísticas entre las diferentes variables financieras. 
+                Los valores oscilan entre <strong>-1</strong> (correlación negativa perfecta) y <strong>+1</strong> (correlación positiva perfecta), 
+                donde <strong>0</strong> indica ausencia de relación lineal.
+            </p>
+            <ul>
+                <li><strong>Correlaciones positivas altas (>0.7):</strong> Indican que las variables tienden a aumentar o disminuir juntas.</li>
+                <li><strong>Correlaciones negativas fuertes (<-0.7):</strong> Sugieren una relación inversa entre las variables.</li>
+                <li><strong>Valores cercanos a 0:</strong> Muestran poca o ninguna relación lineal.</li>
+            </ul>
+            <p style="text-align: justify;">
+                <strong>Interpretación clave:</strong> Las correlaciones significativas pueden revelar relaciones importantes como:
+                cómo los cambios en el capital invertido afectan las ganancias, o si existe relación entre retiros y comisiones.
+                Sin embargo, <em>correlación no implica causalidad</em> - siempre investigue las relaciones subyacentes.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Análisis específico de las correlaciones más fuertes
+        st.markdown("""
+        <div style="background-color: #2d2d2d; padding: 15px; border-radius: 10px; margin-top: 10px;">
+            <h4 style="color: #42e8ff;">🔍 Correlaciones Destacadas</h4>
+        """, unsafe_allow_html=True)
+        
+        # Encontrar las 3 correlaciones más fuertes (excluyendo la diagonal)
+        corr_values = corr_matrix.unstack().sort_values(ascending=False)
+        corr_values = corr_values[corr_values != 1]  # Eliminar autocorrelaciones
+        
+        if not corr_values.empty:
+            top_positive = corr_values.head(3)
+            top_negative = corr_values.tail(3)
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("""
+                <div style="background-color: #1e3e1e; padding: 10px; border-radius: 5px;">
+                    <h5>📈 Mayores Correlaciones Positivas</h5>
+                """, unsafe_allow_html=True)
+                for pair, value in top_positive.items():
+                    st.markdown(f"<p style='margin: 5px;'><strong>{pair[0]}</strong> y <strong>{pair[1]}</strong>: {value:.2f}</p>", 
+                               unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
+            
+            with col2:
+                st.markdown("""
+                <div style="background-color: #3e1e1e; padding: 10px; border-radius: 5px;">
+                    <h5>📉 Mayores Correlaciones Negativas</h5>
+                """, unsafe_allow_html=True)
+                for pair, value in top_negative.items():
+                    st.markdown(f"<p style='margin: 5px;'><strong>{pair[0]}</strong> y <strong>{pair[1]}</strong>: {value:.2f}</p>", 
+                               unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
+        
+        st.markdown("</div>", unsafe_allow_html=True)
+    else:
+        st.warning("No hay suficientes variables numéricas para calcular correlaciones")
 
 def plot_projection(df):
     """Gráficos de proyección a 3 años"""
