@@ -473,49 +473,39 @@ def plot_correlation_heatmap(df):
         st.warning("No hay suficientes variables numéricas para calcular correlaciones")
 
 def plot_projection(df):
-    """Gráficos de proyección a 3 años - Versión Mejorada"""
-    if len(df) > 1 and 'Ganancias/Pérdidas Brutas' in df.columns and 'Capital Invertido' in df.columns:
+    """Gráficos de proyección a 3 años con 3 escenarios personalizados"""
+    if len(df) > 1 and 'Ganancias/Pérdidas Netas' in df.columns and 'Capital Invertido' in df.columns:
         # Configuración de parámetros en el sidebar
         with st.sidebar.expander("⚙️ Configuración de Proyección"):
-            monthly_growth = st.slider(
-                "Crecimiento mensual del capital (%)",
+            st.markdown("**Parámetros generales**")
+            tasa_crecimiento = st.slider(
+                "Tasa de crecimiento mensual promedio (%)",
                 min_value=0.1,
-                max_value=10.0,
-                value=2.0,
+                max_value=20.0,
+                value=5.0,
                 step=0.1,
-                help="Tasa de crecimiento mensual porcentual del capital"
+                help="Tasa de crecimiento mensual porcentual esperada"
             ) / 100
             
-            initial_injection = st.number_input(
-                "Inyección inicial de capital ($)",
-                min_value=0,
-                value=5000,
-                step=1000
-            )
-            
-            annual_injection = st.number_input(
-                "Inyección anual de capital ($)",
-                min_value=0,
-                value=5000,
-                step=1000
-            )
+            st.markdown("**Escenario 3: Inyección anual**")
+            porcentaje_inyeccion = st.slider(
+                "Porcentaje de inyección anual",
+                min_value=1,
+                max_value=50,
+                value=10,
+                step=1,
+                help="Porcentaje del capital actual que se inyecta cada año"
+            ) / 100
         
         # Preparar datos históricos
-        historical_data = df[['Fecha', 'Capital Invertido', 'Ganancias/Pérdidas Brutas']].copy()
+        historical_data = df[['Fecha', 'Capital Invertido', 'Ganancias/Pérdidas Netas']].copy()
         historical_data['Tipo'] = 'Histórico'
+        historical_data['Escenario'] = 'Histórico'
         
-        # Calcular métricas para proyección
+        # Obtener último mes histórico
         last_date = historical_data['Fecha'].max()
         last_capital = historical_data['Capital Invertido'].iloc[-1]
-        last_profit = historical_data['Ganancias/Pérdidas Brutas'].iloc[-1]
-        
-        # Calcular ratio ganancias/capital histórico
-        historical_data['Profit_Ratio'] = historical_data['Ganancias/Pérdidas Brutas'] / historical_data['Capital Invertido']
-        avg_profit_ratio = historical_data['Profit_Ratio'].mean()
-        
-        # Si no hay ratio válido, usar valor conservador (2%)
-        if pd.isna(avg_profit_ratio) or not np.isfinite(avg_profit_ratio):
-            avg_profit_ratio = 0.02
+        last_profit = historical_data['Ganancias/Pérdidas Netas'].iloc[-1]
         
         # Crear fechas futuras (36 meses)
         future_dates = pd.date_range(
@@ -524,45 +514,96 @@ def plot_projection(df):
             freq='M'
         )
         
-        # Escenario 1: Sin nueva inyección de capital
-        scenario1 = pd.DataFrame({'Fecha': future_dates})
-        scenario1['Capital Invertido'] = last_capital * (1 + monthly_growth) ** np.arange(1, 37)
-        scenario1['Ganancias/Pérdidas Brutas'] = scenario1['Capital Invertido'] * avg_profit_ratio
-        scenario1['Tipo'] = 'Escenario 1: Sin nueva inyección'
+        # ----------------------------------------------------------------------
+        # ESCENARIO 1: Retiro de ganancias netas cada 4 meses
+        # ----------------------------------------------------------------------
+        escenario1 = pd.DataFrame({'Fecha': future_dates})
+        escenario1['Capital Invertido'] = last_capital
+        escenario1['Ganancias Netas'] = 0
+        escenario1['Retiros'] = 0
+        escenario1['Tipo'] = 'Escenario 1'
+        escenario1['Descripción'] = 'Retiro ganancias cada 4 meses'
         
-        # Escenario 2: Con inyección de capital
-        scenario2 = pd.DataFrame({'Fecha': future_dates})
-        capital = last_capital + initial_injection  # Inyección inicial
-        scenario2_capital = [capital]
+        for i in range(36):
+            # Calcular ganancias del mes
+            ganancias_mes = escenario1.at[i, 'Capital Invertido'] * tasa_crecimiento
+            escenario1.at[i, 'Ganancias Netas'] = ganancias_mes
+            
+            # Cada 4 meses retirar las ganancias acumuladas de los últimos 4 meses
+            if (i + 1) % 4 == 0:
+                ganancias_acumuladas = escenario1.loc[i-3:i, 'Ganancias Netas'].sum()
+                escenario1.at[i, 'Retiros'] = ganancias_acumuladas
+                escenario1.at[i, 'Ganancias Netas'] = 0  # Se retiran todas
+            
+            # Mantener el capital constante (solo crece por la tasa mes a mes)
+            if i < 35:
+                escenario1.at[i+1, 'Capital Invertido'] = escenario1.at[i, 'Capital Invertido']
+        
+        # ----------------------------------------------------------------------
+        # ESCENARIO 2: Interés compuesto (ganancias se reinvierten)
+        # ----------------------------------------------------------------------
+        escenario2 = pd.DataFrame({'Fecha': future_dates})
+        escenario2['Capital Invertido'] = last_capital
+        escenario2['Tipo'] = 'Escenario 2'
+        escenario2['Descripción'] = 'Interés compuesto mensual'
         
         for i in range(1, 36):
-            new_capital = scenario2_capital[-1] * (1 + monthly_growth)
-            if i % 12 == 0:  # Cada 12 meses (1 año)
-                new_capital += annual_injection  # Inyección anual
-            scenario2_capital.append(new_capital)
+            # Cada mes el capital crece con las ganancias
+            escenario2.at[i, 'Capital Invertido'] = escenario2.at[i-1, 'Capital Invertido'] * (1 + tasa_crecimiento)
         
-        scenario2['Capital Invertido'] = scenario2_capital
-        scenario2['Ganancias/Pérdidas Brutas'] = scenario2['Capital Invertido'] * avg_profit_ratio
-        scenario2['Tipo'] = 'Escenario 2: Con inyección de capital'
+        # ----------------------------------------------------------------------
+        # ESCENARIO 3: Inyección anual del 10% del capital
+        # ----------------------------------------------------------------------
+        escenario3 = pd.DataFrame({'Fecha': future_dates})
+        escenario3['Capital Invertido'] = last_capital
+        escenario3['Inyecciones'] = 0
+        escenario3['Tipo'] = 'Escenario 3'
+        escenario3['Descripción'] = f'Inyección anual del {porcentaje_inyeccion*100:.0f}%'
         
-        # Combinar datos
-        projection_data = pd.concat([historical_data, scenario1, scenario2])
+        for i in range(36):
+            # Cada 12 meses inyectar capital adicional
+            if i > 0 and i % 12 == 0:
+                inyeccion = escenario3.at[i-1, 'Capital Invertido'] * porcentaje_inyeccion
+                escenario3.at[i, 'Inyecciones'] = inyeccion
+                escenario3.at[i, 'Capital Invertido'] += inyeccion
+            
+            # Crecimiento normal del capital
+            if i < 35:
+                escenario3.at[i+1, 'Capital Invertido'] = escenario3.at[i, 'Capital Invertido'] * (1 + tasa_crecimiento)
+        
+        # ----------------------------------------------------------------------
+        # VISUALIZACIÓN DE RESULTADOS
+        # ----------------------------------------------------------------------
+        
+        # Combinar datos para gráfico
+        projection_data = pd.concat([
+            historical_data[['Fecha', 'Capital Invertido', 'Tipo']],
+            escenario1[['Fecha', 'Capital Invertido', 'Tipo']],
+            escenario2[['Fecha', 'Capital Invertido', 'Tipo']],
+            escenario3[['Fecha', 'Capital Invertido', 'Tipo']]
+        ])
         
         # Gráfico de proyección de capital
-        st.markdown("### Proyección de Capital Invertido (3 años)")
-        fig_cap = px.line(
+        st.markdown("### 📈 Proyección de Capital a 3 años (3 escenarios)")
+        fig = px.line(
             projection_data,
             x='Fecha',
             y='Capital Invertido',
             color='Tipo',
-            title=f'<b>Proyección de Capital Invertido (3 años)</b><br><sup>Tasa de crecimiento: {monthly_growth*100:.1f}% mensual</sup>',
+            title=f'<b>Proyección de Capital Invertido (3 años)</b><br><sup>Tasa de crecimiento mensual: {tasa_crecimiento*100:.1f}%</sup>',
             labels={'Capital Invertido': 'Monto ($)', 'Fecha': 'Fecha'},
             template="plotly_dark",
-            line_shape='linear'
+            line_shape='linear',
+            color_discrete_map={
+                'Histórico': '#636EFA',
+                'Escenario 1': '#EF553B',
+                'Escenario 2': '#00CC96',
+                'Escenario 3': '#AB63FA'
+            }
         )
         
         # Añadir línea vertical para separar histórico de proyección
-        fig_cap.add_vline(
+        fig.add_vline(
             x=last_date,
             line_dash="dash",
             line_color="yellow",
@@ -570,7 +611,7 @@ def plot_projection(df):
             annotation_position="top left"
         )
         
-        fig_cap.update_layout(
+        fig.update_layout(
             height=500,
             hovermode='x unified',
             legend=dict(
@@ -581,81 +622,160 @@ def plot_projection(df):
                 x=1
             )
         )
-        st.plotly_chart(fig_cap, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True)
         
-        # Gráfico de proyección de ganancias
-        st.markdown("### Proyección de Ganancias Brutas (3 años)")
-        fig_profit = px.line(
-            projection_data,
-            x='Fecha',
-            y='Ganancias/Pérdidas Brutas',
-            color='Tipo',
-            title=f'<b>Proyección de Ganancias Brutas (3 años)</b><br><sup>Ratio ganancias/capital: {avg_profit_ratio*100:.1f}%</sup>',
-            labels={'Ganancias/Pérdidas Brutas': 'Monto ($)', 'Fecha': 'Fecha'},
-            template="plotly_dark",
-            line_shape='linear'
-        )
+        # ----------------------------------------------------------------------
+        # COMPARATIVA DE ESCENARIOS
+        # ----------------------------------------------------------------------
+        st.markdown("### 📊 Comparativa de Escenarios")
         
-        # Añadir línea vertical para separar histórico de proyección
-        fig_profit.add_vline(
-            x=last_date,
-            line_dash="dash",
-            line_color="yellow",
-            annotation_text="Inicio Proyección",
-            annotation_position="top left"
-        )
+        # Calcular métricas clave
+        capital_final_esc1 = escenario1['Capital Invertido'].iloc[-1]
+        capital_final_esc2 = escenario2['Capital Invertido'].iloc[-1]
+        capital_final_esc3 = escenario3['Capital Invertido'].iloc[-1]
         
-        fig_profit.update_layout(
-            height=500,
-            hovermode='x unified',
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="right",
-                x=1
-            )
-        )
-        st.plotly_chart(fig_profit, use_container_width=True)
+        retiros_totales = escenario1['Retiros'].sum()
+        inyecciones_totales = escenario3['Inyecciones'].sum()
         
-        # Mostrar métricas clave de proyección
-        st.markdown("### 📌 Resumen de Proyección")
-        cols = st.columns(3)
+        # Mostrar métricas en columnas
+        col1, col2, col3 = st.columns(3)
         
-        with cols[0]:
+        with col1:
             st.metric(
-                "Capital Final - Escenario 1",
-                f"${scenario1['Capital Invertido'].iloc[-1]:,.2f}",
-                delta=f"{(scenario1['Capital Invertido'].iloc[-1]/last_capital-1)*100:.1f}% vs actual"
+                "Escenario 1 - Retiro cada 4 meses",
+                f"${capital_final_esc1:,.2f}",
+                delta=f"Retiros totales: ${retiros_totales:,.2f}",
+                delta_color="off"
             )
+            st.markdown("""
+            <div style="background-color: #1e1e1e; padding: 10px; border-radius: 5px; margin-top: -15px;">
+                <p style="font-size: 14px;">Capital se mantiene constante. Retiras ganancias netas acumuladas cada 4 meses.</p>
+            </div>
+            """, unsafe_allow_html=True)
         
-        with cols[1]:
+        with col2:
             st.metric(
-                "Ganancias Acumuladas - Escenario 1",
-                f"${scenario1['Ganancias/Pérdidas Brutas'].sum():,.2f}",
-                delta=f"Ratio: {avg_profit_ratio*100:.1f}%"
+                "Escenario 2 - Interés compuesto",
+                f"${capital_final_esc2:,.2f}",
+                delta=f"{(capital_final_esc2/last_capital-1)*100:.1f}% total",
+                delta_color="normal"
             )
+            st.markdown("""
+            <div style="background-color: #1e1e1e; padding: 10px; border-radius: 5px; margin-top: -15px;">
+                <p style="font-size: 14px;">Ganancias netas se reinvierten mensualmente (capitalización compuesta).</p>
+            </div>
+            """, unsafe_allow_html=True)
         
-        with cols[2]:
+        with col3:
             st.metric(
-                "ROI Proyectado - Escenario 1",
-                f"{(scenario1['Ganancias/Pérdidas Brutas'].sum()/last_capital)*100:.1f}%",
-                delta=f"vs histórico: {historical_data['Ganancias/Pérdidas Brutas'].sum()/historical_data['Capital Invertido'].iloc[0]*100:.1f}%"
+                "Escenario 3 - Inyección anual",
+                f"${capital_final_esc3:,.2f}",
+                delta=f"Inyecciones totales: ${inyecciones_totales:,.2f}",
+                delta_color="off"
+            )
+            st.markdown("""
+            <div style="background-color: #1e1e1e; padding: 10px; border-radius: 5px; margin-top: -15px;">
+                <p style="font-size: 14px;">Cada año inyectas {porcentaje_inyeccion*100:.0f}% del capital actual como nuevo capital.</p>
+            </div>
+            """.format(porcentaje_inyeccion=porcentaje_inyeccion), unsafe_allow_html=True)
+        
+        # ----------------------------------------------------------------------
+        # DETALLE DE CADA ESCENARIO
+        # ----------------------------------------------------------------------
+        st.markdown("### 📝 Detalle por Escenario")
+        
+        tab1, tab2, tab3 = st.tabs(["Escenario 1", "Escenario 2", "Escenario 3"])
+        
+        with tab1:
+            st.markdown("#### Retiro de ganancias cada 4 meses")
+            escenario1['Ganancias Acumuladas'] = escenario1['Ganancias Netas'].cumsum()
+            escenario1['Retiros Acumulados'] = escenario1['Retiros'].cumsum()
+            
+            fig_esc1 = px.line(
+                escenario1,
+                x='Fecha',
+                y=['Ganancias Acumuladas', 'Retiros Acumulados'],
+                title='Ganancias y Retiros Acumulados',
+                template="plotly_dark"
+            )
+            fig_esc1.update_layout(height=400)
+            st.plotly_chart(fig_esc1, use_container_width=True)
+            
+            st.dataframe(
+                escenario1[['Fecha', 'Capital Invertido', 'Ganancias Netas', 'Retiros']].tail(12).style.format({
+                    'Capital Invertido': '${:,.2f}',
+                    'Ganancias Netas': '${:,.2f}',
+                    'Retiros': '${:,.2f}'
+                }),
+                use_container_width=True
             )
         
-        # Explicación de supuestos
+        with tab2:
+            st.markdown("#### Interés compuesto mensual")
+            escenario2['Crecimiento Mensual'] = escenario2['Capital Invertido'].pct_change() * 100
+            
+            fig_esc2 = px.line(
+                escenario2,
+                x='Fecha',
+                y='Capital Invertido',
+                title='Crecimiento del Capital con Interés Compuesto',
+                template="plotly_dark"
+            )
+            fig_esc2.update_layout(height=400)
+            st.plotly_chart(fig_esc2, use_container_width=True)
+            
+            st.dataframe(
+                escenario2[['Fecha', 'Capital Invertido', 'Crecimiento Mensual']].tail(12).style.format({
+                    'Capital Invertido': '${:,.2f}',
+                    'Crecimiento Mensual': '{:.2f}%'
+                }),
+                use_container_width=True
+            )
+        
+        with tab3:
+            st.markdown("#### Inyección anual del capital")
+            escenario3['Crecimiento Anual'] = escenario3['Capital Invertido'].pct_change(periods=12) * 100
+            
+            fig_esc3 = px.bar(
+                escenario3,
+                x='Fecha',
+                y='Inyecciones',
+                title='Inyecciones Anuales de Capital',
+                template="plotly_dark"
+            )
+            fig_esc3.update_layout(height=400)
+            st.plotly_chart(fig_esc3, use_container_width=True)
+            
+            st.dataframe(
+                escenario3[['Fecha', 'Capital Invertido', 'Inyecciones', 'Crecimiento Anual']].tail(24).style.format({
+                    'Capital Invertido': '${:,.2f}',
+                    'Inyecciones': '${:,.2f}',
+                    'Crecimiento Anual': '{:.2f}%'
+                }),
+                use_container_width=True
+            )
+        
+        # ----------------------------------------------------------------------
+        # RESUMEN Y SUPUESTOS
+        # ----------------------------------------------------------------------
         st.markdown("---")
-        st.markdown(f"""
-        **📝 Supuestos de la proyección:**
-        - Se asume un **crecimiento mensual del capital del {monthly_growth*100:.1f}%** (compuesto)
-        - Las **ganancias brutas** se calculan como **{avg_profit_ratio*100:.1f}% del capital invertido** (ratio histórico promedio)
-        - Escenario 2 incluye:
-          - Inyección inicial de **${initial_injection:,.0f}**
-          - **${annual_injection:,.0f} adicionales** cada 12 meses
-        - Las proyecciones son **estimativas** y no garantizan resultados futuros
-        """)
+        st.markdown("""
+        **📌 Supuestos y consideraciones:**
+        - **Tasa de crecimiento mensual**: {tasa_crecimiento*100:.1f}% aplicada sobre el capital
+        - **Escenario 1**: 
+          - Capital inicial se mantiene constante
+          - Ganancias netas se calculan cada mes pero solo se retiran cada 4 meses
+          - No hay reinversión de ganancias
+        - **Escenario 2**:
+          - Ganancias netas se reinvierten completamente cada mes (interés compuesto)
+          - Máximo crecimiento potencial pero sin retiros
+        - **Escenario 3**:
+          - Cada 12 meses se inyecta un {porcentaje_inyeccion*100:.0f}% del capital actual como nuevo capital
+          - Las ganancias netas se reinvierten mensualmente
+        - Las proyecciones son estimativas y asumen condiciones de mercado constantes
+        """.format(tasa_crecimiento=tasa_crecimiento, porcentaje_inyeccion=porcentaje_inyeccion))
     else:
-        st.warning("⚠️ No hay suficientes datos históricos para generar proyecciones")
+        st.warning("⚠️ No hay suficientes datos históricos para generar proyecciones. Se requieren columnas 'Capital Invertido' y 'Ganancias/Pérdidas Netas'")
 
 # =============================================
 # FUNCIONES DE ANÁLISIS
