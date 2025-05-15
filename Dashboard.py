@@ -490,5 +490,5 @@ def main():
             
             # [Resto del código de la función main() permanece igual...]
 
-if __name__ == "__main__":
+if__name__ == "__main__":
     main()
