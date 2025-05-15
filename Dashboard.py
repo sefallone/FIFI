@@ -266,7 +266,7 @@ def plot_correlation_heatmap(df):
         st.plotly_chart(fig, use_container_width=True)
 
 def plot_projection(df):
-    """Gráficos de proyección a 3 años con explicaciones detalladas"""
+    """Gráficos de proyección a 3 años"""
     if len(df) > 1 and 'Ganancias/Pérdidas Brutas' in df.columns and 'Capital Invertido' in df.columns:
         # Preparar datos históricos
         historical_data = df[['Fecha', 'Capital Invertido', 'Ganancias/Pérdidas Brutas']].copy()
@@ -320,19 +320,8 @@ def plot_projection(df):
         # Combinar datos
         projection_data = pd.concat([historical_data, scenario1, scenario2])
         
-        # Gráfico de proyección de capital con explicación
+        # Gráfico de proyección de capital
         st.markdown("### Proyección de Capital Invertido")
-        
-        explanation = """
-        **Cómo interpretar este gráfico:**
-        - **Línea histórica (azul):** Muestra la evolución real de tu capital hasta la fecha actual
-        - **Escenario 1 (verde):** Proyección si NO realizas nuevas inyecciones de capital
-        - **Escenario 2 (naranja):** Proyección si inyectas $5,000 ahora y $5,000 adicionales cada año
-        - El eje Y muestra el monto proyectado en dólares
-        - El eje X muestra la línea de tiempo mes a mes
-        """
-        st.markdown(explanation)
-        
         fig_cap = px.line(
             projection_data,
             x='Fecha',
@@ -340,42 +329,13 @@ def plot_projection(df):
             color='Tipo',
             title='Proyección de Capital Invertido (3 años)',
             labels={'Capital Invertido': 'Monto ($)', 'Fecha': 'Fecha'},
-            template="plotly_dark",
-            color_discrete_map={
-                'Histórico': '#1f77b4',
-                'Escenario 1: Sin nueva inyección': '#2ca02c',
-                'Escenario 2: Con inyección de capital': '#ff7f0e'
-            }
+            template="plotly_dark"
         )
-        fig_cap.update_layout(
-            height=500,
-            annotations=[
-                dict(
-                    x=0.5,
-                    y=-0.2,
-                    xref='paper',
-                    yref='paper',
-                    text="Nota: Las proyecciones se basan en el crecimiento histórico promedio",
-                    showarrow=False,
-                    font=dict(size=10)
-                )
-        ])
+        fig_cap.update_layout(height=500)
         st.plotly_chart(fig_cap, use_container_width=True)
         
-        # Gráfico de proyección de ganancias con explicación
+        # Gráfico de proyección de ganancias
         st.markdown("### Proyección de Ganancias Brutas")
-        
-        explanation = """
-        **Cómo interpretar este gráfico:**
-        - **Línea histórica (azul):** Muestra tus ganancias reales hasta la fecha actual
-        - **Escenario 1 (verde):** Ganancias proyectadas sin nuevas inyecciones de capital
-        - **Escenario 2 (naranja):** Ganancias proyectadas CON inyecciones de capital
-        - Las ganancias crecen proporcionalmente al capital invertido
-        - El eje Y muestra el monto de ganancias en dólares por mes
-        - El eje X muestra la línea de tiempo mes a mes
-        """
-        st.markdown(explanation)
-        
         fig_profit = px.line(
             projection_data,
             x='Fecha',
@@ -383,26 +343,9 @@ def plot_projection(df):
             color='Tipo',
             title='Proyección de Ganancias Brutas (3 años)',
             labels={'Ganancias/Pérdidas Brutas': 'Monto ($)', 'Fecha': 'Fecha'},
-            template="plotly_dark",
-            color_discrete_map={
-                'Histórico': '#1f77b4',
-                'Escenario 1: Sin nueva inyección': '#2ca02c',
-                'Escenario 2: Con inyección de capital': '#ff7f0e'
-            }
+            template="plotly_dark"
         )
-        fig_profit.update_layout(
-            height=500,
-            annotations=[
-                dict(
-                    x=0.5,
-                    y=-0.2,
-                    xref='paper',
-                    yref='paper',
-                    text="Nota: Las ganancias proyectadas asumen el mismo rendimiento porcentual histórico",
-                    showarrow=False,
-                    font=dict(size=10)
-                )
-        ]
+        fig_profit.update_layout(height=500)
         st.plotly_chart(fig_profit, use_container_width=True)
         
         # Mostrar métricas clave de proyección
@@ -428,11 +371,6 @@ def plot_projection(df):
         - Crecimiento mensual promedio de ganancias: {:.2%}
         - Escenario 2 incluye inyección inicial de $5,000 y anualidades del mismo monto
         - Las proyecciones son estimativas y no garantizan resultados futuros
-        
-        **Limitaciones:**
-        - No considera cambios en las condiciones del mercado
-        - Asume rendimientos consistentes
-        - No incluye impuestos ni inflación
         """.format(avg_capital_growth, avg_profit_growth))
     else:
         st.warning("No hay suficientes datos históricos para generar proyecciones")
