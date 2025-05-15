@@ -470,8 +470,11 @@ def main():
             selected_sheet = st.selectbox("📋 Seleccionar hoja de trabajo", sheet_names)
             
             @st.cache_data
-            def load_data():
-                return pd.read_excel(uploaded_file, sheet_name=selected_sheet)
+            def load_data(file, sheet):
+                return pd.read_excel(file, sheet_name=sheet)
+
+            df = load_data(uploaded_file, selected_sheet)
+
             
             df = load_data()
             df = df.loc[:, ~df.columns.duplicated()]
