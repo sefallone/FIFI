@@ -359,7 +359,7 @@ def plot_projection(df):
                     showarrow=False,
                     font=dict(size=10)
                 )
-        ]
+        ])
         st.plotly_chart(fig_cap, use_container_width=True)
         
         # Gráfico de proyección de ganancias con explicación
