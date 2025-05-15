@@ -219,6 +219,8 @@ def plot_combined_capital_withdrawals(df, capital_inicial):
         st.warning("No se pueden generar el gráfico combinado. Faltan columnas necesarias.")
         return
     
+    df['Fecha'] = pd.to_datetime(df['Fecha'])
+    
     fig = px.line(
         df,
         x='Fecha',
@@ -266,6 +268,7 @@ def plot_capital_profit_relation(df):
         st.warning("No se pueden calcular las métricas de relación. Faltan columnas necesarias.")
         return
     
+    df['Fecha'] = pd.to_datetime(df['Fecha'])
     df['Porcentaje_Ganancias'] = (df['Ganancias/Pérdidas Brutas'] / df['Capital Invertido']) * 100
     
     fig = px.bar(
@@ -286,6 +289,8 @@ def plot_capital_profit_relation(df):
 def plot_bubble_chart(df):
     """Gráfico de burbujas para relación capital-ganancias"""
     if all(col in df.columns for col in ['Capital Invertido', 'Ganancias/Pérdidas Brutas', 'Fecha']):
+        df['Fecha'] = pd.to_datetime(df['Fecha'])
+        
         fig = px.scatter(
             df,
             x='Fecha',
@@ -303,6 +308,8 @@ def plot_bubble_chart(df):
 def plot_waterfall(df):
     """Gráfico de cascada para flujo de capital"""
     if all(col in df.columns for col in ['Aumento Capital', 'Retiro de Fondos', 'Ganancias/Pérdidas Netas']):
+        df['Fecha'] = pd.to_datetime(df['Fecha'])
+        
         # Crear datos para el gráfico de cascada
         changes = []
         running_total = 0
@@ -502,6 +509,9 @@ def plot_projection(df):
         historical_data['Tipo'] = 'Histórico'
         historical_data['Escenario'] = 'Histórico'
         
+        # Convertir fechas a datetime si no lo están
+        historical_data['Fecha'] = pd.to_datetime(historical_data['Fecha'])
+        
         # Obtener último mes histórico
         last_date = historical_data['Fecha'].max()
         last_capital = historical_data['Capital Invertido'].iloc[-1]
@@ -583,6 +593,10 @@ def plot_projection(df):
             escenario3[['Fecha', 'Capital Invertido', 'Tipo']]
         ])
         
+        # Convertir fechas a string para evitar problemas con Plotly
+        projection_data['Fecha'] = projection_data['Fecha'].dt.strftime('%Y-%m-%d')
+        last_date_str = last_date.strftime('%Y-%m-%d')
+        
         # Gráfico de proyección de capital
         st.markdown("### 📈 Proyección de Capital a 3 años (3 escenarios)")
         fig = px.line(
@@ -604,7 +618,7 @@ def plot_projection(df):
         
         # Añadir línea vertical para separar histórico de proyección
         fig.add_vline(
-            x=last_date,
+            x=last_date_str,
             line_dash="dash",
             line_color="yellow",
             annotation_text="Inicio Proyección",
@@ -791,6 +805,7 @@ def calculate_roi(df, capital_inicial):
 def calculate_cagr(df, capital_inicial, current_capital):
     """Calcula la tasa de crecimiento anual compuesta"""
     if len(df) > 1 and capital_inicial and float(capital_inicial) != 0:
+        df['Fecha'] = pd.to_datetime(df['Fecha'])
         start_date = df['Fecha'].iloc[0]
         end_date = df['Fecha'].iloc[-1]
         months = (end_date.year - start_date.year) * 12 + (end_date.month - start_date.month)
@@ -802,6 +817,7 @@ def calculate_cagr(df, capital_inicial, current_capital):
 def calculate_sharpe_ratio(df):
     """Calcula el ratio Sharpe simplificado"""
     if 'Ganancias/Pérdidas Netas' in df.columns:
+        df['Fecha'] = pd.to_datetime(df['Fecha'])
         returns = df['Ganancias/Pérdidas Netas'].pct_change().dropna()
         if len(returns) > 0:
             return (returns.mean() / returns.std()) * (np.sqrt(12))
@@ -810,6 +826,7 @@ def calculate_sharpe_ratio(df):
 def calculate_max_drawdown(df):
     """Calcula el drawdown máximo"""
     if 'Capital Invertido' in df.columns:
+        df['Fecha'] = pd.to_datetime(df['Fecha'])
         df['Capital Acumulado'] = df['Capital Invertido'].cummax()
         df['Drawdown'] = (df['Capital Invertido'] - df['Capital Acumulado']) / df['Capital Acumulado']
         return df['Drawdown'].min() * 100 if len(df) > 0 else 0
