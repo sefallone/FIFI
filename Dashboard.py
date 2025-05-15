@@ -358,8 +358,8 @@ def plot_projection(df):
                     text="Nota: Las proyecciones se basan en el crecimiento histórico promedio",
                     showarrow=False,
                     font=dict(size=10)
-            ]
-        )
+                )
+        ]
         st.plotly_chart(fig_cap, use_container_width=True)
         
         # Gráfico de proyección de ganancias con explicación
