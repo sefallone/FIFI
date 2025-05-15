@@ -223,7 +223,7 @@ def plot_combined_capital_withdrawals(df, capital_inicial):
         df,
         x='Fecha',
         y='Capital Invertido',
-        title='Evolución del Capital Invertido y Retiros',
+        title='<b>Evolución del Capital vs Retiros</b><br><sup>Línea: Capital Invertido | Barras: Retiros</sup>',
         labels={'Capital Invertido': 'Monto ($)', 'Fecha': 'Fecha'},
         template="plotly_dark"
     )
@@ -247,7 +247,7 @@ def plot_combined_capital_withdrawals(df, capital_inicial):
     )
     
     fig.update_layout(
-        height=400,
+        height=450,
         barmode='overlay',
         legend=dict(
             orientation="h",
@@ -492,7 +492,7 @@ def calculate_max_drawdown(df):
     return 0
 
 # =============================================
-# INTERFAZ PRINCIPAL
+# INTERFAZ PRINCIPAL (CON GRÁFICA COMBINADA IMPLEMENTADA)
 # =============================================
 
 def main():
@@ -652,12 +652,14 @@ def main():
             tab1, tab2, tab3, tab4 = st.tabs(["📈 Visualizaciones Principales", "📊 Análisis Avanzado", "🔍 Detalle de Datos", "🔮 Proyección Futura"])
             
             with tab1:
-                # Gráfico combinado de capital y retiros (NUEVA VERSIÓN)
-                if 'Fecha' in filtered_df.columns and 'Capital Invertido' in filtered_df.columns and 'Retiro de Fondos' in filtered_df.columns:
+                # Gráfico combinado de capital y retiros (VERSIÓN IMPLEMENTADA)
+                if all(col in filtered_df.columns for col in ['Fecha', 'Capital Invertido', 'Retiro de Fondos']):
                     try:
                         plot_combined_capital_withdrawals(filtered_df, capital_inicial)
                     except Exception as e:
                         st.error(f"Error al generar gráfico combinado: {str(e)}")
+                else:
+                    st.warning("Se requieren las columnas: Fecha, Capital Invertido y Retiro de Fondos")
                 
                 # Gráfico de relación porcentual capital-ganancias
                 if 'Capital Invertido' in filtered_df.columns and 'Ganancias/Pérdidas Brutas' in filtered_df.columns:
