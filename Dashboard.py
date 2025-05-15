@@ -176,7 +176,7 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
             value=value_display,
             delta=delta_display,
             key=f"card_{title.replace(' ', '_')}",
-            background="#1024ca",
+            background="#1eca10",
             border_color="#8f10ca",
             border_size_px=4,
             help=explanation
@@ -197,7 +197,7 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
             padding: 15px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
             margin-bottom: 20px;
-            border-left: 4px solid #8f10ca;
+            border-left: 4px solid #ca1040;
             position: relative;
         ">
             <div style="font-weight: 600; font-size: 14px; color: #ffffff;">
@@ -534,7 +534,7 @@ def main():
             padding: 0.5rem 1rem;
         }
         .stButton>button:hover {
-            background-color: #4d42ff;
+            background-color: #42e8ff;
         }
     </style>
     """, unsafe_allow_html=True)
