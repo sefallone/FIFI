@@ -474,9 +474,6 @@ def main():
                 return pd.read_excel(file, sheet_name=sheet)
 
             df = load_data(uploaded_file, selected_sheet)
-
-            
-            df = load_data()
             df = df.loc[:, ~df.columns.duplicated()]
             
             rename_dict = {
