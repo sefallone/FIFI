@@ -401,8 +401,8 @@ def plot_projection(df):
                     text="Nota: Las ganancias proyectadas asumen el mismo rendimiento porcentual histórico",
                     showarrow=False,
                     font=dict(size=10)
-            ]
-        )
+                )
+        ]
         st.plotly_chart(fig_profit, use_container_width=True)
         
         # Mostrar métricas clave de proyección
