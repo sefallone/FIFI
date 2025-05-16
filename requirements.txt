@@ -7,3 +7,4 @@ seaborn
 plotly
 streamlit_extras
 yfinance
+ta
