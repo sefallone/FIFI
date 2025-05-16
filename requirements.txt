@@ -6,4 +6,4 @@ openpyxl
 seaborn
 plotly
 streamlit_extras
-
+yfinance
