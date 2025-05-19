@@ -663,7 +663,7 @@ def plot_projection(df):
 
 def calculate_roi(df, capital_inicial):
     """Calcula el ROI basado en ganancias netas"""
-    if 'Ganancias/Pérdidas Netas' in df.columns and capital_inicial and float(current_capital) != 0:
+    if 'Ganancias/Pérdidas Netas' in df.columns and float(current_capital) != 0:
         ganancias_netas = df['Ganancias/Pérdidas Netas'].sum()
         return (float(ganancias_netas) / float(current_capital)) * 100
     return 0
@@ -823,7 +823,7 @@ def main():
     comisiones = filtered_df['Comisiones Pagadas'].sum() if 'Comisiones Pagadas' in filtered_df.columns else None
     retiros = filtered_df['Retiro de Fondos'].sum() if 'Retiro de Fondos' in filtered_df.columns else None
     
-    roi = calculate_roi(filtered_df, capital_inicial)
+    roi = calculate_roi(filtered_df, current_capital)
     cagr = calculate_cagr(filtered_df, capital_inicial, current_capital)
     sharpe_ratio = calculate_sharpe_ratio(filtered_df)
     max_drawdown = calculate_max_drawdown(filtered_df)
