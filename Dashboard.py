@@ -25,7 +25,7 @@ except ImportError:
     METRIC_CARDS_ENABLED = False
 
 # =============================================
-# FUNCIONES AUXILIARES MEJORADAS
+# FUNCIONES AUXILIARES (CORREGIDAS)
 # =============================================
 
 def safe_divide(numerator, denominator):
@@ -37,97 +37,114 @@ def safe_divide(numerator, denominator):
 
 def normalize_column_names(df):
     """
-    Normaliza los nombres de columnas con manejo de variantes comunes.
-    Versión mejorada para manejar múltiples formatos de nombres.
+    Normalización mejorada que maneja múltiples formatos de columnas.
+    Versión corregida para aceptar todas las variantes de nombres.
     """
     # Primero hacer replacements específicos para casos conocidos
     df.columns = df.columns.str.strip()
     
-    common_replacements = {
-        'ganancias/perdidas brutas': 'ganancias_perdidas_brutas',
-        'ganancias pérdidas brutas': 'ganancias_perdidas_brutas',
-        'ganacias/perdidas brutas': 'ganancias_perdidas_brutas',
-        'ganancias_perdidas brutas': 'ganancias_perdidas_brutas',
-        'ganancias perdidas brutas': 'ganancias_perdidas_brutas',
-        'capital invertido': 'capital_invertido',
-        'comisiones 10 %': 'comisiones_pagadas',
-        'comisiones pagadas': 'comisiones_pagadas',
-        'retiro de fondos': 'retiro_fondos',
-        'retiro fondos': 'retiro_fondos',
-        'id inv': 'id_inversionista',
-        'id inversionista': 'id_inversionista',
-        'aumento capital': 'aumento_capital',
-        'ganancias/perdidas netas': 'ganancias_perdidas_netas',
-        'ganancias pérdidas netas': 'ganancias_perdidas_netas',
-        'beneficio %': 'porcentaje_beneficio'
+    # Mapeo completo de todas las variantes posibles
+    column_mappings = {
+        'ganancias_perdidas_brutas': [
+            'ganancias', 'perdidas', 'resultado', 'profit', 'g/p', 'rentabilidad',
+            'ganancias brutas', 'perdidas brutas', 'resultado bruto', 
+            'ganancias perdidas', 'ganancias y perdidas', 'ganancias-perdidas',
+            'ganancias/perdidas', 'ganancias & perdidas', 'ganancias pérdidas',
+            'ganancias_perdidas', 'gananciasperdidas', 'gananciasperdidas brutas'
+        ],
+        'capital_invertido': [
+            'capital', 'inversion', 'monto', 'invest', 'principal', 'amount',
+            'capital invertido', 'monto invertido', 'inversion total',
+            'capital_inversion', 'capital-inversion', 'capital/inversion'
+        ],
+        'fecha': [
+            'date', 'fecha', 'time', 'periodo', 'dia', 'mes',
+            'fecha operacion', 'fecha operación', 'fecha transaccion',
+            'fecha movimiento', 'fecha registro', 'fecha valor'
+        ],
+        'aumento_capital': [
+            'inyeccion', 'aumento', 'adicional', 'extra', 'deposito',
+            'aumento capital', 'capital adicional', 'inyeccion capital',
+            'deposito capital', 'capital extra', 'aumento de capital'
+        ],
+        'comisiones_pagadas': [
+            'comisiones', 'fee', 'costo', 'gastos', 'tarifa',
+            'comisiones pagadas', 'comisiones 10%', 'comisiones 10 %',
+            'comisiones pagadas', 'comisiones cobradas', 'comisiones de gestion'
+        ],
+        'retiro_fondos': [
+            'retiro', 'retiros', 'withdrawal', 'extraccion', 'salida',
+            'retiro fondos', 'retiro de fondos', 'retiros de capital',
+            'extraccion fondos', 'retiro dinero', 'retiro de dinero'
+        ]
     }
+
+    # Construir mapeo inverso para búsqueda eficiente
+    reverse_mapping = {}
+    for standard_name, variants in column_mappings.items():
+        for variant in variants:
+            reverse_mapping[variant.lower().replace(' ', '').replace('_', '').replace('-', '').replace('/', '')] = standard_name
+
+    # Normalizar nombres de columnas
+    new_columns = []
+    for col in df.columns:
+        normalized_col = col.lower().strip().replace(' ', '').replace('_', '').replace('-', '').replace('/', '')
+        found = False
+        
+        # Buscar en el mapeo inverso
+        for variant, standard in reverse_mapping.items():
+            if variant in normalized_col:
+                new_columns.append(standard)
+                found = True
+                break
+                
+        if not found:
+            # Conservar el nombre original si no se encuentra en el mapeo
+            new_columns.append(col)
     
-    # Aplicar replacements específicos
-    for old, new in common_replacements.items():
-        if old in df.columns:
-            df = df.rename(columns={old: new})
-    
-    # Normalización general
-    df.columns = (
-        df.columns.str.lower()
-        .str.replace(' ', '_')
-        .str.replace('ó', 'o')
-        .str.replace('é', 'e')
-        .str.replace('í', 'i')
-        .str.replace('á', 'a')
-        .str.replace('ú', 'u')
-        .str.replace('ñ', 'n')
-        .str.replace('/', '_')
-        .str.replace('%', 'porcentaje')
-        .str.replace('-', '_')
-    )
-    
+    df.columns = new_columns
     return df
 
 def validate_dataframe(df):
     """
-    Valida que el DataFrame tenga las columnas necesarias con mensajes descriptivos.
-    Versión mejorada con sugerencias para nombres de columnas.
+    Validación mejorada con mensajes de error descriptivos.
+    Versión corregida para manejar casos especiales.
     """
     required_columns = {
         'fecha': {
-            'description': 'Fecha de las operaciones',
-            'alternatives': ['fecha_operacion', 'date', 'fecha_transaccion']
+            'description': 'Fecha de las operaciones (columna temporal)',
+            'alternatives': ['date', 'fecha', 'periodo', 'dia', 'mes']
         },
         'capital_invertido': {
-            'description': 'Monto de capital invertido',
-            'alternatives': ['capital', 'monto_invertido', 'inversion']
+            'description': 'Monto de capital invertido (valores numéricos)',
+            'alternatives': ['capital', 'inversion', 'monto', 'principal']
         },
         'ganancias_perdidas_brutas': {
-            'description': 'Ganancias o pérdidas brutas',
-            'alternatives': ['ganancias_brutas', 'resultado_bruto', 'beneficio_bruto']
+            'description': 'Ganancias o pérdidas brutas (valores numéricos)',
+            'alternatives': ['ganancias', 'perdidas', 'resultado', 'profit']
         }
     }
     
     missing_cols = []
     suggestions = {}
     
+    # Verificar columnas requeridas
     for col, info in required_columns.items():
         if col not in df.columns:
             missing_cols.append(col)
-            # Buscar alternativas
-            for alt in info['alternatives']:
-                if alt in df.columns:
-                    df = df.rename(columns={alt: col})
-                    if col not in missing_cols:  # Si ya se encontró y renombró
-                        missing_cols.remove(col)
-                    break
+            suggestions[col] = info['alternatives']
     
     if missing_cols:
-        error_msg = "Faltan columnas requeridas:\n"
+        error_msg = "🚨 Error en los datos - Faltan columnas requeridas:\n"
         for col in missing_cols:
             info = required_columns[col]
             error_msg += f"\n- {col} ({info['description']})"
             if info['alternatives']:
                 error_msg += f"\n  Nombres alternativos aceptados: {', '.join(info['alternatives'])}"
         
-        # Mostrar las columnas disponibles para ayudar en debugging
-        error_msg += f"\n\nColumnas disponibles en el archivo: {', '.join(df.columns.tolist())}"
+        # Mostrar columnas disponibles para ayudar en debugging
+        error_msg += f"\n\n📋 Columnas disponibles en tu archivo: {', '.join(df.columns.tolist())}"
+        error_msg += "\n\n💡 Sugerencia: Verifica si alguna de tus columnas coincide con los nombres alternativos mencionados."
         return False, error_msg
     
     # Validar tipos de datos
@@ -135,9 +152,9 @@ def validate_dataframe(df):
         df['fecha'] = pd.to_datetime(df['fecha'])
         df['capital_invertido'] = pd.to_numeric(df['capital_invertido'])
         df['ganancias_perdidas_brutas'] = pd.to_numeric(df['ganancias_perdidas_brutas'])
-        return True, "Datos válidos"
+        return True, "✅ Datos validados correctamente"
     except Exception as e:
-        return False, f"Error al convertir datos: {str(e)}\nTipos actuales:\n{df.dtypes}"
+        return False, f"❌ Error en tipos de datos: {str(e)}\n\nTipos actuales:\n{df.dtypes}"
 
 def load_custom_style():
     """Carga el estilo CSS personalizado mejorado"""
@@ -219,215 +236,11 @@ def load_custom_style():
         h1, h2, h3, h4, h5, h6 {
             color: #3f33ff !important;
         }
-        
-        /* Tooltips */
-        .stTooltip {
-            background-color: #2d2d2d !important;
-            border: 1px solid #3f33ff !important;
-        }
     </style>
     """, unsafe_allow_html=True)
 
 # =============================================
-# FUNCIÓN DE FILTROS AVANZADOS (MEJORADA)
-# =============================================
-
-def advanced_filters(df):
-    """Función con selector de fechas por mes y año con validación mejorada"""
-    with st.sidebar.expander("🔍 Filtros Avanzados", expanded=True):
-        filtered_df = df.copy()
-        
-        # Filtro por fechas
-        if 'fecha' in filtered_df.columns:
-            try:
-                min_date = filtered_df['fecha'].min().to_pydatetime()
-                max_date = filtered_df['fecha'].max().to_pydatetime()
-                
-                st.write("**Seleccione el rango de fechas:**")
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    start_date = st.date_input(
-                        "Fecha inicial",
-                        value=min_date,
-                        min_value=min_date,
-                        max_value=max_date,
-                        key="start_date"
-                    )
-                
-                with col2:
-                    end_date = st.date_input(
-                        "Fecha final",
-                        value=max_date,
-                        min_value=min_date,
-                        max_value=max_date,
-                        key="end_date"
-                    )
-                
-                # Validar que la fecha inicial no sea mayor que la final
-                if start_date > end_date:
-                    st.error("⚠️ La fecha inicial no puede ser mayor que la final")
-                    return df  # Retornar los datos sin filtrar
-                
-                # Convertir a datetime y filtrar
-                start_date = pd.to_datetime(start_date)
-                end_date = pd.to_datetime(end_date)
-                
-                filtered_df = filtered_df[
-                    (filtered_df['fecha'] >= start_date) & 
-                    (filtered_df['fecha'] <= end_date)
-                ]
-                
-            except Exception as e:
-                st.warning(f"⚠️ No se pudo aplicar el filtro de fechas: {str(e)}")
-                return df  # Retornar los datos sin filtrar
-        
-        # Filtro por capital invertido
-        if 'capital_invertido' in filtered_df.columns:
-            try:
-                capital_series = pd.to_numeric(
-                    filtered_df['capital_invertido'], 
-                    errors='coerce'
-                ).dropna()
-                
-                if not capital_series.empty:
-                    min_cap = float(capital_series.min())
-                    max_cap = float(capital_series.max())
-                    
-                    # Si todos los valores son iguales, ajustar el rango
-                    if min_cap == max_cap:
-                        min_cap = max(0, min_cap - 1)
-                        max_cap += 1
-                    
-                    cap_range = st.slider(
-                        "Seleccione rango de capital",
-                        min_value=min_cap,
-                        max_value=max_cap,
-                        value=(min_cap, max_cap),
-                        help="Filtre por rango de capital invertido",
-                        key="capital_range_filter"
-                    )
-                    
-                    filtered_df = filtered_df[
-                        (pd.to_numeric(filtered_df['capital_invertido'], errors='coerce') >= cap_range[0]) & 
-                        (pd.to_numeric(filtered_df['capital_invertido'], errors='coerce') <= cap_range[1])
-                    ]
-                else:
-                    st.warning("⚠️ No hay valores numéricos válidos en 'Capital Invertido'")
-            except Exception as e:
-                st.warning(f"⚠️ No se pudo aplicar el filtro de capital: {str(e)}")
-        
-        # Filtro por resultados (ganancias/pérdidas)
-        if 'ganancias_perdidas_brutas' in filtered_df.columns:
-            try:
-                profit_filter = st.selectbox(
-                    "Filtrar por resultados",
-                    options=["Todos", "Solo ganancias", "Solo pérdidas"],
-                    index=0,
-                    help="Filtre por tipo de resultados financieros",
-                    key="profit_filter"
-                )
-                
-                if profit_filter == "Solo ganancias":
-                    filtered_df = filtered_df[filtered_df['ganancias_perdidas_brutas'] >= 0]
-                elif profit_filter == "Solo pérdidas":
-                    filtered_df = filtered_df[filtered_df['ganancias_perdidas_brutas'] < 0]
-            except Exception as e:
-                st.warning(f"⚠️ No se pudo aplicar el filtro de ganancias: {str(e)}")
-    
-    return filtered_df
-
-# =============================================
-# VISUALIZACIÓN DE KPIs (MEJORADA)
-# =============================================
-
-def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False, delta=None):
-    """
-    Muestra un KPI con tooltip explicativo mejorado.
-    
-    Parámetros:
-        title (str): Nombre del KPI
-        value: Valor a mostrar
-        icon (str): Emoji para el KPI
-        is_currency (bool): Si es valor monetario
-        is_percentage (bool): Si es porcentaje
-        delta: Variación del valor
-    """
-    # Diccionario de explicaciones para cada KPI
-    kpi_explanations = {
-        "id_inversionista": "Identificador único del inversionista en el sistema.",
-        "fecha_entrada": "Fecha inicial de participación en el fondo de inversión.",
-        "capital_inicial": "Monto inicial invertido por el usuario.",
-        "capital_actual": "Valor actual de la inversión (incluyendo ganancias/pérdidas).",
-        "total_inyeccion": "Suma total de capital adicional aportado.",
-        "ganancias_brutas": "Beneficios antes de deducir comisiones e impuestos.",
-        "ganancias_netas": "Beneficios después de comisiones e impuestos.",
-        "comisiones_pagadas": "Total acumulado en comisiones de gestión.",
-        "retiro_dinero": "Capital retirado por el inversionista.",
-        "roi": "Retorno sobre la inversión (Ganancias Netas / Capital Inicial).",
-        "cagr_mensual": "Tasa de crecimiento anual compuesto mensualizada.",
-        "drawdown_max": "Peor pérdida porcentual respecto al máximo histórico.",
-        "ratio_sharpe": "Medida de rendimiento ajustado al riesgo (mayor = mejor)."
-    }
-
-    # Formatear el valor
-    if pd.isna(value) or value is None:
-        value_display = "N/D"
-        delta_display = None
-    else:
-        if is_currency:
-            value_display = f"${float(value):,.2f}"
-        elif is_percentage:
-            value_display = f"{float(value):.2f}%"
-        else:
-            value_display = f"{value:.2f}" if isinstance(value, (int, float)) else str(value)
-        
-        delta_display = delta
-
-    # Tooltip con explicación
-    explanation = kpi_explanations.get(title.lower().replace(' ', '_'), "Métrica financiera clave.")
-    
-    if METRIC_CARDS_ENABLED:
-        metric_card(
-            title=f"{icon} {title}",
-            value=value_display,
-            delta=delta_display,
-            key=f"card_{title.replace(' ', '_')}",
-            background="#1e1e1e",
-            border_color="#3f33ff",
-            border_size_px=2,
-            help=explanation
-        )
-    else:
-        delta_color = "#4CAF50" if delta_display and str(delta_display).startswith('+') else "#F44336"
-        delta_html = f"""
-        <div style='color: {delta_color}; font-size: 14px; margin-top: 5px;'>
-            {delta_display if delta_display else ''}
-        </div>
-        """ if delta_display else ""
-        
-        st.markdown(f"""
-        <div style="
-            background: #1e1e1e;
-            color: #ffffff;
-            border-radius: 10px;
-            padding: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            margin-bottom: 20px;
-            border-left: 4px solid #3f33ff;
-            position: relative;
-        ">
-            <div style="font-weight: 600; font-size: 14px; color: #ffffff;">
-                {icon} {title}
-                <span style="font-size: 12px; color: #aaa; margin-left: 5px; cursor: pointer;" title="{explanation}">ℹ️</span>
-            </div>
-            <div style="font-weight: 700; font-size: 24px; margin: 10px 0;">{value_display}</div>
-            {delta_html}
-        </div>
-        """, unsafe_allow_html=True)
-
-# =============================================
-# FUNCIONES DE ANÁLISIS (MEJORADAS)
+# FUNCIONES DE ANÁLISIS (CORREGIDAS)
 # =============================================
 
 def calculate_roi(ganancias_netas, capital_inicial):
@@ -478,224 +291,7 @@ def calculate_max_drawdown(df):
         return 0
 
 # =============================================
-# VISUALIZACIONES (MEJORADAS)
-# =============================================
-
-def plot_combined_capital_withdrawals(df, capital_inicial):
-    """Muestra la evolución del capital invertido junto con retiros de dinero"""
-    if not all(col in df.columns for col in ['fecha', 'capital_invertido', 'retiro_fondos']):
-        st.warning("⚠️ No se pueden generar el gráfico combinado. Faltan columnas necesarias.")
-        return
-    
-    try:
-        fig = px.line(
-            df,
-            x='fecha',
-            y='capital_invertido',
-            title='<b>Evolución del Capital vs Retiros</b>',
-            labels={'capital_invertido': 'Monto ($)', 'fecha': 'Fecha'},
-            template="plotly_dark",
-            line_shape='linear'
-        )
-        
-        # Añadir retiros como barras
-        fig.add_bar(
-            x=df['fecha'],
-            y=df['retiro_fondos'],
-            name='Retiros',
-            marker_color='#FF6B6B',
-            opacity=0.7
-        )
-        
-        # Línea de capital inicial
-        fig.add_hline(
-            y=capital_inicial,
-            line_dash="dash",
-            line_color="green",
-            annotation_text=f"Capital Inicial: ${capital_inicial:,.2f}",
-            annotation_position="bottom right",
-            annotation_font_color="#fff"
-        )
-        
-        fig.update_layout(
-            height=450,
-            barmode='overlay',
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="right",
-                x=1
-            ),
-            hovermode="x unified",
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='white')
-        )
-        st.plotly_chart(fig, use_container_width=True)
-    except Exception as e:
-        st.error(f"❌ Error al generar gráfico combinado: {str(e)}")
-
-def plot_capital_profit_relation(df):
-    """Muestra la relación porcentual entre capital invertido y ganancias brutas"""
-    if not all(col in df.columns for col in ['fecha', 'capital_invertido', 'ganancias_perdidas_brutas']):
-        st.warning("⚠️ No se pueden calcular las métricas de relación. Faltan columnas necesarias.")
-        return
-    
-    try:
-        df['porcentaje_ganancias'] = safe_divide(
-            df['ganancias_perdidas_brutas'], 
-            df['capital_invertido']
-        ) * 100
-        
-        fig = px.bar(
-            df,
-            x='fecha',
-            y='porcentaje_ganancias',
-            title='Relación Porcentual: Ganancias Brutas / Capital Invertido',
-            labels={'porcentaje_ganancias': 'Porcentaje de Ganancias (%)', 'fecha': 'Fecha'},
-            color='porcentaje_ganancias',
-            color_continuous_scale=px.colors.diverging.RdYlGn,
-            template="plotly_dark"
-        )
-        
-        fig.add_hline(y=0, line_dash="dash", line_color="white")
-        fig.update_layout(
-            height=400, 
-            yaxis_title="Porcentaje de Ganancias (%)",
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)'
-        )
-        st.plotly_chart(fig, use_container_width=True)
-    except Exception as e:
-        st.error(f"❌ Error al generar gráfico de relación: {str(e)}")
-
-def plot_projection(df):
-    """Gráficos de proyección a 3 años con validación mejorada"""
-    if len(df) < 2 or not all(col in df.columns for col in ['fecha', 'capital_invertido', 'ganancias_perdidas_brutas']):
-        st.warning("⚠️ No hay suficientes datos históricos para generar proyecciones")
-        return
-    
-    try:
-        # Preparar datos históricos
-        historical_data = df[['fecha', 'capital_invertido', 'ganancias_perdidas_brutas']].copy()
-        historical_data['tipo'] = 'Histórico'
-        
-        # Calcular métricas para proyección
-        last_date = historical_data['fecha'].max()
-        last_capital = historical_data['capital_invertido'].iloc[-1]
-        last_profit = historical_data['ganancias_perdidas_brutas'].iloc[-1]
-        
-        # Calcular crecimiento promedio mensual con validación
-        historical_data['crecimiento_capital'] = historical_data['capital_invertido'].pct_change()
-        historical_data['crecimiento_ganancias'] = historical_data['ganancias_perdidas_brutas'].pct_change()
-        
-        avg_capital_growth = historical_data['crecimiento_capital'].mean()
-        avg_profit_growth = historical_data['crecimiento_ganancias'].mean()
-        
-        # Valores por defecto si hay problemas con los cálculos
-        if pd.isna(avg_capital_growth) or not np.isfinite(avg_capital_growth):
-            avg_capital_growth = 0.02  # 2% mensual por defecto
-        
-        if pd.isna(avg_profit_growth) or not np.isfinite(avg_profit_growth):
-            avg_profit_growth = 0.03  # 3% mensual por defecto
-        
-        # Crear fechas futuras (36 meses)
-        future_dates = pd.date_range(
-            start=last_date + pd.DateOffset(months=1),
-            periods=36,
-            freq='M'
-        )
-        
-        # Escenario 1: Sin nueva inyección de capital
-        scenario1 = pd.DataFrame({'fecha': future_dates})
-        scenario1['capital_invertido'] = last_capital * (1 + avg_capital_growth) ** np.arange(1, 37)
-        scenario1['ganancias_perdidas_brutas'] = last_profit * (1 + avg_profit_growth) ** np.arange(1, 37)
-        scenario1['tipo'] = 'Escenario 1: Sin nueva inyección'
-        
-        # Escenario 2: Con inyección de capital de $5000 ahora y cada año
-        scenario2 = pd.DataFrame({'fecha': future_dates})
-        capital = last_capital + 5000  # Inyección inicial
-        scenario2['capital_invertido'] = capital * (1 + avg_capital_growth) ** np.arange(1, 37)
-        
-        # Añadir inyecciones anuales
-        for i, date in enumerate(scenario2['fecha']):
-            if date.month == last_date.month and i > 0:  # Cada año
-                scenario2.loc[i:, 'capital_invertido'] += 5000
-        
-        scenario2['ganancias_perdidas_brutas'] = (
-            last_profit * (1 + avg_profit_growth) ** np.arange(1, 37) * 
-            (scenario2['capital_invertido'] / last_capital))
-        scenario2['tipo'] = 'Escenario 2: Con inyección de capital'
-        
-        # Combinar datos
-        projection_data = pd.concat([historical_data, scenario1, scenario2])
-        
-        # Gráfico de proyección de capital
-        st.markdown("### Proyección de Capital Invertido")
-        fig_cap = px.line(
-            projection_data,
-            x='fecha',
-            y='capital_invertido',
-            color='tipo',
-            title='Proyección de Capital Invertido (3 años)',
-            labels={'capital_invertido': 'Monto ($)', 'fecha': 'Fecha'},
-            template="plotly_dark"
-        )
-        fig_cap.update_layout(
-            height=500,
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)'
-        )
-        st.plotly_chart(fig_cap, use_container_width=True)
-        
-        # Gráfico de proyección de ganancias
-        st.markdown("### Proyección de Ganancias Brutas")
-        fig_profit = px.line(
-            projection_data,
-            x='fecha',
-            y='ganancias_perdidas_brutas',
-            color='tipo',
-            title='Proyección de Ganancias Brutas (3 años)',
-            labels={'ganancias_perdidas_brutas': 'Monto ($)', 'fecha': 'Fecha'},
-            template="plotly_dark"
-        )
-        fig_profit.update_layout(
-            height=500,
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)'
-        )
-        st.plotly_chart(fig_profit, use_container_width=True)
-        
-        # Mostrar métricas clave de proyección
-        st.markdown("### Resumen de Proyección")
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("**Escenario 1: Sin nueva inyección**")
-            st.metric("Capital final", f"${scenario1['capital_invertido'].iloc[-1]:,.2f}")
-            st.metric("Ganancias acumuladas", f"${scenario1['ganancias_perdidas_brutas'].sum():,.2f}")
-        
-        with col2:
-            st.markdown("**Escenario 2: Con inyección de capital**")
-            st.metric("Capital final", f"${scenario2['capital_invertido'].iloc[-1]:,.2f}")
-            st.metric("Ganancias acumuladas", f"${scenario2['ganancias_perdidas_brutas'].sum():,.2f}")
-        
-        # Explicación de supuestos
-        st.markdown("---")
-        st.markdown(f"""
-        **Supuestos de la proyección:**
-        - Tasas de crecimiento basadas en el desempeño histórico
-        - Crecimiento mensual promedio del capital: {avg_capital_growth:.2%}
-        - Crecimiento mensual promedio de ganancias: {avg_profit_growth:.2%}
-        - Escenario 2 incluye inyección inicial de $5,000 y anualidades del mismo monto
-        - Las proyecciones son estimativas y no garantizan resultados futuros
-        """)
-    except Exception as e:
-        st.error(f"❌ Error al generar proyecciones: {str(e)}")
-
-# =============================================
-# INTERFAZ PRINCIPAL (MEJORADA)
+# INTERFAZ PRINCIPAL (CORREGIDA)
 # =============================================
 
 def main():
@@ -703,7 +299,7 @@ def main():
     st.title("📊 Fondo de Inversión Fallone Investment")
     
     # Mostrar información de ayuda
-    with st.expander("ℹ️ Instrucciones", expanded=False):
+    with st.expander("ℹ️ Instrucciones (Leer antes de comenzar)", expanded=False):
         st.markdown("""
         1. **Sube tu archivo Excel** con los datos financieros
         2. **Selecciona la hoja** que contiene los datos
@@ -711,18 +307,17 @@ def main():
         4. **Explora las métricas** y gráficos en las diferentes pestañas
         
         **Columnas requeridas:**
-        - Fecha (debe contener fechas válidas)
-        - Capital Invertido (valores numéricos)
-        - Ganancias/Pérdidas Brutas (valores numéricos)
+        - `fecha` (debe contener fechas válidas)
+        - `capital_invertido` (valores numéricos)
+        - `ganancias_perdidas_brutas` (valores numéricos)
         
-        **Nota:** El sistema acepta variaciones en los nombres de estas columnas.
+        **El sistema acepta variantes de estos nombres** como "Ganancias Brutas", "Capital", "Fecha Operación", etc.
         """)
     
-    uploaded_file = st.file_uploader("📤 Subir archivo Excel", type=['xlsx', 'xls'], help="Suba el archivo Excel con los datos financieros")
+    uploaded_file = st.file_uploader("📤 Subir archivo Excel", type=['xlsx', 'xls'])
     
     if uploaded_file is not None:
         try:
-            # Cargar datos
             xls = pd.ExcelFile(uploaded_file)
             sheet_names = xls.sheet_names
             
@@ -736,34 +331,34 @@ def main():
                 help="Seleccione la hoja que contiene los datos financieros"
             )
             
+            # Opción para debugging avanzado
+            debug_mode = st.checkbox("🛠️ Modo depuración (mostrar datos sin procesar)")
+            
             @st.cache_data
             def load_data(file, sheet):
                 df = pd.read_excel(file, sheet_name=sheet)
+                if debug_mode:
+                    st.write("### Datos sin procesar (antes de normalización):")
+                    st.write("Columnas:", df.columns.tolist())
+                    st.dataframe(df.head(3))
                 df = normalize_column_names(df)
+                if debug_mode:
+                    st.write("### Datos después de normalización:")
+                    st.write("Columnas:", df.columns.tolist())
+                    st.dataframe(df.head(3))
                 return df.loc[:, ~df.columns.duplicated()]
             
             df = load_data(uploaded_file, selected_sheet)
             
-            # Debug: Mostrar columnas disponibles
-            if st.checkbox("🔍 Mostrar información de depuración", help="Muestra información técnica para resolver problemas"):
-                st.write("### Columnas detectadas en el archivo:")
-                st.write(df.columns.tolist())
-                
-                st.write("### Primeras filas de datos:")
-                st.dataframe(df.head())
-                
-                st.write("### Tipos de datos detectados:")
-                st.write(df.dtypes)
-            
             # Validar datos
             is_valid, validation_msg = validate_dataframe(df)
             if not is_valid:
-                st.error(f"❌ {validation_msg}")
+                st.error(validation_msg)
                 st.stop()
             
             # Obtener métricas iniciales
             capital_inicial = df['capital_invertido'].iloc[0] if len(df) > 0 else 0
-            id_inversionista = df['id_inversionista'].iloc[0] if 'id_inversionista' in df.columns and len(df) > 0 else "N/D"
+            id_inversionista = df.get('id_inversionista', pd.Series(["N/D"])).iloc[0]
             
             fecha_entrada = df['fecha'].iloc[0] if len(df) > 0 else "N/D"
             if isinstance(fecha_entrada, pd.Timestamp):
@@ -788,47 +383,39 @@ def main():
             # Calcular métricas avanzadas
             current_capital = filtered_df['capital_invertido'].iloc[-1] if len(filtered_df) > 0 else 0
             delta_capital = current_capital - capital_inicial if len(filtered_df) > 0 else 0
-            total_aumentos = filtered_df['aumento_capital'].sum() if 'aumento_capital' in filtered_df.columns else 0
-            ganancias_brutas = filtered_df['ganancias_perdidas_brutas'].sum() if 'ganancias_perdidas_brutas' in filtered_df.columns else 0
-            ganancias_netas = filtered_df['ganancias_perdidas_netas'].sum() if 'ganancias_perdidas_netas' in filtered_df.columns else 0
-            comisiones = filtered_df['comisiones_pagadas'].sum() if 'comisiones_pagadas' in filtered_df.columns else 0
-            retiros = filtered_df['retiro_fondos'].sum() if 'retiro_fondos' in filtered_df.columns else 0
+            total_aumentos = filtered_df.get('aumento_capital', pd.Series([0])).sum()
+            ganancias_brutas = filtered_df['ganancias_perdidas_brutas'].sum()
+            ganancias_netas = filtered_df.get('ganancias_perdidas_netas', pd.Series([ganancias_brutas])).sum()
+            comisiones = filtered_df.get('comisiones_pagadas', pd.Series([0])).sum()
+            retiros = filtered_df.get('retiro_fondos', pd.Series([0])).sum()
             
             roi = calculate_roi(ganancias_netas, capital_inicial)
             cagr = calculate_cagr(filtered_df, capital_inicial, current_capital)
             sharpe_ratio = calculate_sharpe_ratio(filtered_df)
             max_drawdown = calculate_max_drawdown(filtered_df)
             
-            # Mostrar KPIs
-            col1, col2, col3, col4 = st.columns(4)
-            with col1:
+            # Mostrar KPIs en un layout organizado
+            kpi_col1, kpi_col2, kpi_col3, kpi_col4 = st.columns(4)
+            
+            with kpi_col1:
                 display_kpi("ID Inversionista", id_inversionista, "🆔", is_currency=False)
-            with col2:
-                display_kpi("Fecha de Entrada", fecha_entrada, "📅", is_currency=False)
-            with col3:
                 display_kpi("Capital Inicial", capital_inicial, "🏁")
-            with col4:
-                display_kpi("Capital Actual", current_capital, "🏦", delta=f"{delta_capital:+,.2f}")
-            
-            col5, col6, col7, col8 = st.columns(4)
-            with col5:
-                display_kpi("Total Inyección", total_aumentos, "📈")
-            with col6:
-                display_kpi("Ganancias Brutas", ganancias_brutas, "💵")
-            with col7:
                 display_kpi("Ganancias Netas", ganancias_netas, "💰")
-            with col8:
+                
+            with kpi_col2:
+                display_kpi("Fecha de Entrada", fecha_entrada, "📅", is_currency=False)
+                display_kpi("Capital Actual", current_capital, "🏦", delta=f"{delta_capital:+,.2f}")
                 display_kpi("Comisiones Pagadas", comisiones, "💸")
-            
-            col9, col10, col11, col12 = st.columns(4)
-            with col9:
+                
+            with kpi_col3:
+                display_kpi("Total Inyección", total_aumentos, "📈")
+                display_kpi("Ganancias Brutas", ganancias_brutas, "💵")
                 display_kpi("Retiro de Dinero", retiros, "↘️")
-            with col10:
+                
+            with kpi_col4:
                 display_kpi("ROI", roi, "📊", is_percentage=True)
-            with col11:
                 display_kpi("CAGR Mensual", cagr, "🚀", is_percentage=True)
-            with col12:
-                display_kpi("Drawdown Máximo", max_drawdown, "📉", is_percentage=True)
+                display_kpi("Drawdown Máx.", max_drawdown, "📉", is_percentage=True)
             
             # SECCIÓN DE GRÁFICOS PRINCIPALES
             st.markdown("---")
@@ -839,25 +426,20 @@ def main():
                 plot_capital_profit_relation(filtered_df)
                 
                 # Gráfico de ganancias/pérdidas
-                if 'ganancias_perdidas_brutas' in filtered_df.columns:
-                    fig = px.bar(
-                        filtered_df,
-                        x='fecha',
-                        y='ganancias_perdidas_brutas',
-                        title='Ganancias/Pérdidas Brutas por Periodo',
-                        color='ganancias_perdidas_brutas',
-                        color_continuous_scale=px.colors.diverging.RdYlGn,
-                        labels={'ganancias_perdidas_brutas': 'Monto ($)', 'fecha': 'Fecha'},
-                        template="plotly_dark"
-                    )
-                    fig.update_layout(
-                        height=400,
-                        plot_bgcolor='rgba(0,0,0,0)',
-                        paper_bgcolor='rgba(0,0,0,0)'
-                    )
-                    st.plotly_chart(fig, use_container_width=True)
+                fig = px.bar(
+                    filtered_df,
+                    x='fecha',
+                    y='ganancias_perdidas_brutas',
+                    title='Ganancias/Pérdidas Brutas por Periodo',
+                    color='ganancias_perdidas_brutas',
+                    color_continuous_scale=px.colors.diverging.RdYlGn,
+                    labels={'ganancias_perdidas_brutas': 'Monto ($)', 'fecha': 'Fecha'},
+                    template="plotly_dark"
+                )
+                fig.update_layout(height=400)
+                st.plotly_chart(fig, use_container_width=True)
                 
-                # Gráfico de comisiones acumuladas
+                # Gráfico de comisiones si existe la columna
                 if 'comisiones_pagadas' in filtered_df.columns:
                     filtered_df['comisiones_acumuladas'] = filtered_df['comisiones_pagadas'].cumsum()
                     fig = px.area(
@@ -868,11 +450,7 @@ def main():
                         labels={'comisiones_acumuladas': 'Monto ($)', 'fecha': 'Fecha'},
                         template="plotly_dark"
                     )
-                    fig.update_layout(
-                        height=400,
-                        plot_bgcolor='rgba(0,0,0,0)',
-                        paper_bgcolor='rgba(0,0,0,0)'
-                    )
+                    fig.update_layout(height=400)
                     st.plotly_chart(fig, use_container_width=True)
             
             with tab2:
@@ -881,7 +459,7 @@ def main():
                 # Formatear DataFrame para visualización
                 display_df = filtered_df.copy()
                 numeric_cols = display_df.select_dtypes(include=['float64', 'int64']).columns
-                format_dict = {col: "${:,.2f}" for col in numeric_col}
+                format_dict = {col: "${:,.2f}" for col in numeric_cols}
                 
                 st.dataframe(
                     display_df.style.format(format_dict),
@@ -907,9 +485,204 @@ def main():
         
         except Exception as e:
             st.error(f"❌ Error crítico al procesar el archivo: {str(e)}")
-            st.exception(e)
+            if debug_mode:
+                st.exception(e)
     else:
         st.info("👋 Por favor, sube un archivo Excel para comenzar el análisis")
+
+# =============================================
+# FUNCIONES DE VISUALIZACIÓN (CORREGIDAS)
+# =============================================
+
+def plot_combined_capital_withdrawals(df, capital_inicial):
+    """Muestra la evolución del capital vs retiros"""
+    if not all(col in df.columns for col in ['fecha', 'capital_invertido']):
+        st.warning("⚠️ No se pueden generar el gráfico. Faltan columnas requeridas.")
+        return
+    
+    try:
+        fig = px.line(
+            df,
+            x='fecha',
+            y='capital_invertido',
+            title='<b>Evolución del Capital</b>',
+            labels={'capital_invertido': 'Monto ($)', 'fecha': 'Fecha'},
+            template="plotly_dark"
+        )
+        
+        # Añadir retiros si existe la columna
+        if 'retiro_fondos' in df.columns:
+            fig.add_bar(
+                x=df['fecha'],
+                y=df['retiro_fondos'],
+                name='Retiros',
+                marker_color='#FF6B6B',
+                opacity=0.7
+            )
+            fig.update_layout(title='<b>Evolución del Capital vs Retiros</b>')
+        
+        # Línea de capital inicial
+        fig.add_hline(
+            y=capital_inicial,
+            line_dash="dash",
+            line_color="green",
+            annotation_text=f"Capital Inicial: ${capital_inicial:,.2f}",
+            annotation_position="bottom right"
+        )
+        
+        fig.update_layout(
+            height=450,
+            hovermode="x unified",
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)'
+        )
+        st.plotly_chart(fig, use_container_width=True)
+    except Exception as e:
+        st.error(f"❌ Error al generar gráfico: {str(e)}")
+
+def plot_capital_profit_relation(df):
+    """Muestra la relación entre capital y ganancias"""
+    if not all(col in df.columns for col in ['fecha', 'capital_invertido', 'ganancias_perdidas_brutas']):
+        st.warning("⚠️ No se puede generar el gráfico de relación. Faltan datos.")
+        return
+    
+    try:
+        df['porcentaje_ganancias'] = safe_divide(
+            df['ganancias_perdidas_brutas'], 
+            df['capital_invertido']
+        ) * 100
+        
+        fig = px.bar(
+            df,
+            x='fecha',
+            y='porcentaje_ganancias',
+            title='Relación: Ganancias Brutas / Capital Invertido',
+            labels={'porcentaje_ganancias': 'Porcentaje (%)', 'fecha': 'Fecha'},
+            color='porcentaje_ganancias',
+            color_continuous_scale=px.colors.diverging.RdYlGn,
+            template="plotly_dark"
+        )
+        
+        fig.add_hline(y=0, line_dash="dash", line_color="white")
+        fig.update_layout(height=400, yaxis_title="Porcentaje de Ganancias (%)")
+        st.plotly_chart(fig, use_container_width=True)
+    except Exception as e:
+        st.error(f"❌ Error al generar gráfico: {str(e)}")
+
+def plot_projection(df):
+    """Proyección futura basada en datos históricos"""
+    if len(df) < 2 or not all(col in df.columns for col in ['fecha', 'capital_invertido']):
+        st.warning("⚠️ No hay suficientes datos para generar proyecciones")
+        return
+    
+    try:
+        # Preparar datos históricos
+        historical_data = df[['fecha', 'capital_invertido']].copy()
+        historical_data['tipo'] = 'Histórico'
+        
+        # Calcular crecimiento promedio
+        historical_data['crecimiento'] = historical_data['capital_invertido'].pct_change()
+        avg_growth = historical_data['crecimiento'].mean()
+        
+        # Valores por defecto si hay problemas con los cálculos
+        if pd.isna(avg_growth) or not np.isfinite(avg_growth):
+            avg_growth = 0.02  # 2% mensual por defecto
+        
+        # Crear fechas futuras (36 meses)
+        last_date = historical_data['fecha'].max()
+        last_capital = historical_data['capital_invertido'].iloc[-1]
+        future_dates = pd.date_range(start=last_date, periods=36, freq='M')
+        
+        # Escenario base
+        scenario1 = pd.DataFrame({'fecha': future_dates})
+        scenario1['capital_invertido'] = last_capital * (1 + avg_growth) ** np.arange(1, 37)
+        scenario1['tipo'] = 'Proyección Base'
+        
+        # Combinar datos
+        projection_data = pd.concat([historical_data, scenario1])
+        
+        # Gráfico de proyección
+        fig = px.line(
+            projection_data,
+            x='fecha',
+            y='capital_invertido',
+            color='tipo',
+            title='Proyección de Capital (3 años)',
+            labels={'capital_invertido': 'Monto ($)', 'fecha': 'Fecha'},
+            template="plotly_dark"
+        )
+        fig.update_layout(height=500)
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # Mostrar métricas clave
+        st.metric("Tasa de crecimiento mensual", f"{avg_growth:.2%}")
+        st.metric("Capital proyectado (36 meses)", f"${scenario1['capital_invertido'].iloc[-1]:,.2f}")
+        
+        # Explicación de supuestos
+        st.info("""
+        **Supuestos de la proyección:**
+        - Basada en el crecimiento histórico promedio
+        - No considera cambios en las condiciones del mercado
+        - Para análisis ilustrativo solamente
+        """)
+    except Exception as e:
+        st.error(f"❌ Error al generar proyección: {str(e)}")
+
+# =============================================
+# FUNCIÓN DE FILTROS (CORREGIDA)
+# =============================================
+
+def advanced_filters(df):
+    """Filtros mejorados con manejo robusto de errores"""
+    with st.sidebar.expander("🔍 Filtros Avanzados", expanded=True):
+        filtered_df = df.copy()
+        
+        # Filtro por fechas
+        if 'fecha' in filtered_df.columns:
+            try:
+                min_date = filtered_df['fecha'].min().to_pydatetime()
+                max_date = filtered_df['fecha'].max().to_pydatetime()
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    start_date = st.date_input("Fecha inicial", min_value=min_date, max_value=max_date, value=min_date)
+                with col2:
+                    end_date = st.date_input("Fecha final", min_value=min_date, max_value=max_date, value=max_date)
+                
+                if start_date > end_date:
+                    st.error("La fecha inicial no puede ser mayor que la final")
+                else:
+                    filtered_df = filtered_df[
+                        (filtered_df['fecha'] >= pd.to_datetime(start_date)) & 
+                        (filtered_df['fecha'] <= pd.to_datetime(end_date))
+                    ]
+            except Exception as e:
+                st.warning(f"Error en filtro de fechas: {str(e)}")
+        
+        # Filtro por capital
+        if 'capital_invertido' in filtered_df.columns:
+            try:
+                min_val = float(filtered_df['capital_invertido'].min())
+                max_val = float(filtered_df['capital_invertido'].max())
+                val_range = st.slider("Rango de capital", min_val, max_val, (min_val, max_val))
+                filtered_df = filtered_df[
+                    (filtered_df['capital_invertido'] >= val_range[0]) & 
+                    (filtered_df['capital_invertido'] <= val_range[1])
+            except:
+                pass
+        
+        # Filtro por resultados
+        if 'ganancias_perdidas_brutas' in filtered_df.columns:
+            try:
+                option = st.selectbox("Filtrar por", ["Todos", "Solo ganancias", "Solo pérdidas"])
+                if option == "Solo ganancias":
+                    filtered_df = filtered_df[filtered_df['ganancias_perdidas_brutas'] >= 0]
+                elif option == "Solo pérdidas":
+                    filtered_df = filtered_df[filtered_df['ganancias_perdidas_brutas'] < 0]
+            except:
+                pass
+    
+    return filtered_df
 
 if __name__ == "__main__":
     main()
