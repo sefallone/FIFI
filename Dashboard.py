@@ -667,7 +667,7 @@ def advanced_filters(df):
                 val_range = st.slider("Rango de capital", min_val, max_val, (min_val, max_val))
                 filtered_df = filtered_df[
                     (filtered_df['capital_invertido'] >= val_range[0]) & 
-                    (filtered_df['capital_invertido'] <= val_range[1])
+                    (filtered_df['capital_invertido'] <= val_range[1])]
             except:
                 pass
         
