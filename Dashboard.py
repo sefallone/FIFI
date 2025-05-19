@@ -223,7 +223,7 @@ def calculate_metrics(df):
     
     # Métricas de ganancias
     metrics['ganancias_brutas'] = df['ganancias_perdidas_brutas'].sum()
-    metrics['ganancias_netas'] = df.get('ganancias_perdidas_netas', pd.Series([metrics['ganancias_brutas'])).sum()
+    metrics['ganancias_netas'] = df.get('ganancias_perdidas_netas', pd.Series([metrics['ganancias_brutas']])).sum()
     
     # Métricas adicionales
     metrics['comisiones'] = df.get('comisiones_pagadas', pd.Series([0])).sum()
