@@ -670,7 +670,7 @@ def calculate_roi(df, capital_inicial):
 
 def calculate_cagr(df, capital_inicial, current_capital):
     """Calcula la tasa de crecimiento anual compuesta"""
-    if len(df) > 1 and Capital Invertido and float(current_capital) != 0:
+    if len(df) > 1 and capital_inicial and float(current_capital) != 0:
         start_date = df['Fecha'].iloc[0]
         end_date = df['Fecha'].iloc[-1]
         months = (end_date.year - start_date.year) * 12 + (end_date.month - start_date.month)
