@@ -455,7 +455,7 @@ def main():
                     filtered_df = filtered_df[
                         (filtered_df['capital_invertido'] >= cap_range[0]) & 
                         (filtered_df['capital_invertido'] <= cap_range[1])
-            
+                    ]
             if len(filtered_df) == 0:
                 st.warning("⚠️ No hay datos que coincidan con los filtros aplicados")
                 st.stop()
