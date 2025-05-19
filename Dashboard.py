@@ -506,7 +506,7 @@ def plot_projection(df):
         
         scenario2['ganancias_perdidas_brutas'] = (
             last_profit * (1 + avg_profit_growth) ** np.arange(1, 37) * 
-            (scenario2['capital_invertido'] / last_capital)
+            (scenario2['capital_invertido'] / last_capital))
         scenario2['tipo'] = 'Escenario 2: Con inyección de capital'
         
         # Combinar datos
