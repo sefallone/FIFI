@@ -330,18 +330,102 @@ def plot_waterfall(df):
         st.plotly_chart(fig, use_container_width=True)
 
 def plot_correlation_heatmap(df):
-    """Mapa de calor de correlaciones"""
-    numeric_cols = df.select_dtypes(include=['number']).columns.tolist()
+    """Mapa de calor de correlaciones optimizado para variables financieras clave"""
+    st.markdown("""
+    <style>
+        .correlation-plot {
+            margin-top: 20px;
+            margin-bottom: 30px;
+        }
+        .correlation-explanation {
+            background-color: #2d2d2d;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 4px solid #8f10ca;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # Seleccionar solo las variables financieras clave
+    relevant_columns = [
+        'Capital Invertido', 
+        'Ganancias/Pérdidas Brutas',
+        'Ganancias/Pérdidas Netas',
+        'Comisiones Pagadas',
+        'Retiro de Fondos',
+        'Aumento Capital'
+    ]
+    
+    # Filtrar columnas existentes
+    numeric_cols = [col for col in relevant_columns if col in df.columns]
+    
     if len(numeric_cols) > 1:
+        # Calcular matriz de correlación
         corr_matrix = df[numeric_cols].corr()
+        
+        # Crear figura más grande
         fig = px.imshow(
             corr_matrix,
             text_auto=True,
             color_continuous_scale=px.colors.diverging.RdYlGn,
-            title='Correlación entre Variables',
-            template="plotly_dark"
+            title='<b>Correlación entre Variables Clave</b>',
+            template="plotly_dark",
+            width=800,
+            height=700,
+            zmin=-1,
+            zmax=1,
+            labels=dict(color="Correlación"))
+        
+        # Mejorar formato
+        fig.update_layout(
+            font_size=12,
+            title_font_size=20,
+            margin=dict(l=50, r=50, b=100, t=100),
+            xaxis_showgrid=False,
+            yaxis_showgrid=False
         )
+        
+        # Mostrar gráfico
         st.plotly_chart(fig, use_container_width=True)
+        
+        # Explicación para el inversionista
+        st.markdown("""
+        <div class="correlation-explanation">
+            <h3>📌 ¿Qué significa esta correlación?</h3>
+            <p>Este mapa muestra cómo se relacionan las diferentes variables financieras de tu inversión:</p>
+            <ul>
+                <li><b>Valores cercanos a 1</b>: Relación positiva fuerte (cuando una aumenta, la otra también)</li>
+                <li><b>Valores cercanos a -1</b>: Relación negativa fuerte (cuando una aumenta, la otra disminuye)</li>
+                <li><b>Valores cercanos a 0</b>: Poca o ninguna relación</li>
+            </ul>
+            <p><b>Interpretaciones clave que debes buscar:</b></p>
+            <ol>
+                <li>La correlación entre <b>Capital Invertido</b> y <b>Ganancias</b> debería ser positiva (idealmente entre 0.5-1)</li>
+                <li>Una correlación negativa fuerte entre <b>Retiros</b> y <b>Ganancias</b> puede indicar que los retiros afectan el crecimiento</li>
+                <li>Si <b>Comisiones</b> tienen alta correlación con <b>Ganancias Brutas</b>, significa que pagas más comisiones cuando ganas más</li>
+            </ol>
+            <p>⚠️ <i>Recuerda: Correlación no implica causalidad. Estas relaciones deben analizarse en contexto.</i></p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Añadir consejos accionables
+        with st.expander("💡 Consejos basados en tu correlación"):
+            st.markdown("""
+            **Si la correlación Capital-Ganancias es baja (<0.3):**
+            - Revisa si estás diversificando adecuadamente
+            - Considera ajustar tu estrategia de inversión
+            
+            **Si Retiros-Ganancias es muy negativa (<-0.5):**
+            - Evalúa si los retiros están afectando tu capital de trabajo
+            - Planea retiros estratégicos en momentos de alta rentabilidad
+            
+            **Si Comisiones-Ganancias es muy alta (>0.7):**
+            - Analiza si la estructura de comisiones es proporcional a tus rendimientos
+            - Considera negociar comisiones con tu gestor
+            """)
+    else:
+        st.warning("No hay suficientes variables numéricas relevantes para mostrar correlaciones")
 
 def plot_projection(df):
     """Gráficos de proyección a 3 años"""
@@ -492,7 +576,7 @@ def calculate_max_drawdown(df):
     return 0
 
 # =============================================
-# INTERFAZ PRINCIPAL (CON GRÁFICA COMBINADA IMPLEMENTADA)
+# INTERFAZ PRINCIPAL
 # =============================================
 
 def main():
@@ -652,7 +736,7 @@ def main():
             tab1, tab2, tab3, tab4 = st.tabs(["📈 Visualizaciones Principales", "📊 Análisis Avanzado", "🔍 Detalle de Datos", "🔮 Proyección Futura"])
             
             with tab1:
-                # Gráfico combinado de capital y retiros (VERSIÓN IMPLEMENTADA)
+                # Gráfico combinado de capital y retiros
                 if all(col in filtered_df.columns for col in ['Fecha', 'Capital Invertido', 'Retiro de Fondos']):
                     try:
                         plot_combined_capital_withdrawals(filtered_df, capital_inicial)
@@ -709,7 +793,7 @@ def main():
                 # Gráfico de cascada
                 plot_waterfall(filtered_df)
                 
-                # Mapa de calor de correlaciones
+                # Mapa de calor de correlaciones optimizado
                 plot_correlation_heatmap(filtered_df)
                 
                 # Análisis de drawdown
