@@ -176,7 +176,7 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
             value=value_display,
             delta=delta_display,
             key=f"card_{title.replace(' ', '_')}",
-            background="#1eca10",
+            background="#4834c8",
             border_color="#8f10ca",
             border_size_px=4,
             help=explanation
@@ -191,7 +191,7 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
         
         st.markdown(f"""
         <div style="
-            background: #1024ca;
+            background: #4834c8;
             color: #ffffff;
             border-radius: 10px;
             padding: 15px;
@@ -663,14 +663,14 @@ def plot_projection(df):
 
 def calculate_roi(df, capital_inicial):
     """Calcula el ROI basado en ganancias netas"""
-    if 'Ganancias/Pérdidas Netas' in df.columns and capital_inicial and float(capital_inicial) != 0:
+    if 'Ganancias/Pérdidas Netas' in df.columns and capital_inicial and float(current_capital) != 0:
         ganancias_netas = df['Ganancias/Pérdidas Netas'].sum()
-        return (float(ganancias_netas) / float(capital_inicial)) * 100
+        return (float(ganancias_netas) / float(current_capital)) * 100
     return 0
 
 def calculate_cagr(df, capital_inicial, current_capital):
     """Calcula la tasa de crecimiento anual compuesta"""
-    if len(df) > 1 and capital_inicial and float(capital_inicial) != 0:
+    if len(df) > 1 and Capital Invertido and float(current_capital) != 0:
         start_date = df['Fecha'].iloc[0]
         end_date = df['Fecha'].iloc[-1]
         months = (end_date.year - start_date.year) * 12 + (end_date.month - start_date.month)
@@ -812,12 +812,12 @@ def main():
     
     # SECCIÓN DE KPIs
     st.markdown("---")
-    st.markdown('<h2 style="color: #1024ca; border-bottom: 2px solid #8f10ca; padding-bottom: 10px;">📊 KPIs Financieros</h2>', unsafe_allow_html=True)
+    st.markdown('<h2 style="color: #105cca; border-bottom: 2px solid #8f10ca; padding-bottom: 10px;">📊 KPIs Financieros</h2>', unsafe_allow_html=True)
     
     # Calcular métricas avanzadas
     current_capital = filtered_df['Capital Invertido'].iloc[-1] if len(filtered_df) > 0 else 0
-    delta_capital = current_capital - capital_inicial if len(filtered_df) > 0 else 0
     total_aumentos = filtered_df['Aumento Capital'].sum()
+    delta_capital = current_capital - total_aumentos if len(filtered_df) > 0 else 0
     ganancias_brutas = filtered_df['Ganancias/Pérdidas Brutas'].sum() if 'Ganancias/Pérdidas Brutas' in filtered_df.columns else None
     ganancias_netas = filtered_df['Ganancias/Pérdidas Netas'].sum() if 'Ganancias/Pérdidas Netas' in filtered_df.columns else None
     comisiones = filtered_df['Comisiones Pagadas'].sum() if 'Comisiones Pagadas' in filtered_df.columns else None
