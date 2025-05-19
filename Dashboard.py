@@ -29,10 +29,12 @@ def safe_divide(numerator, denominator):
 
 def normalize_column_names(df):
     """
-    Normalización mejorada que maneja exactamente los nombres de columnas proporcionados
-    Versión corregida para garantizar el mapeo preciso
+    Normalización robusta de nombres de columnas que maneja:
+    - Mapeo exacto de nombres de columnas
+    - Verificación sensible a mayúsculas/espacios
+    - Diagnóstico detallado de problemas
     """
-    # Mapeo exacto de los nombres de columnas proporcionados
+    # Mapeo exacto de nombres de columnas (conservando mayúsculas y espacios)
     column_mapping = {
         'Fecha': 'fecha',
         'ID Inv': 'id_inversionista',
@@ -50,23 +52,51 @@ def normalize_column_names(df):
         'Beneficio en %': 'beneficio_porcentaje'
     }
     
-    # Verificar qué columnas existen en el DataFrame
-    existing_columns = [col for col in column_mapping.keys() if col in df.columns]
-    missing_columns = [col for col in column_mapping.keys() if col not in df.columns]
+    # Diagnóstico inicial (para debugging)
+    original_columns = df.columns.tolist()
+    st.write("🔍 Columnas originales recibidas:", original_columns)
     
-    # Mostrar advertencia para columnas faltantes
+    # Verificación sensible de columnas existentes
+    existing_columns = []
+    missing_columns = []
+    
+    for original_name in column_mapping.keys():
+        # Verificación flexible que ignora espacios adicionales y mayúsculas
+        found = False
+        for actual_col in df.columns:
+            if str(actual_col).strip().lower() == original_name.strip().lower():
+                existing_columns.append(actual_col)  # Conservamos el nombre exacto del dataframe
+                found = True
+                break
+        
+        if not found:
+            missing_columns.append(original_name)
+    
+    # Mostrar advertencias detalladas
     if missing_columns:
-        st.warning(f"⚠️ Algunas columnas esperadas no se encontraron: {', '.join(missing_columns)}")
+        st.warning(f"⚠️ Columnas esperadas no encontradas ({len(missing_columns)}):")
+        for col in missing_columns:
+            st.write(f"- {col} (se esperaba: {column_mapping[col]})")
+        
+        st.warning("ℹ️ Columnas disponibles en el archivo:")
+        st.write(df.columns.tolist())
     
-    # Crear diccionario de renombrado solo con columnas existentes
-    rename_dict = {col: column_mapping[col] for col in existing_columns}
+    # Crear diccionario de renombrado (usando los nombres exactos del dataframe)
+    rename_dict = {}
+    for original_map_name, new_name in column_mapping.items():
+        for actual_col in df.columns:
+            if str(actual_col).strip().lower() == original_map_name.strip().lower():
+                rename_dict[actual_col] = new_name
+                break
     
     # Aplicar el renombrado
-    df = df.rename(columns=rename_dict)
+    if rename_dict:
+        df = df.rename(columns=rename_dict)
     
-    # Conservar columnas no mapeadas (sin renombrar)
+    # Diagnóstico final
+    st.write("✅ Columnas después de normalización:", df.columns.tolist())
+    
     return df
-
 def validate_dataframe(df):
     """Validación mejorada con mensajes de error descriptivos"""
     required_columns = {
