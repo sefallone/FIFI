@@ -670,8 +670,8 @@ def main():
             
             st.success(f"✅ Datos cargados correctamente ({len(filtered_df)} registros)")
             
-            if not METRIC_CARDS_ENABLED:
-                st.warning("Para mejores visualizaciones, instala: pip install streamlit-extras")
+            #if not METRIC_CARDS_ENABLED:
+            #    st.warning("Para mejores visualizaciones, instala: pip install streamlit-extras")
             
             # SECCIÓN DE KPIs
             st.markdown("---")
