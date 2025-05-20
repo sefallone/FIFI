@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import numpy as np
 from datetime import datetime
 import base64
@@ -210,7 +211,7 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
         """, unsafe_allow_html=True)
 
 # =============================================
-# GRÁFICOS MEJORADOS (CON GRÁFICA COMBINADA)
+# GRÁFICOS MEJORADOS
 # =============================================
 
 def plot_combined_capital_withdrawals(df, capital_inicial):
@@ -329,22 +330,8 @@ def plot_waterfall(df):
         fig.update_layout(height=400)
         st.plotly_chart(fig, use_container_width=True)
 
-def plot_correlation_heatmap(df):
-    """Mapa de calor de correlaciones"""
-    numeric_cols = df.select_dtypes(include=['number']).columns.tolist()
-    if len(numeric_cols) > 1:
-        corr_matrix = df[numeric_cols].corr()
-        fig = px.imshow(
-            corr_matrix,
-            text_auto=True,
-            color_continuous_scale=px.colors.diverging.RdYlGn,
-            title='Correlación entre Variables',
-            template="plotly_dark"
-        )
-        st.plotly_chart(fig, use_container_width=True)
-
 def plot_projection(df):
-    """Gráficos de proyección a 3 años"""
+    """Gráficos de proyección a 3 años con visualización mejorada"""
     if len(df) > 1 and 'Ganancias/Pérdidas Brutas' in df.columns and 'Capital Invertido' in df.columns:
         # Preparar datos históricos
         historical_data = df[['Fecha', 'Capital Invertido', 'Ganancias/Pérdidas Brutas']].copy()
@@ -355,14 +342,14 @@ def plot_projection(df):
         last_capital = historical_data['Capital Invertido'].iloc[-1]
         last_profit = historical_data['Ganancias/Pérdidas Brutas'].iloc[-1]
         
-        # Calcular crecimiento promedio mensual
-        historical_data['Crecimiento Capital'] = historical_data['Capital Invertido'].pct_change()
-        historical_data['Crecimiento Ganancias'] = historical_data['Ganancias/Pérdidas Brutas'].pct_change()
+        # Calcular crecimiento promedio mensual con rolling para suavizar
+        historical_data['Crecimiento Capital'] = historical_data['Capital Invertido'].pct_change().rolling(3, min_periods=1).mean()
+        historical_data['Crecimiento Ganancias'] = historical_data['Ganancias/Pérdidas Brutas'].pct_change().rolling(3, min_periods=1).mean()
         
-        avg_capital_growth = historical_data['Crecimiento Capital'].mean()
-        avg_profit_growth = historical_data['Crecimiento Ganancias'].mean()
+        avg_capital_growth = historical_data['Crecimiento Capital'].iloc[-6:].mean()  # Últimos 6 meses
+        avg_profit_growth = historical_data['Crecimiento Ganancias'].iloc[-6:].mean()
         
-        # Si hay valores NaN o infinitos, usar valores conservadores
+        # Valores por defecto conservadores si hay problemas con los cálculos
         if pd.isna(avg_capital_growth) or not np.isfinite(avg_capital_growth):
             avg_capital_growth = 0.02  # 2% mensual por defecto
         
@@ -380,25 +367,108 @@ def plot_projection(df):
         scenario1 = pd.DataFrame({'Fecha': future_dates})
         scenario1['Capital Invertido'] = last_capital * (1 + avg_capital_growth) ** np.arange(1, 37)
         scenario1['Ganancias/Pérdidas Brutas'] = last_profit * (1 + avg_profit_growth) ** np.arange(1, 37)
-        scenario1['Tipo'] = 'Escenario 1: Sin nueva inyección'
+        scenario1['Tipo'] = 'Escenario Conservador'
         
-        # Escenario 2: Con inyección de capital de $5000 ahora y cada año
+        # Escenario 2: Crecimiento moderado (promedio histórico + 25%)
         scenario2 = pd.DataFrame({'Fecha': future_dates})
-        capital = last_capital + 5000  # Inyección inicial
-        scenario2['Capital Invertido'] = capital * (1 + avg_capital_growth) ** np.arange(1, 37)
+        scenario2['Capital Invertido'] = last_capital * (1 + avg_capital_growth*1.25) ** np.arange(1, 37)
+        scenario2['Ganancias/Pérdidas Brutas'] = last_profit * (1 + avg_profit_growth*1.25) ** np.arange(1, 37)
+        scenario2['Tipo'] = 'Escenario Moderado'
         
-        # Añadir inyecciones anuales
-        for i, date in enumerate(scenario2['Fecha']):
-            if date.month == last_date.month and i > 0:  # Cada año
-                scenario2.loc[i:, 'Capital Invertido'] += 5000
-        
-        scenario2['Ganancias/Pérdidas Brutas'] = last_profit * (1 + avg_profit_growth) ** np.arange(1, 37) * (scenario2['Capital Invertido'] / last_capital)
-        scenario2['Tipo'] = 'Escenario 2: Con inyección de capital'
+        # Escenario 3: Crecimiento óptimo (promedio histórico + 50%)
+        scenario3 = pd.DataFrame({'Fecha': future_dates})
+        scenario3['Capital Invertido'] = last_capital * (1 + avg_capital_growth*1.5) ** np.arange(1, 37)
+        scenario3['Ganancias/Pérdidas Brutas'] = last_profit * (1 + avg_profit_growth*1.5) ** np.arange(1, 37)
+        scenario3['Tipo'] = 'Escenario Óptimo'
         
         # Combinar datos
-        projection_data = pd.concat([historical_data, scenario1, scenario2])
+        projection_data = pd.concat([historical_data, scenario1, scenario2, scenario3])
         
-        # Gráfico de proyección de capital
+        # --- Gráfico de proyección de ganancias brutas MEJORADO ---
+        st.markdown("### Proyección de Ganancias Brutas (3 años)")
+        
+        # Configurar colores personalizados
+        color_map = {
+            'Histórico': '#636EFA',
+            'Escenario Conservador': '#EF553B',
+            'Escenario Moderado': '#00CC96',
+            'Escenario Óptimo': '#AB63FA'
+        }
+        
+        # Crear gráfico interactivo con rangos
+        fig_profit = px.line(
+            projection_data,
+            x='Fecha',
+            y='Ganancias/Pérdidas Brutas',
+            color='Tipo',
+            title='<b>Proyección de Ganancias Brutas</b><br><sub>Basado en el desempeño histórico y diferentes escenarios</sub>',
+            labels={'Ganancias/Pérdidas Brutas': 'Ganancias Brutas ($)', 'Fecha': 'Fecha'},
+            template="plotly_dark",
+            color_discrete_map=color_map,
+            height=550
+        )
+        
+        # Añadir área sombreada para rango probable
+        min_profit = projection_data[projection_data['Tipo'].isin(['Escenario Conservador', 'Escenario Moderado'])].groupby('Fecha')['Ganancias/Pérdidas Brutas'].min()
+        max_profit = projection_data[projection_data['Tipo'].isin(['Escenario Moderado', 'Escenario Óptimo'])].groupby('Fecha')['Ganancias/Pérdidas Brutas'].max()
+        
+        fig_profit.add_trace(go.Scatter(
+            x=max_profit.index.tolist() + min_profit.index.tolist()[::-1],
+            y=max_profit.tolist() + min_profit.tolist()[::-1],
+            fill='toself',
+            fillcolor='rgba(100, 200, 100, 0.2)',
+            line=dict(color='rgba(255, 255, 255, 0)'),
+            name='Rango probable',
+            hoverinfo='skip'
+        ))
+        
+        # Mejorar formato
+        fig_profit.update_layout(
+            hovermode='x unified',
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1
+            ),
+            yaxis=dict(
+                tickformat="$,.0f",
+                gridcolor='rgba(255, 255, 255, 0.1)'
+            ),
+            xaxis=dict(
+                gridcolor='rgba(255, 255, 255, 0.1)',
+                rangeslider=dict(visible=True)
+            ),
+            margin=dict(l=50, r=50, b=80, t=100),
+            plot_bgcolor='rgba(0, 0, 0, 0)',
+            paper_bgcolor='rgba(0, 0, 0, 0)'
+        )
+        
+        # Añadir anotaciones explicativas
+        fig_profit.add_annotation(
+            x=projection_data['Fecha'].max(),
+            y=projection_data[projection_data['Tipo'] == 'Escenario Óptimo']['Ganancias/Pérdidas Brutas'].iloc[-1],
+            text="Mejor caso",
+            showarrow=True,
+            arrowhead=1,
+            ax=-50,
+            ay=-40
+        )
+        
+        fig_profit.add_annotation(
+            x=projection_data['Fecha'].max(),
+            y=projection_data[projection_data['Tipo'] == 'Escenario Conservador']['Ganancias/Pérdidas Brutas'].iloc[-1],
+            text="Caso conservador",
+            showarrow=True,
+            arrowhead=1,
+            ax=-50,
+            ay=40
+        )
+        
+        st.plotly_chart(fig_profit, use_container_width=True)
+        
+        # --- Gráfico de proyección de capital (se mantiene similar) ---
         st.markdown("### Proyección de Capital Invertido")
         fig_cap = px.line(
             projection_data,
@@ -407,49 +477,61 @@ def plot_projection(df):
             color='Tipo',
             title='Proyección de Capital Invertido (3 años)',
             labels={'Capital Invertido': 'Monto ($)', 'Fecha': 'Fecha'},
-            template="plotly_dark"
+            template="plotly_dark",
+            color_discrete_map=color_map,
+            height=500
         )
-        fig_cap.update_layout(height=500)
+        fig_cap.update_layout(
+            yaxis_tickformat="$,.0f",
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1
+            )
+        )
         st.plotly_chart(fig_cap, use_container_width=True)
-        
-        # Gráfico de proyección de ganancias
-        st.markdown("### Proyección de Ganancias Brutas")
-        fig_profit = px.line(
-            projection_data,
-            x='Fecha',
-            y='Ganancias/Pérdidas Brutas',
-            color='Tipo',
-            title='Proyección de Ganancias Brutas (3 años)',
-            labels={'Ganancias/Pérdidas Brutas': 'Monto ($)', 'Fecha': 'Fecha'},
-            template="plotly_dark"
-        )
-        fig_profit.update_layout(height=500)
-        st.plotly_chart(fig_profit, use_container_width=True)
         
         # Mostrar métricas clave de proyección
         st.markdown("### Resumen de Proyección")
-        col1, col2 = st.columns(2)
+        cols = st.columns(3)
         
-        with col1:
-            st.markdown("**Escenario 1: Sin nueva inyección**")
-            st.metric("Capital final", f"${scenario1['Capital Invertido'].iloc[-1]:,.2f}")
-            st.metric("Ganancias acumuladas", f"${scenario1['Ganancias/Pérdidas Brutas'].sum():,.2f}")
+        with cols[0]:
+            st.markdown("**Escenario Conservador**")
+            st.metric("Ganancias finales", f"${scenario1['Ganancias/Pérdidas Brutas'].iloc[-1]:,.0f}")
+            st.metric("Ganancias acumuladas", f"${scenario1['Ganancias/Pérdidas Brutas'].sum():,.0f}")
         
-        with col2:
-            st.markdown("**Escenario 2: Con inyección de capital**")
-            st.metric("Capital final", f"${scenario2['Capital Invertido'].iloc[-1]:,.2f}")
-            st.metric("Ganancias acumuladas", f"${scenario2['Ganancias/Pérdidas Brutas'].sum():,.2f}")
+        with cols[1]:
+            st.markdown("**Escenario Moderado**")
+            st.metric("Ganancias finales", f"${scenario2['Ganancias/Pérdidas Brutas'].iloc[-1]:,.0f}")
+            st.metric("Ganancias acumuladas", f"${scenario2['Ganancias/Pérdidas Brutas'].sum():,.0f}")
         
-        # Explicación de supuestos
+        with cols[2]:
+            st.markdown("**Escenario Óptimo**")
+            st.metric("Ganancias finales", f"${scenario3['Ganancias/Pérdidas Brutas'].iloc[-1]:,.0f}")
+            st.metric("Ganancias acumuladas", f"${scenario3['Ganancias/Pérdidas Brutas'].sum():,.0f}")
+        
+        # Explicación de supuestos mejorada
         st.markdown("---")
         st.markdown("""
-        **Supuestos de la proyección:**
-        - Tasas de crecimiento basadas en el desempeño histórico
-        - Crecimiento mensual promedio del capital: {:.2%}
-        - Crecimiento mensual promedio de ganancias: {:.2%}
-        - Escenario 2 incluye inyección inicial de $5,000 y anualidades del mismo monto
-        - Las proyecciones son estimativas y no garantizan resultados futuros
-        """.format(avg_capital_growth, avg_profit_growth))
+        <div style="background-color: #2d2d2d; padding: 15px; border-radius: 10px; border-left: 4px solid #8f10ca;">
+            <h3>📌 Supuestos de la proyección</h3>
+            <p><b>Tasas de crecimiento basadas en:</b></p>
+            <ul>
+                <li>Crecimiento mensual promedio del capital (últimos 6 meses): <b>{:.2%}</b></li>
+                <li>Crecimiento mensual promedio de ganancias (últimos 6 meses): <b>{:.2%}</b></li>
+            </ul>
+            <p><b>Escenarios considerados:</b></p>
+            <ol>
+                <li><b>Conservador:</b> Mantiene el crecimiento histórico sin cambios</li>
+                <li><b>Moderado:</b> Crecimiento un 25% superior al histórico</li>
+                <li><b>Óptimo:</b> Crecimiento un 50% superior al histórico</li>
+            </ol>
+            <p style="color: #ff6b6b;">⚠️ Las proyecciones son estimativas y no garantizan resultados futuros. 
+            El área sombreada representa el rango más probable entre los escenarios conservador y moderado.</p>
+        </div>
+        """.format(avg_capital_growth, avg_profit_growth), unsafe_allow_html=True)
     else:
         st.warning("No hay suficientes datos históricos para generar proyecciones")
 
@@ -492,7 +574,7 @@ def calculate_max_drawdown(df):
     return 0
 
 # =============================================
-# INTERFAZ PRINCIPAL (CON GRÁFICA COMBINADA IMPLEMENTADA)
+# INTERFAZ PRINCIPAL
 # =============================================
 
 def main():
@@ -652,7 +734,7 @@ def main():
             tab1, tab2, tab3, tab4 = st.tabs(["📈 Visualizaciones Principales", "📊 Análisis Avanzado", "🔍 Detalle de Datos", "🔮 Proyección Futura"])
             
             with tab1:
-                # Gráfico combinado de capital y retiros (VERSIÓN IMPLEMENTADA)
+                # Gráfico combinado de capital y retiros
                 if all(col in filtered_df.columns for col in ['Fecha', 'Capital Invertido', 'Retiro de Fondos']):
                     try:
                         plot_combined_capital_withdrawals(filtered_df, capital_inicial)
@@ -708,9 +790,6 @@ def main():
                 
                 # Gráfico de cascada
                 plot_waterfall(filtered_df)
-                
-                # Mapa de calor de correlaciones
-                plot_correlation_heatmap(filtered_df)
                 
                 # Análisis de drawdown
                 if 'Capital Invertido' in filtered_df.columns:
