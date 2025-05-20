@@ -178,7 +178,7 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
             delta=delta_display,
             key=f"card_{title.replace(' ', '_')}",
             background="#1eca10",
-            border_color="#8f10ca",
+            border_color="#1eca10",
             border_size_px=4,
             help=explanation
         )
