@@ -195,10 +195,10 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
             background: #1810ca;
             color: #ffffff;
             border-radius: 10px;
-            padding: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            padding: 12px;
+            box-shadow: 0 6px 8px rgba(0,0,0,0.3);
             margin-bottom: 20px;
-            border-left: 4px solid #7010ca;
+            border-left: 8px solid #7010ca;
             position: relative;
         ">
             <div style="font-weight: 600; font-size: 14px; color: #ffffff;">
