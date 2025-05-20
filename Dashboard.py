@@ -211,7 +211,7 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
         """, unsafe_allow_html=True)
 
 # =============================================
-# GRÁFICOS MEJORADOS (CON GRÁFICA COMBINADA)
+# GRÁFICOS MEJORADOS
 # =============================================
 
 def plot_combined_capital_withdrawals(df, capital_inicial):
