@@ -13,7 +13,7 @@ from io import BytesIO
 
 # Configuración de página
 st.set_page_config(
-    page_title="Dashboard Fallone Investments",
+    page_title="DashBoard Fallone Investments",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -107,7 +107,7 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
     kpi_explanations = {
         "ID Inversionista": "Identificador único del inversionista",
         "Capital Inicial": "Monto inicial invertido",
-        "ROI": "Retorno sobre la inversión (Ganancias Netas / Capital Inicial)",
+        "ROI": "Retorno sobre la inversión (Ganancias Netas / Capital Inyectado)",
         # ... (otros tooltips)
     }
     
@@ -141,7 +141,7 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
             border-radius: 10px;
             padding: 15px;
             margin-bottom: 20px;
-            border-left: 4px solid #ca1040;
+            border-left: 4px solid #8f10ca;
         ">
             <div style="font-weight: 600; font-size: 14px;">
                 {icon} {title}
@@ -322,7 +322,7 @@ def main():
     </style>
     """, unsafe_allow_html=True)
     
-    st.title("📊 Dashboard Financiero Fallone")
+    st.title("📊 Fondo de Inversión Fallone Investment")
     
     # Carga de datos
     uploaded_file = st.file_uploader("Subir archivo Excel", type=['xlsx', 'xls'])
