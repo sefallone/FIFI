@@ -116,29 +116,41 @@ if uploaded_file:
         elif pagina == "📊 Gráficos":
             st.title("📊 Visualizaciones Financieras")
 
+            # 📈 Capital Invertido (línea) + Retiros (barras)
+            df_plot = df.copy()
+            df_plot["Retiros"] = df_plot["Retiro de Fondos"].fillna(0)
+
+            fig_capital = px.bar(df_plot, x="Fecha", y="Retiros", title="Capital Invertido y Retiros", labels={"value": "Monto"}, template="plotly_white")
+            fig_capital.add_scatter(x=df_plot["Fecha"], y=df_plot["Capital Acumulado"], mode='lines+markers', name="Capital Invertido", line=dict(color="blue"))
+
+            st.plotly_chart(fig_capital, use_container_width=True)
+
+            # 📉 Ganancia Neta Acumulada
             fig1 = px.line(df, x="Fecha", y="Ganacias/Pérdidas Netas Acumuladas", title="Ganancia Neta Acumulada", template="plotly_white")
             st.plotly_chart(fig1, use_container_width=True)
 
+            # 📊 Bruta vs Neta
             fig2 = px.line(df, x="Fecha", y=["Ganacias/Pérdidas Brutas", "Ganacias/Pérdidas Netas"], title="Bruta vs Neta", template="plotly_white")
             st.plotly_chart(fig2, use_container_width=True)
 
+            # 📊 Ganancia Neta Mensual
             ganancias_mensuales = df.groupby(df["Fecha"].dt.to_period("M"))["Ganacias/Pérdidas Netas"].sum().reset_index()
             ganancias_mensuales["Fecha"] = ganancias_mensuales["Fecha"].astype(str)
             fig3 = px.bar(ganancias_mensuales, x="Fecha", y="Ganacias/Pérdidas Netas", title="Ganancia Neta Mensual", template="plotly_white")
             st.plotly_chart(fig3, use_container_width=True)
 
+            # 📊 Comisiones Mensuales
             comisiones_mensuales = df.groupby(df["Fecha"].dt.to_period("M"))["Comisiones Pagadas"].sum().reset_index()
             comisiones_mensuales["Fecha"] = comisiones_mensuales["Fecha"].astype(str)
             fig4 = px.bar(comisiones_mensuales, x="Fecha", y="Comisiones Pagadas", title="Comisiones Mensuales", template="plotly_white")
             st.plotly_chart(fig4, use_container_width=True)
 
-            fig5 = px.line(df, x="Fecha", y="Capital Acumulado", title="Capital Invertido Acumulado", template="plotly_white")
-            st.plotly_chart(fig5, use_container_width=True)
-
+            # 📈 Rentabilidad Mensual (%)
             rentabilidad = df.groupby("Mes")["Beneficio en %"].mean().reset_index()
             rentabilidad["Mes"] = rentabilidad["Mes"].astype(str)
             fig6 = px.bar(rentabilidad, x="Mes", y="Beneficio en %", title="Rentabilidad Mensual (%)", template="plotly_white")
             st.plotly_chart(fig6, use_container_width=True)
+
 
         # =========================
         # 📈 PROYECCIONES
