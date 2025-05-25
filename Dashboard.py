@@ -148,22 +148,31 @@ if uploaded_file:
             st.plotly_chart(fig6, use_container_width=True)
 
         elif pagina == "📈 Proyecciones":
-            st.title("📈 Proyecciones de Crecimiento")
+            st.title("📈 Proyección de Inversión Personalizada")
 
-            monthly_returns = df.groupby("Mes")["Ganacias/Pérdidas Netas"].sum()
-            monthly_avg_return_pct = monthly_returns.pct_change().mean()
-            tasa_defecto = 2.0
-            tasa_base = monthly_avg_return_pct * 100 if pd.notna(monthly_avg_return_pct) and np.isfinite(monthly_avg_return_pct) else tasa_defecto
+            capital_actual = float(df["Capital Invertido"].dropna().iloc[-1])
+            aumento_opcion = st.selectbox("Selecciona porcentaje de aumento de capital", [0, 5, 10, 20, 30, 50])
+            beneficio_mensual = st.slider("Beneficio mensual estimado (%)", min_value=0.0, max_value=15.0, value=5.0, step=0.5)
+            meses_proyeccion = st.slider("Duración de la inversión (meses)", min_value=1, max_value=60, value=12)
 
-            capital_inicial_proy = st.number_input("Capital Inicial", value=float(df["Capital Invertido"].iloc[-1]), step=100.0)
-            tasa = st.slider("Tasa de crecimiento mensual (%)", min_value=-10.0, max_value=10.0, value=round(tasa_base, 2))
-            meses = st.slider("Meses a proyectar", 1, 60, 12)
+            capital_proyectado = capital_actual * (1 + aumento_opcion / 100)
+            proyeccion = [capital_proyectado * ((1 + beneficio_mensual / 100) ** i) for i in range(meses_proyeccion + 1)]
+            df_proy = pd.DataFrame({"Mes": list(range(meses_proyeccion + 1)), "Proyección": proyeccion})
 
-            proyeccion = [capital_inicial_proy * ((1 + tasa / 100) ** i) for i in range(meses + 1)]
-            df_proj = pd.DataFrame({"Mes": list(range(meses + 1)), "Proyección": proyeccion})
+            st.markdown("---")
+            col1, _ = st.columns(2)
+            with col1:
+                st.metric(label="💼 Capital Inicial Proyectado", value=f"${capital_proyectado:,.2f}")
+                st.metric(label="📈 Valor Estimado Final", value=f"${proyeccion[-1]:,.2f}")
 
-            fig_proj = px.line(df_proj, x="Mes", y="Proyección", title="Proyección de Capital Futuro", template="plotly_white")
-            st.plotly_chart(fig_proj, use_container_width=True)
+            fig = px.line(df_proy, x="Mes", y="Proyección", title="Proyección de Crecimiento de Capital", template="plotly_white")
+            st.plotly_chart(fig, use_container_width=True)
+
+            st.markdown("### 📄 Detalle de Proyección (mes a mes)")
+            st.dataframe(df_proy.style.format({"Proyección": "${:,.2f}"}), use_container_width=True)
+
+            csv = df_proy.to_csv(index=False).encode("utf-8")
+            st.download_button("📥 Descargar proyección en CSV", data=csv, file_name="proyeccion.csv", mime="text/csv")
 
         elif pagina == "⚖️ Comparaciones":
             st.title("⚖️ Comparativa Mensual")
