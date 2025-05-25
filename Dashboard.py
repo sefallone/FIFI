@@ -150,7 +150,7 @@ if uploaded_file:
             monthly_returns = df.groupby("Mes")["Ganacias/Pérdidas Netas"].sum()
             monthly_avg_return_pct = monthly_returns.pct_change().mean()
 
-            capital_inicial_proy = st.number_input("Capital Inicial", value=float(df["Capital Acumulado"].iloc[-1]), step=100.0)
+            capital_inicial_proy = st.number_input("Capital Inicial", value=float(df["Capital Invertido"].iloc[-1]), step=100.0)
             tasa = st.slider("Tasa de crecimiento mensual (%)", min_value=-10.0, max_value=10.0, value=float(monthly_avg_return_pct * 100 if not np.isnan(monthly_avg_return_pct) else 2.0))
             meses = st.slider("Meses a proyectar", 1, 60, 12)
 
