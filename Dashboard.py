@@ -146,12 +146,16 @@ if uploaded_file:
         elif pagina == "📈 Proyecciones":
             st.title("📈 Proyecciones de Crecimiento")
 
-            # Asegurarse de que monthly_avg_return_pct esté definido
+            # Asegurarse de que monthly_avg_return_pct esté definido de forma segura
             monthly_returns = df.groupby("Mes")["Ganacias/Pérdidas Netas"].sum()
             monthly_avg_return_pct = monthly_returns.pct_change().mean()
 
+            # Valor por defecto si es NaN o inf
+            tasa_defecto = 2.0  # Porcentaje mensual
+            tasa_base = monthly_avg_return_pct * 100 if pd.notna(monthly_avg_return_pct) and np.isfinite(monthly_avg_return_pct) else tasa_defecto
+
             capital_inicial_proy = st.number_input("Capital Inicial", value=float(df["Capital Invertido"].iloc[-1]), step=100.0)
-            tasa = st.slider("Tasa de crecimiento mensual (%)", min_value=-10.0, max_value=10.0, value=float(monthly_avg_return_pct * 100 if not np.isnan(monthly_avg_return_pct) else 2.0))
+            tasa = st.slider("Tasa de crecimiento mensual (%)", min_value=-10.0, max_value=10.0, value=round(tasa_base, 2))
             meses = st.slider("Meses a proyectar", 1, 60, 12)
 
             proyeccion = [capital_inicial_proy * ((1 + tasa / 100) ** i) for i in range(meses + 1)]
@@ -159,6 +163,7 @@ if uploaded_file:
 
             fig_proj = px.line(df_proj, x="Mes", y="Proyección", title="Proyección de Capital Futuro", template="plotly_white")
             st.plotly_chart(fig_proj, use_container_width=True)
+
 
 
         # =========================
