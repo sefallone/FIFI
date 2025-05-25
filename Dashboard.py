@@ -178,14 +178,14 @@ if uploaded_file:
             output = BytesIO()
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
               resumen = pd.DataFrame({
-                "Descripción": [
-                "Capital Actual",
-                "% Aumento",
-                "Capital Proyectado",
-                "% Beneficio Mensual",
-                "Meses de Proyección",
-                "Valor Final Estimado",
-                "Capital Compuesto Anual"
+                    "Descripción": [
+                    "Capital Actual",
+                    "% Aumento",
+                    "Capital Proyectado",
+                    "% Beneficio Mensual",
+                    "Meses de Proyección",
+                    "Valor Final Estimado",
+                    "Capital Compuesto Anual"
                 ],
                 "Valor": [
                     capital_actual,
@@ -196,9 +196,9 @@ if uploaded_file:
                     proyeccion[-1],
                     capital_proyectado * ((1 + beneficio_mensual / 100) ** 12)
                 ]
-                })
-            resumen.to_excel(writer, index=False, sheet_name="Resumen")
-            df_proy.to_excel(writer, index=False, sheet_name="Proyección")
+              })
+              resumen.to_excel(writer, index=False, sheet_name="Resumen")
+              df_proy.to_excel(writer, index=False, sheet_name="Proyección")
             excel_data = output.getvalue()
             st.download_button("📥 Descargar proyección en Excel", data=excel_data, file_name="proyeccion.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
