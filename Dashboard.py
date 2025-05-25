@@ -4,14 +4,12 @@ import numpy as np
 import plotly.express as px
 from datetime import datetime
 
-# Configuración general de página
+# Configuración general
 st.set_page_config(page_title="Dashboard FIFI", layout="wide")
 
 st.sidebar.title("Configuración")
 
-# =========================
-# 📁 Subida de archivo
-# =========================
+# Subida de archivo
 uploaded_file = st.sidebar.file_uploader("Sube el archivo Excel (.xlsx)", type=["xlsx"])
 
 if uploaded_file:
@@ -21,9 +19,7 @@ if uploaded_file:
         df["Fecha"] = pd.to_datetime(df["Fecha"], errors="coerce")
         df = df.sort_values("Fecha")
 
-        # =========================
-        # 🔍 Filtro de fechas
-        # =========================
+        # Filtro de fechas
         st.sidebar.markdown("### Filtros por Fecha")
         fecha_min = df["Fecha"].min()
         fecha_max = df["Fecha"].max()
@@ -35,32 +31,43 @@ if uploaded_file:
         )
 
         if fecha_inicio > fecha_fin:
-            st.warning("⚠️ La fecha de inicio es mayor que la final.")
+            st.warning("⚠️ La fecha de inicio es mayor que la fecha final.")
         else:
             df = df[(df["Fecha"] >= pd.to_datetime(fecha_inicio)) & (df["Fecha"] <= pd.to_datetime(fecha_fin))]
 
-        # =========================
-        # 🧮 Preprocesamiento base
-        # =========================
+        # Preprocesamiento
         df["Mes"] = df["Fecha"].dt.to_period("M")
         df["Acumulado"] = df["Ganacias/Pérdidas Netas Acumuladas"].fillna(method="ffill")
         df["MaxAcum"] = df["Acumulado"].cummax()
         df["Drawdown"] = df["Acumulado"] - df["MaxAcum"]
         df["Capital Acumulado"] = df["Capital Invertido"].fillna(0).cumsum()
 
-        # =========================
-        # 🚀 Navegación multipágina
-        # =========================
+        # Navegación
         pagina = st.sidebar.radio("Selecciona la sección", ["📌 KPIs", "📊 Gráficos", "📈 Proyecciones", "⚖️ Comparaciones"])
 
+        # Estilo de KPI
+        def styled_kpi(title, value, bg_color="#ffffff", text_color="#333"):
+            st.markdown(f"""
+            <div style="
+                background-color: {bg_color};
+                color: {text_color};
+                padding: 20px;
+                border-radius: 15px;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                text-align: center;
+                margin-bottom: 15px;">
+                <div style='font-size:18px; font-weight: 600;'>{title}</div>
+                <div style='font-size:28px; font-weight: bold;'>{value}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
         # =========================
-        # 📌 KPIs estilizados
+        # 📌 KPIs
         # =========================
         if pagina == "📌 KPIs":
             st.title("📌 Indicadores Clave de Desempeño (KPIs)")
             st.markdown("---")
 
-            # Cálculos
             total_invertido = df["Capital Invertido"].sum(skipna=True)
             total_aumento = df["Aumento Capital"].sum(skipna=True)
             total_retiros = df["Retiro de Fondos"].sum(skipna=True)
@@ -79,64 +86,59 @@ if uploaded_file:
 
             max_drawdown = df["Drawdown"].min()
 
-            # Función para KPI estilizado
-            def styled_kpi(title, value, color):
-                st.markdown(f"""
-                <div style='padding:15px; border-radius:12px; background-color:{color}; margin-bottom:10px;'>
-                    <h5 style='margin:0; color:white;'>{title}</h5>
-                    <h3 style='margin:0; color:white;'>{value}</h3>
-                </div>
-                """, unsafe_allow_html=True)
-
-            # KPIs en tarjetas
+            # KPIs estilizados
             col1, col2, col3, col4 = st.columns(4)
-            with col1: styled_kpi("💰 Capital Invertido", f"${total_invertido:,.2f}", "#1f77b4")
-            with col2: styled_kpi("📈 Aumento de Capital", f"${total_aumento:,.2f}", "#2ca02c")
-            with col3: styled_kpi("💸 Retiros", f"${total_retiros:,.2f}", "#ff7f0e")
-            with col4: styled_kpi("📊 ROI Total", f"{roi:.2%}", "#d62728")
+            with col1: styled_kpi("💰 Capital Invertido", f"${total_invertido:,.2f}", "#E8F0FE")
+            with col2: styled_kpi("📈 Aumento de Capital", f"${total_aumento:,.2f}", "#E6F4EA")
+            with col3: styled_kpi("💸 Retiros", f"${total_retiros:,.2f}", "#FFF4E5")
+            with col4: styled_kpi("📊 ROI Total", f"{roi:.2%}", "#FDECEF")
 
             col5, col6, col7, col8 = st.columns(4)
-            with col5: styled_kpi("📉 Ganancia Bruta", f"${ganancia_bruta:,.2f}", "#9467bd")
-            with col6: styled_kpi("📈 Ganancia Neta", f"${ganancia_neta:,.2f}", "#17becf")
-            with col7: styled_kpi("🧾 Comisiones Pagadas", f"${comisiones:,.2f}", "#8c564b")
-            with col8: styled_kpi("📆 Rentab. Mensual Prom.", f"{monthly_avg_return_pct:.2%}", "#e377c2")
+            with col5: styled_kpi("📉 Ganancia Bruta", f"${ganancia_bruta:,.2f}", "#F0F4C3")
+            with col6: styled_kpi("📈 Ganancia Neta", f"${ganancia_neta:,.2f}", "#E1F5FE")
+            with col7: styled_kpi("🧾 Comisiones Pagadas", f"${comisiones:,.2f}", "#F3E5F5")
+            with col8: styled_kpi("📆 Rentab. Mensual Prom.", f"{monthly_avg_return_pct:.2%}", "#F1F8E9")
 
             col9, col10 = st.columns(2)
-            with col9: styled_kpi("📈 CAGR Mensual", f"{cagr_mensual:.2%}", "#7f7f7f")
-            with col10: styled_kpi("📉 Drawdown Máximo", f"${max_drawdown:,.2f}", "#bcbd22")
+            with col9: styled_kpi("📈 CAGR Mensual", f"{cagr_mensual:.2%}", "#F0F0F0")
+            with col10: styled_kpi("📉 Drawdown Máximo", f"${max_drawdown:,.2f}", "#FFEBEE")
 
         # =========================
-        # 📊 Visualizaciones
+        # 📊 GRÁFICOS
         # =========================
         elif pagina == "📊 Gráficos":
             st.title("📊 Visualizaciones Financieras")
 
-            fig1 = px.line(df, x="Fecha", y="Ganacias/Pérdidas Netas Acumuladas", title="Ganancia Neta Acumulada")
+            fig1 = px.line(df, x="Fecha", y="Ganacias/Pérdidas Netas Acumuladas",
+                           title="Ganancia Neta Acumulada", template="plotly_white")
             st.plotly_chart(fig1, use_container_width=True)
 
-            fig2 = px.line(df, x="Fecha", y=["Ganacias/Pérdidas Brutas", "Ganacias/Pérdidas Netas"], title="Bruta vs Neta")
+            fig2 = px.line(df, x="Fecha", y=["Ganacias/Pérdidas Brutas", "Ganacias/Pérdidas Netas"],
+                           title="Bruta vs Neta", template="plotly_white")
             st.plotly_chart(fig2, use_container_width=True)
 
             ganancias_mensuales = df.groupby(df["Fecha"].dt.to_period("M"))["Ganacias/Pérdidas Netas"].sum().reset_index()
             ganancias_mensuales["Fecha"] = ganancias_mensuales["Fecha"].astype(str)
-            fig3 = px.bar(ganancias_mensuales, x="Fecha", y="Ganacias/Pérdidas Netas", title="Ganancia Neta Mensual")
+            fig3 = px.bar(ganancias_mensuales, x="Fecha", y="Ganacias/Pérdidas Netas",
+                          title="Ganancia Neta Mensual", template="plotly_white")
             st.plotly_chart(fig3, use_container_width=True)
 
             comisiones_mensuales = df.groupby(df["Fecha"].dt.to_period("M"))["Comisiones Pagadas"].sum().reset_index()
             comisiones_mensuales["Fecha"] = comisiones_mensuales["Fecha"].astype(str)
-            fig4 = px.bar(comisiones_mensuales, x="Fecha", y="Comisiones Pagadas", title="Comisiones Mensuales")
+            fig4 = px.bar(comisiones_mensuales, x="Fecha", y="Comisiones Pagadas",
+                          title="Comisiones Mensuales", template="plotly_white")
             st.plotly_chart(fig4, use_container_width=True)
 
-            fig5 = px.line(df, x="Fecha", y="Capital Acumulado", title="Capital Invertido Acumulado")
+            fig5 = px.line(df, x="Fecha", y="Capital Acumulado", title="Capital Invertido Acumulado", template="plotly_white")
             st.plotly_chart(fig5, use_container_width=True)
 
             rentabilidad = df.groupby("Mes")["Beneficio en %"].mean().reset_index()
             rentabilidad["Mes"] = rentabilidad["Mes"].astype(str)
-            fig6 = px.bar(rentabilidad, x="Mes", y="Beneficio en %", title="Rentabilidad Mensual (%)")
+            fig6 = px.bar(rentabilidad, x="Mes", y="Beneficio en %", title="Rentabilidad Mensual (%)", template="plotly_white")
             st.plotly_chart(fig6, use_container_width=True)
 
         # =========================
-        # 📈 Proyecciones
+        # 📈 PROYECCIONES
         # =========================
         elif pagina == "📈 Proyecciones":
             st.title("📈 Proyecciones de Crecimiento")
@@ -149,11 +151,11 @@ if uploaded_file:
             proyeccion = [capital_inicial * ((1 + tasa / 100) ** i) for i in range(meses + 1)]
             df_proj = pd.DataFrame({"Mes": list(range(meses + 1)), "Proyección": proyeccion})
 
-            fig_proj = px.line(df_proj, x="Mes", y="Proyección", title="Proyección de Capital Futuro")
+            fig_proj = px.line(df_proj, x="Mes", y="Proyección", title="Proyección de Capital Futuro", template="plotly_white")
             st.plotly_chart(fig_proj, use_container_width=True)
 
         # =========================
-        # ⚖️ Comparaciones
+        # ⚖️ COMPARACIONES
         # =========================
         elif pagina == "⚖️ Comparaciones":
             st.title("⚖️ Comparativa Mensual")
@@ -164,24 +166,23 @@ if uploaded_file:
                 "Comisiones Pagadas": "sum",
                 "Beneficio en %": "mean"
             }).reset_index()
-
             comparacion["Mes"] = comparacion["Mes"].astype(str)
 
             fig_cmp1 = px.bar(comparacion, x="Mes", y=["Ganacias/Pérdidas Brutas", "Ganacias/Pérdidas Netas"],
-                              barmode="group", title="Ganancias Brutas vs Netas")
+                              barmode="group", title="Ganancias Brutas vs Netas", template="plotly_white")
             st.plotly_chart(fig_cmp1, use_container_width=True)
 
-            fig_cmp2 = px.bar(comparacion, x="Mes", y="Comisiones Pagadas", title="Comisiones por Mes")
+            fig_cmp2 = px.bar(comparacion, x="Mes", y="Comisiones Pagadas", title="Comisiones por Mes", template="plotly_white")
             st.plotly_chart(fig_cmp2, use_container_width=True)
 
-            fig_cmp3 = px.line(comparacion, x="Mes", y="Beneficio en %", title="Rentabilidad Promedio Mensual (%)")
+            fig_cmp3 = px.line(comparacion, x="Mes", y="Beneficio en %", title="Rentabilidad Promedio Mensual (%)", template="plotly_white")
             st.plotly_chart(fig_cmp3, use_container_width=True)
 
     except Exception as e:
         st.error(f"❌ Error al procesar el archivo: {e}")
-
 else:
     st.info("📂 Por favor, sube un archivo Excel desde la barra lateral para comenzar.")
+
 
 
 
