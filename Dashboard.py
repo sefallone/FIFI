@@ -166,13 +166,20 @@ def main():
             st.warning("⚠️ El archivo está vacío o no tiene datos válidos.")
             return
 
-        # Renombrar columnas si es necesario
-        rename_dict = {
+        # Eliminar columnas duplicadas
+        df = df.loc[:, ~df.columns.duplicated()]
+
+        # Renombrar columnas si es necesario y evitar duplicación
+        if 'Comisiones 10 %' in df.columns:
+            if 'Comisiones Pagadas' not in df.columns:
+                df.rename(columns={'Comisiones 10 %': 'Comisiones Pagadas'}, inplace=True)
+            else:
+                df.drop(columns=['Comisiones 10 %'], inplace=True)
+
+        df.rename(columns={
             'Ganacias/Pérdidas Brutas': 'Ganancias/Pérdidas Brutas',
-            'Ganacias/Pérdidas Netas': 'Ganancias/Pérdidas Netas',
-            'Comisiones 10 %': 'Comisiones Pagadas'
-        }
-        df.rename(columns={k: v for k, v in rename_dict.items() if k in df.columns}, inplace=True)
+            'Ganacias/Pérdidas Netas': 'Ganancias/Pérdidas Netas'
+        }, inplace=True)
 
         # Conversión de fecha
         if 'Fecha' not in df.columns:
@@ -194,6 +201,9 @@ def main():
         cagr = calculate_cagr(filtered_df, capital_inicial, current_capital)
         drawdown = calculate_max_drawdown(filtered_df)
         sharpe = calculate_sharpe_ratio(filtered_df)
+
+        # KPIs y Tabs seguirían aquí...
+
         # ==========================
         # KPIs FINANCIEROS
         # ==========================
