@@ -1,157 +1,131 @@
-import streamlit as st
+import streamlit as st 
 import pandas as pd
-import numpy as np
 import plotly.express as px
+import numpy as np
 from datetime import datetime
 
-# ========== CONFIGURACIÓN DE LA PÁGINA ==========
-st.set_page_config(page_title="Dashboard Fallone Investments", layout="wide")
+st.set_page_config(
+    page_title="Dashboard Fallone Investments",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-# ========== CARGA Y LIMPIEZA DE DATOS ==========
-@st.cache_data
-def load_data(file, sheet_name):
-    df = pd.read_excel(file, sheet_name=sheet_name)
-    rename_dict = {
-        'Ganacias/Pérdidas Brutas': 'Ganancias/Pérdidas Brutas',
-        'Ganacias/Pérdidas Netas': 'Ganancias/Pérdidas Netas',
-        'Comisiones 10 %': 'Comisiones Pagadas',
-        'Beneficio en %': 'Beneficio %'
-    }
-    df = df.rename(columns={k: v for k, v in rename_dict.items() if k in df.columns})
-    df = df.loc[:, ~df.columns.duplicated()]
-    df['Fecha'] = pd.to_datetime(df['Fecha'])
-    return df
+def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False, delta=None):
+    if pd.isna(value) or value is None:
+        value_display = "N/D"
+    else:
+        if is_currency:
+            value_display = f"${float(value):,.2f}"
+        elif is_percentage:
+            value_display = f"{float(value):.2f}%"
+        else:
+            value_display = f"{value:.2f}"
 
-# ========== VALIDACIONES ==========
-def validar_columnas(df, columnas_requeridas):
-    faltantes = [col for col in columnas_requeridas if col not in df.columns]
-    if faltantes:
-        st.error(f"❌ Faltan columnas esenciales: {faltantes}")
-        st.stop()
+    st.markdown(f"""
+    <div style="background: #1810ca; color: white; border-radius: 10px;
+                padding: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                border-left: 6px solid #8f10ca; margin-bottom: 10px;">
+        <div style="font-weight: bold; font-size: 14px;">{icon} {title}</div>
+        <div style="font-size: 24px; font-weight: bold;">{value_display}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-# ========== CÁLCULO DE MÉTRICAS ==========
-def calcular_kpis(df):
-    capital_inicial = df['Aumento Capital'].dropna().iloc[0] if not df['Aumento Capital'].dropna().empty else 0
-    capital_actual = df['Capital Invertido'].iloc[-1]
-    total_retiros = df['Retiro de Fondos'].sum()
-    ganancias_netas = df['Ganancias/Pérdidas Netas'].sum()
-    ganancias_brutas = df['Ganancias/Pérdidas Brutas'].sum()
-    comisiones = df['Comisiones Pagadas'].iloc[-1]  # ya viene acumulada
+def calculate_roi(df, capital_inicial):
+    if 'Ganancias/Pérdidas Netas' in df.columns and capital_inicial:
+        return (df['Ganancias/Pérdidas Netas'].sum() / capital_inicial) * 100
+    return 0
 
-    meses = (df['Fecha'].iloc[-1].year - df['Fecha'].iloc[0].year) * 12 + \
-            (df['Fecha'].iloc[-1].month - df['Fecha'].iloc[0].month)
-    cagr = ((capital_actual / capital_inicial) ** (12 / meses) - 1) * 100 if meses > 0 else 0
-    roi = (ganancias_netas / capital_inicial) * 100 if capital_inicial else 0
+def calculate_cagr(df, capital_inicial, current_capital):
+    if len(df) > 1 and capital_inicial:
+        start = df['Fecha'].iloc[0]
+        end = df['Fecha'].iloc[-1]
+        months = (end.year - start.year) * 12 + (end.month - start.month)
+        if months > 0:
+            return ((current_capital / capital_inicial) ** (12 / months) - 1) * 100
+    return 0
 
-    df['Capital Acumulado'] = df['Capital Invertido'].cummax()
-    df['Drawdown'] = (df['Capital Invertido'] - df['Capital Acumulado']) / df['Capital Acumulado']
-    drawdown_max = df['Drawdown'].min() * 100 if not df['Drawdown'].isna().all() else 0
+def calculate_max_drawdown(df):
+    if 'Capital Invertido' in df.columns:
+        df['Max'] = df['Capital Invertido'].cummax()
+        df['Drawdown'] = (df['Capital Invertido'] - df['Max']) / df['Max']
+        return df['Drawdown'].min() * 100
+    return 0
 
-    return {
-        "Capital Inicial": capital_inicial,
-        "Capital Actual": capital_actual,
-        "Ganancias Netas": ganancias_netas,
-        "Ganancias Brutas": ganancias_brutas,
-        "Comisiones Pagadas": comisiones,
-        "Retiros": total_retiros,
-        "ROI (%)": roi,
-        "CAGR (%)": cagr,
-        "Drawdown (%)": drawdown_max
-    }
+st.title("📊 Fondo de Inversión Fallone Investment")
 
-# ========== PROYECCIÓN A 3 AÑOS ==========
-def generar_proyecciones(df):
-    last = df.iloc[-1]
-    cap_actual = last['Capital Invertido']
-    gan_actual = last['Ganancias/Pérdidas Brutas']
-
-    df['Crec Capital'] = df['Capital Invertido'].pct_change().rolling(3, min_periods=1).mean()
-    df['Crec Ganancias'] = df['Ganancias/Pérdidas Brutas'].pct_change().rolling(3, min_periods=1).mean()
-    g_cap = df['Crec Capital'].iloc[-6:].mean()
-    g_gan = df['Crec Ganancias'].iloc[-6:].mean()
-
-    g_cap = 0.02 if not np.isfinite(g_cap) else g_cap
-    g_gan = 0.03 if not np.isfinite(g_gan) else g_gan
-
-    future_dates = pd.date_range(start=df['Fecha'].max() + pd.DateOffset(months=1), periods=36, freq='M')
-    escenarios = {
-        "Conservador": (g_cap, g_gan),
-        "Moderado": (g_cap * 1.25, g_gan * 1.25),
-        "Óptimo": (g_cap * 1.5, g_gan * 1.5)
-    }
-    proyecciones = []
-
-    for tipo, (gc, gg) in escenarios.items():
-        s = pd.DataFrame({'Fecha': future_dates})
-        s['Capital Invertido'] = cap_actual * (1 + gc) ** np.arange(1, 37)
-        s['Ganancias/Pérdidas Brutas'] = gan_actual * (1 + gg) ** np.arange(1, 37)
-        s['Escenario'] = tipo
-        proyecciones.append(s)
-
-    combinado = pd.concat([df.assign(Escenario='Histórico'), *proyecciones])
-    return combinado[['Fecha', 'Capital Invertido', 'Ganancias/Pérdidas Brutas', 'Escenario']]
-
-# ========== VISUALIZACIONES ==========
-def mostrar_kpis(kpis):
-    st.subheader("📌 KPIs Financieros")
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Capital Inicial", f"${kpis['Capital Inicial']:,.2f}")
-    col2.metric("Capital Actual", f"${kpis['Capital Actual']:,.2f}")
-    col3.metric("Ganancias Netas", f"${kpis['Ganancias Netas']:,.2f}")
-    col4.metric("Ganancias Brutas", f"${kpis['Ganancias Brutas']:,.2f}")
-
-    col5, col6, col7, col8 = st.columns(4)
-    col5.metric("Comisiones Pagadas", f"${kpis['Comisiones Pagadas']:,.2f}")
-    col6.metric("Retiros", f"${kpis['Retiros']:,.2f}")
-    col7.metric("ROI", f"{kpis['ROI (%)']:.2f}%")
-    col8.metric("CAGR Mensual", f"{kpis['CAGR (%)']:.2f}%")
-
-    col9, _, _, _ = st.columns(4)
-    col9.metric("Drawdown Máximo", f"{kpis['Drawdown (%)']:.2f}%")
-
-def graficos(df):
-    st.subheader("📊 Gráficos de Rendimiento")
-    st.plotly_chart(px.line(df, x='Fecha', y='Capital Invertido', title='📈 Capital Invertido'), use_container_width=True)
-    st.plotly_chart(px.bar(df, x='Fecha', y='Ganancias/Pérdidas Brutas', title='💰 Ganancias Brutas'), use_container_width=True)
-    st.plotly_chart(px.bar(df, x='Fecha', y='Retiro de Fondos', title='↘️ Retiros'), use_container_width=True)
-    st.plotly_chart(px.line(df, x='Fecha', y='Comisiones Pagadas', title='💸 Comisiones Pagadas (Acumuladas)'), use_container_width=True)
-
-def graficos_proyeccion(proj_df):
-    st.subheader("🔮 Proyección a 3 años")
-    fig1 = px.line(proj_df, x='Fecha', y='Capital Invertido', color='Escenario', title="Proyección de Capital Invertido", template="plotly_dark")
-    st.plotly_chart(fig1, use_container_width=True)
-
-    fig2 = px.line(proj_df, x='Fecha', y='Ganancias/Pérdidas Brutas', color='Escenario', title="Proyección de Ganancias Brutas", template="plotly_dark")
-    st.plotly_chart(fig2, use_container_width=True)
-
-# ========== APLICACIÓN PRINCIPAL ==========
-st.title("💼 Dashboard de Inversión - Fallone Investments")
-
-uploaded_file = st.file_uploader("📥 Carga tu archivo Excel", type=['xlsx'])
+uploaded_file = st.file_uploader("📥 Cargar archivo Excel", type=["xlsx"])
 
 if uploaded_file:
     try:
-        xls = pd.ExcelFile(uploaded_file)
-        sheet = st.selectbox("📄 Selecciona una hoja", xls.sheet_names)
-        df = load_data(uploaded_file, sheet)
+        df = pd.read_excel(uploaded_file)
+        df = df.loc[:, ~df.columns.duplicated()]
+        df.rename(columns={
+            'Ganacias/Pérdidas Brutas': 'Ganancias/Pérdidas Brutas',
+            'Ganacias/Pérdidas Netas': 'Ganancias/Pérdidas Netas',
+            'Comisiones 10 %': 'Comisiones Pagadas'
+        }, inplace=True)
+        df['Fecha'] = pd.to_datetime(df['Fecha'])
 
-        columnas_requeridas = ['Fecha', 'ID Inv', 'Capital Invertido',
-                               'Aumento Capital', 'Retiro de Fondos',
-                               'Ganancias/Pérdidas Brutas', 'Ganancias/Pérdidas Netas',
-                               'Comisiones Pagadas']
-        validar_columnas(df, columnas_requeridas)
+        capital_inicial = df['Aumento Capital'].dropna().iloc[0]
+        current_capital = df['Capital Invertido'].iloc[-1]
 
-        st.success("✅ Archivo cargado correctamente.")
-        st.dataframe(df.head(), use_container_width=True)
+        roi = calculate_roi(df, capital_inicial)
+        cagr = calculate_cagr(df, capital_inicial, current_capital)
+        drawdown = calculate_max_drawdown(df)
 
-        kpis = calcular_kpis(df)
-        mostrar_kpis(kpis)
+        ganancias_brutas = df['Ganancias/Pérdidas Brutas'].sum()
+        ganancias_netas = df['Ganancias/Pérdidas Netas'].sum()
+        comisiones = df['Comisiones Pagadas'].iloc[-1]
+        retiros = df['Retiro de Fondos'].sum()
 
-        graficos(df)
+        # KPIs
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            display_kpi("Capital Inicial", capital_inicial)
+        with col2:
+            display_kpi("Capital Actual", current_capital)
+        with col3:
+            display_kpi("Ganancias Brutas", ganancias_brutas)
+        with col4:
+            display_kpi("Ganancias Netas", ganancias_netas)
+
+        col5, col6, col7, col8 = st.columns(4)
+        with col5:
+            display_kpi("Comisiones Pagadas", comisiones)
+        with col6:
+            display_kpi("Retiros", retiros)
+        with col7:
+            display_kpi("ROI", roi, is_currency=False, is_percentage=True)
+        with col8:
+            display_kpi("CAGR Mensual", cagr, is_currency=False, is_percentage=True)
+
+        col9, _, _, _ = st.columns(4)
+        with col9:
+            display_kpi("Drawdown Máximo", drawdown, is_currency=False, is_percentage=True)
 
         st.markdown("---")
-        proj_df = generar_proyecciones(df)
-        graficos_proyeccion(proj_df)
+        st.subheader("📈 Visualización de Capital")
+        fig1 = px.line(df, x='Fecha', y='Capital Invertido', title="Capital Invertido")
+        st.plotly_chart(fig1, use_container_width=True)
+
+        st.subheader("💰 Ganancias Brutas")
+        fig2 = px.bar(df, x='Fecha', y='Ganancias/Pérdidas Brutas', title="Ganancias/Pérdidas Brutas")
+        st.plotly_chart(fig2, use_container_width=True)
+
+        st.subheader("↘️ Retiros")
+        fig3 = px.bar(df, x='Fecha', y='Retiro de Fondos', title="Retiros de Fondos")
+        st.plotly_chart(fig3, use_container_width=True)
+
+        st.subheader("💸 Comisiones Pagadas")
+        fig4 = px.area(
+            df,
+            x='Fecha',
+            y='Comisiones Pagadas',
+            title='Comisiones Pagadas Acumuladas',
+            labels={'Comisiones Pagadas': 'Monto ($)', 'Fecha': 'Fecha'},
+            template="plotly_dark"
+        )
+        st.plotly_chart(fig4, use_container_width=True)
 
     except Exception as e:
         st.error(f"❌ Error al procesar el archivo: {e}")
