@@ -176,7 +176,7 @@ if uploaded_file:
 
             from io import BytesIO
             output = BytesIO()
-            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            with pd.ExcelWriter(output, engine='openpyxl') as writer:
               resumen = pd.DataFrame({
                     "Descripción": [
                     "Capital Actual",
