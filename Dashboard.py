@@ -11,7 +11,7 @@ st.set_page_config(page_title="Dashboard FIFI", layout="wide")
 # Logo en barra lateral
 with st.sidebar:
     logo = Image.open("Logo.jpg")
-    st.image(logo, capton="Fallone Investments", use_column_width=True)
+    st.image(logo, caption="Fallone Investments", use_column_width=True)
     st.title("Configuración")
     
 # Subida de archivo
