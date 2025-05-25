@@ -7,8 +7,12 @@ from datetime import datetime
 
 # Configuración general
 st.set_page_config(page_title="Dashboard FIFI", layout="wide")
-st.sidebar.title("Configuración")
-
+# Logo en barra lateral
+with st.sidebar:
+    logo = Image.open("logo.jpg")
+    st.image(logo, caption="Fallone Investments", use_column_width=True)
+    st.title("Configuración")
+    
 # Subida de archivo
 uploaded_file = st.sidebar.file_uploader("Sube el archivo Excel (.xlsx)", type=["xlsx"])
 
