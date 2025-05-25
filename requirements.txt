@@ -9,4 +9,4 @@ streamlit_extras
 yfinance
 ta
 Image
-
+BytesIO
