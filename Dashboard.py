@@ -5,15 +5,22 @@ import plotly.express as px
 from plotly.graph_objs import Scatter
 from datetime import datetime
 from PIL import Image
+import base64
 
 # Configuración general
 st.set_page_config(page_title="Dashboard FIFI", layout="wide")
-# Logo en barra lateral
+# Logo en página principal
+logo = Image.open("Logo.jpg")
+st.markdown("""
+    <div style='text-align: center;'>
+        <img src='data:image/jpeg;base64,{}' style='width:200px;'/>
+        <h3 style='margin-top:10px;'>Fallone Investments</h3>
+    </div>
+    """.format(base64.b64encode(open("Logo.jpg", "rb").read()).decode()), unsafe_allow_html=True)
+
+# Sidebar config
 with st.sidebar:
-    logo = Image.open("Logo.jpg")
-    st.image(logo, caption="Fallone Investments", use_container_width=True)
     st.title("Configuración")
-    
 # Subida de archivo
 uploaded_file = st.sidebar.file_uploader("Sube el archivo Excel (.xlsx)", type=["xlsx"])
 
