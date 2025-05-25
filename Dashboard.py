@@ -111,7 +111,7 @@ if uploaded_file:
             df_plot["Retiros"] = df_plot["Retiro de Fondos"].fillna(0)
 
             fig_capital = px.bar(df_plot, x="Fecha", y="Retiros", title="Capital Invertido y Retiros", template="plotly_white")
-            fig_capital.add_scatter(x=df_plot["Fecha"], y=df_plot["Capital Acumulado"], mode='lines+markers', name="Capital Invertido", line=dict(color="blue"))
+            fig_capital.add_scatter(x=df_plot["Fecha"], y=df_plot["Capital Invertido"], mode='lines+markers', name="Capital Invertido", line=dict(color="blue"))
             st.plotly_chart(fig_capital, use_container_width=True)
 
             fig1 = px.line(df, x="Fecha", y="Ganacias/Pérdidas Netas Acumuladas", title="Ganancia Neta Acumulada", template="plotly_white")
