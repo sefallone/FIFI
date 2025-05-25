@@ -51,6 +51,25 @@ if uploaded_file:
         # 📌 KPIs
         # =========================
         if pagina == "📌 KPIs":
+
+            st.title("📌 Indicadores Clave de Desempeño (KPIs)")
+                st.markdown("---")
+
+            # Función para mostrar tarjetas estilizadas
+            def styled_kpi(title, value, color):
+                st.markdown(f"""
+                <div style='padding:15px; border-radius:12px; background-color:{color}; margin-bottom:10px;'>
+                <h5 style='margin:0; color:white;'>{title}</h5>
+                <h3 style='margin:0; color:white;'>{value}</h3>
+                </div>
+                """, unsafe_allow_html=True)
+
+            col1, col2, col3, col4 = st.columns(4)
+            with col1: styled_kpi("💰 Capital Invertido", f"${total_invertido:,.2f}", "#1f77b4")
+            with col2: styled_kpi("📈 Aumento de Capital", f"${total_aumento:,.2f}", "#2ca02c")
+            with col3: styled_kpi("💸 Retiros", f"${total_retiros:,.2f}", "#ff7f0e")
+            with col4: styled_kpi("📊 ROI Total", f"{roi:.2%}", "#d62728")
+                
             st.title("📌 Indicadores Clave de Desempeño (KPIs)")
 
             total_invertido = df["Capital Invertido"].sum(skipna=True)
