@@ -33,12 +33,12 @@ def display_kpi(title, value, icon="💰", is_currency=True, is_percentage=False
 # CÁLCULOS FINANCIEROS
 # =====================
 def calculate_roi(df, capital_inicial):
-    if 'Ganancias/Pérdidas Netas' in df.columns and capital_inicial:
+    if 'Ganancias/Pérdidas Netas' in df.columns and capital_inicial > 0:
         return (df['Ganancias/Pérdidas Netas'].sum() / capital_inicial) * 100
     return 0
 
 def calculate_cagr(df, capital_inicial, current_capital):
-    if len(df) > 1 and capital_inicial:
+    if len(df) > 1 and capital_inicial > 0:
         start = df['Fecha'].iloc[0]
         end = df['Fecha'].iloc[-1]
         months = (end.year - start.year) * 12 + (end.month - start.month)
@@ -71,7 +71,7 @@ if uploaded_file:
         }, inplace=True)
         df['Fecha'] = pd.to_datetime(df['Fecha'])
 
-        capital_inicial = df['Aumento Capital'].dropna().iloc[0]
+        capital_inicial = float(df['Aumento Capital'].dropna().values[0]) if not df['Aumento Capital'].dropna().empty else 0.0
         current_capital = df['Capital Invertido'].iloc[-1]
 
         roi = calculate_roi(df, capital_inicial)
@@ -142,5 +142,4 @@ if uploaded_file:
         st.error(f"❌ Error al procesar el archivo: {e}")
 else:
     st.info("📂 Sube un archivo Excel para comenzar.")
-
 
