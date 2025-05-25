@@ -11,7 +11,6 @@ st.set_page_config(page_title="Dashboard Fallone Investments", layout="wide")
 @st.cache_data
 def load_data(file, sheet_name):
     df = pd.read_excel(file, sheet_name=sheet_name)
-
     rename_dict = {
         'Ganacias/Pérdidas Brutas': 'Ganancias/Pérdidas Brutas',
         'Ganacias/Pérdidas Netas': 'Ganancias/Pérdidas Netas',
@@ -37,12 +36,16 @@ def calcular_kpis(df):
     total_retiros = df['Retiro de Fondos'].sum()
     ganancias_netas = df['Ganancias/Pérdidas Netas'].sum()
     ganancias_brutas = df['Ganancias/Pérdidas Brutas'].sum()
-    comisiones = df['Comisiones Pagadas'].sum()
+    comisiones = df['Comisiones Pagadas'].iloc[-1]  # ya viene acumulada
 
     meses = (df['Fecha'].iloc[-1].year - df['Fecha'].iloc[0].year) * 12 + \
             (df['Fecha'].iloc[-1].month - df['Fecha'].iloc[0].month)
     cagr = ((capital_actual / capital_inicial) ** (12 / meses) - 1) * 100 if meses > 0 else 0
     roi = (ganancias_netas / capital_inicial) * 100 if capital_inicial else 0
+
+    df['Capital Acumulado'] = df['Capital Invertido'].cummax()
+    df['Drawdown'] = (df['Capital Invertido'] - df['Capital Acumulado']) / df['Capital Acumulado']
+    drawdown_max = df['Drawdown'].min() * 100 if not df['Drawdown'].isna().all() else 0
 
     return {
         "Capital Inicial": capital_inicial,
@@ -52,7 +55,8 @@ def calcular_kpis(df):
         "Comisiones Pagadas": comisiones,
         "Retiros": total_retiros,
         "ROI (%)": roi,
-        "CAGR (%)": cagr
+        "CAGR (%)": cagr,
+        "Drawdown (%)": drawdown_max
     }
 
 # ========== PROYECCIÓN A 3 AÑOS ==========
@@ -100,27 +104,24 @@ def mostrar_kpis(kpis):
     col5.metric("Comisiones Pagadas", f"${kpis['Comisiones Pagadas']:,.2f}")
     col6.metric("Retiros", f"${kpis['Retiros']:,.2f}")
     col7.metric("ROI", f"{kpis['ROI (%)']:.2f}%")
-    col8.metric("CAGR", f"{kpis['CAGR (%)']:.2f}%")
+    col8.metric("CAGR Mensual", f"{kpis['CAGR (%)']:.2f}%")
+
+    col9, _, _, _ = st.columns(4)
+    col9.metric("Drawdown Máximo", f"{kpis['Drawdown (%)']:.2f}%")
 
 def graficos(df):
     st.subheader("📊 Gráficos de Rendimiento")
     st.plotly_chart(px.line(df, x='Fecha', y='Capital Invertido', title='📈 Capital Invertido'), use_container_width=True)
     st.plotly_chart(px.bar(df, x='Fecha', y='Ganancias/Pérdidas Brutas', title='💰 Ganancias Brutas'), use_container_width=True)
     st.plotly_chart(px.bar(df, x='Fecha', y='Retiro de Fondos', title='↘️ Retiros'), use_container_width=True)
+    st.plotly_chart(px.line(df, x='Fecha', y='Comisiones Pagadas', title='💸 Comisiones Pagadas (Acumuladas)'), use_container_width=True)
 
 def graficos_proyeccion(proj_df):
     st.subheader("🔮 Proyección a 3 años")
-
-    fig1 = px.line(
-        proj_df, x='Fecha', y='Capital Invertido', color='Escenario',
-        title="Proyección de Capital Invertido", template="plotly_dark"
-    )
+    fig1 = px.line(proj_df, x='Fecha', y='Capital Invertido', color='Escenario', title="Proyección de Capital Invertido", template="plotly_dark")
     st.plotly_chart(fig1, use_container_width=True)
 
-    fig2 = px.line(
-        proj_df, x='Fecha', y='Ganancias/Pérdidas Brutas', color='Escenario',
-        title="Proyección de Ganancias Brutas", template="plotly_dark"
-    )
+    fig2 = px.line(proj_df, x='Fecha', y='Ganancias/Pérdidas Brutas', color='Escenario', title="Proyección de Ganancias Brutas", template="plotly_dark")
     st.plotly_chart(fig2, use_container_width=True)
 
 # ========== APLICACIÓN PRINCIPAL ==========
