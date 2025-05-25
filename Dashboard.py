@@ -6,7 +6,6 @@ from datetime import datetime
 
 # Configuración general
 st.set_page_config(page_title="Dashboard FIFI", layout="wide")
-
 st.sidebar.title("Configuración")
 
 # Subida de archivo
@@ -42,10 +41,10 @@ if uploaded_file:
         df["Drawdown"] = df["Acumulado"] - df["MaxAcum"]
         df["Capital Acumulado"] = df["Capital Invertido"].fillna(0).cumsum()
 
-        # Navegación
+        # Navegación multipágina
         pagina = st.sidebar.radio("Selecciona la sección", ["📌 KPIs", "📊 Gráficos", "📈 Proyecciones", "⚖️ Comparaciones"])
 
-        # Estilo de KPI
+        # KPI estilizado profesional
         def styled_kpi(title, value, bg_color="#ffffff", text_color="#333"):
             st.markdown(f"""
             <div style="
@@ -68,14 +67,16 @@ if uploaded_file:
             st.title("📌 Indicadores Clave de Desempeño (KPIs)")
             st.markdown("---")
 
-            total_invertido = df["Capital Invertido"].sum(skipna=True)
-            total_aumento = df["Aumento Capital"].sum(skipna=True)
+            # KPIs corregidos según indicaciones
+            capital_invertido = df["Capital Invertido"].dropna().iloc[-1]
+            capital_inicial = df["Aumento Capital"].dropna().iloc[0]
             total_retiros = df["Retiro de Fondos"].sum(skipna=True)
             ganancia_bruta = df["Ganacias/Pérdidas Brutas"].sum(skipna=True)
             ganancia_neta = df["Ganacias/Pérdidas Netas"].sum(skipna=True)
-            comisiones = df["Comisiones Pagadas"].sum(skipna=True)
+            comisiones = df["Comisiones Pagadas"].dropna().iloc[-1]
+            fecha_ingreso = df["Fecha"].dropna().iloc[0].date()
 
-            capital_base = total_invertido + total_aumento - total_retiros
+            capital_base = capital_invertido - total_retiros
             roi = ganancia_neta / capital_base if capital_base > 0 else 0
 
             monthly_returns = df.groupby("Mes")["Ganacias/Pérdidas Netas"].sum()
@@ -86,10 +87,10 @@ if uploaded_file:
 
             max_drawdown = df["Drawdown"].min()
 
-            # KPIs estilizados
+            # Mostrar KPIs con estilo
             col1, col2, col3, col4 = st.columns(4)
-            with col1: styled_kpi("💰 Capital Invertido", f"${total_invertido:,.2f}", "#E8F0FE")
-            with col2: styled_kpi("📈 Aumento de Capital", f"${total_aumento:,.2f}", "#E6F4EA")
+            with col1: styled_kpi("💼 Capital Inicial", f"${capital_inicial:,.2f}", "#E8F0FE")
+            with col2: styled_kpi("💰 Capital Invertido", f"${capital_invertido:,.2f}", "#E6F4EA")
             with col3: styled_kpi("💸 Retiros", f"${total_retiros:,.2f}", "#FFF4E5")
             with col4: styled_kpi("📊 ROI Total", f"{roi:.2%}", "#FDECEF")
 
@@ -101,7 +102,7 @@ if uploaded_file:
 
             col9, col10 = st.columns(2)
             with col9: styled_kpi("📈 CAGR Mensual", f"{cagr_mensual:.2%}", "#F0F0F0")
-            with col10: styled_kpi("📉 Drawdown Máximo", f"${max_drawdown:,.2f}", "#FFEBEE")
+            with col10: styled_kpi("📅 Ingreso al Fondo", f"{fecha_ingreso.strftime('%d/%m/%Y')}", "#FFEBEE")
 
         # =========================
         # 📊 GRÁFICOS
@@ -109,24 +110,20 @@ if uploaded_file:
         elif pagina == "📊 Gráficos":
             st.title("📊 Visualizaciones Financieras")
 
-            fig1 = px.line(df, x="Fecha", y="Ganacias/Pérdidas Netas Acumuladas",
-                           title="Ganancia Neta Acumulada", template="plotly_white")
+            fig1 = px.line(df, x="Fecha", y="Ganacias/Pérdidas Netas Acumuladas", title="Ganancia Neta Acumulada", template="plotly_white")
             st.plotly_chart(fig1, use_container_width=True)
 
-            fig2 = px.line(df, x="Fecha", y=["Ganacias/Pérdidas Brutas", "Ganacias/Pérdidas Netas"],
-                           title="Bruta vs Neta", template="plotly_white")
+            fig2 = px.line(df, x="Fecha", y=["Ganacias/Pérdidas Brutas", "Ganacias/Pérdidas Netas"], title="Bruta vs Neta", template="plotly_white")
             st.plotly_chart(fig2, use_container_width=True)
 
             ganancias_mensuales = df.groupby(df["Fecha"].dt.to_period("M"))["Ganacias/Pérdidas Netas"].sum().reset_index()
             ganancias_mensuales["Fecha"] = ganancias_mensuales["Fecha"].astype(str)
-            fig3 = px.bar(ganancias_mensuales, x="Fecha", y="Ganacias/Pérdidas Netas",
-                          title="Ganancia Neta Mensual", template="plotly_white")
+            fig3 = px.bar(ganancias_mensuales, x="Fecha", y="Ganacias/Pérdidas Netas", title="Ganancia Neta Mensual", template="plotly_white")
             st.plotly_chart(fig3, use_container_width=True)
 
             comisiones_mensuales = df.groupby(df["Fecha"].dt.to_period("M"))["Comisiones Pagadas"].sum().reset_index()
             comisiones_mensuales["Fecha"] = comisiones_mensuales["Fecha"].astype(str)
-            fig4 = px.bar(comisiones_mensuales, x="Fecha", y="Comisiones Pagadas",
-                          title="Comisiones Mensuales", template="plotly_white")
+            fig4 = px.bar(comisiones_mensuales, x="Fecha", y="Comisiones Pagadas", title="Comisiones Mensuales", template="plotly_white")
             st.plotly_chart(fig4, use_container_width=True)
 
             fig5 = px.line(df, x="Fecha", y="Capital Acumulado", title="Capital Invertido Acumulado", template="plotly_white")
@@ -143,12 +140,12 @@ if uploaded_file:
         elif pagina == "📈 Proyecciones":
             st.title("📈 Proyecciones de Crecimiento")
 
-            capital_inicial = st.number_input("Capital Inicial", value=float(df["Capital Acumulado"].iloc[-1]), step=100.0)
+            capital_inicial_proy = st.number_input("Capital Inicial", value=float(df["Capital Acumulado"].iloc[-1]), step=100.0)
             tasa_mensual = monthly_avg_return_pct if not np.isnan(monthly_avg_return_pct) else 0.02
             tasa = st.slider("Tasa de crecimiento mensual (%)", min_value=-10.0, max_value=10.0, value=float(tasa_mensual * 100))
             meses = st.slider("Meses a proyectar", 1, 60, 12)
 
-            proyeccion = [capital_inicial * ((1 + tasa / 100) ** i) for i in range(meses + 1)]
+            proyeccion = [capital_inicial_proy * ((1 + tasa / 100) ** i) for i in range(meses + 1)]
             df_proj = pd.DataFrame({"Mes": list(range(meses + 1)), "Proyección": proyeccion})
 
             fig_proj = px.line(df_proj, x="Mes", y="Proyección", title="Proyección de Capital Futuro", template="plotly_white")
@@ -182,7 +179,6 @@ if uploaded_file:
         st.error(f"❌ Error al procesar el archivo: {e}")
 else:
     st.info("📂 Por favor, sube un archivo Excel desde la barra lateral para comenzar.")
-
 
 
 
