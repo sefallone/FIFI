@@ -168,7 +168,9 @@ if uploaded_file:
             with col2:
                 styled_kpi("📈 Valor Estimado Final", f"${proyeccion[-1]:,.2f}", "#E6F4EA")
             with col3:
-                styled_kpi("📈 Capital Compuesto Anual", f"${capital_proyectado * ((1 + beneficio_mensual / 100) ** 12):,.2f}", "#F0F4C3") ** 12:,.2f}", "#F0F4C3")
+                capital_comp_anual = capital_proyectado * ((1 + beneficio_mensual / 100) ** 12)
+                styled_kpi("📈 Capital Compuesto Anual", f"${capital_comp_anual:,.2f}", "#F0F4C3")
+                st.caption("Proyección de capital al final de un año con interés compuesto mensual.") ** 12):,.2f}", "#F0F4C3") ** 12):,.2f}", "#F0F4C3")            
 
             fig = px.line(df_proy, x="Mes", y="Proyección", title="Proyección de Crecimiento de Capital", template="plotly_white")
             st.plotly_chart(fig, use_container_width=True)
