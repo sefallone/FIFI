@@ -67,9 +67,11 @@ if uploaded_file:
             st.title("📌 Indicadores Clave de Desempeño (KPIs)")
             st.markdown("---")
 
-            # KPIs corregidos según indicaciones
+            # KPIs actualizados
             capital_invertido = df["Capital Invertido"].dropna().iloc[-1]
             capital_inicial = df["Aumento Capital"].dropna().iloc[0]
+            inyeccion_total = df["Aumento Capital"].sum(skipna=True)
+            inversionista = df["ID Inv"].dropna().iloc[0]
             total_retiros = df["Retiro de Fondos"].sum(skipna=True)
             ganancia_bruta = df["Ganacias/Pérdidas Brutas"].sum(skipna=True)
             ganancia_neta = df["Ganacias/Pérdidas Netas"].sum(skipna=True)
@@ -89,20 +91,24 @@ if uploaded_file:
 
             # Mostrar KPIs con estilo
             col1, col2, col3, col4 = st.columns(4)
-            with col1: styled_kpi("💼 Capital Inicial", f"${capital_inicial:,.2f}", "#E8F0FE")
-            with col2: styled_kpi("💰 Capital Invertido", f"${capital_invertido:,.2f}", "#E6F4EA")
-            with col3: styled_kpi("💸 Retiros", f"${total_retiros:,.2f}", "#FFF4E5")
-            with col4: styled_kpi("📊 ROI Total", f"{roi:.2%}", "#FDECEF")
+            with col1: styled_kpi("🧑 Inversionista", f"{inversionista}", "#D7F9F1")
+            with col2: styled_kpi("💼 Capital Inicial", f"${capital_inicial:,.2f}", "#E8F0FE")
+            with col3: styled_kpi("💰 Capital Invertido", f"${capital_invertido:,.2f}", "#E6F4EA")
+            with col4: styled_kpi("💵 Inyección Capital Total", f"${inyeccion_total:,.2f}", "#FFF9E5")
 
             col5, col6, col7, col8 = st.columns(4)
-            with col5: styled_kpi("📉 Ganancia Bruta", f"${ganancia_bruta:,.2f}", "#F0F4C3")
-            with col6: styled_kpi("📈 Ganancia Neta", f"${ganancia_neta:,.2f}", "#E1F5FE")
-            with col7: styled_kpi("🧾 Comisiones Pagadas", f"${comisiones:,.2f}", "#F3E5F5")
-            with col8: styled_kpi("📆 Rentab. Mensual Prom.", f"{monthly_avg_return_pct:.2%}", "#F1F8E9")
+            with col5: styled_kpi("💸 Retiros", f"${total_retiros:,.2f}", "#FFE5EC")
+            with col6: styled_kpi("📉 Ganancia Bruta", f"${ganancia_bruta:,.2f}", "#F0F4C3")
+            with col7: styled_kpi("📈 Ganancia Neta", f"${ganancia_neta:,.2f}", "#E1F5FE")
+            with col8: styled_kpi("🧾 Comisiones Pagadas", f"${comisiones:,.2f}", "#F3E5F5")
 
-            col9, col10 = st.columns(2)
-            with col9: styled_kpi("📈 CAGR Mensual", f"{cagr_mensual:.2%}", "#F0F0F0")
-            with col10: styled_kpi("📅 Ingreso al Fondo", f"{fecha_ingreso.strftime('%d/%m/%Y')}", "#FFEBEE")
+            col9, col10, col11 = st.columns(3)
+            with col9: styled_kpi("📅 Fecha Ingreso", f"{fecha_ingreso.strftime('%d/%m/%Y')}", "#FFEBEE")
+            with col10: styled_kpi("📊 ROI Total", f"{roi:.2%}", "#DDEBF7")
+            with col11: styled_kpi("📈 CAGR Mensual", f"{cagr_mensual:.2%}", "#F0F0F0")
+
+            st.markdown("---")
+            styled_kpi("📆 Rentabilidad Promedio Mensual", f"{monthly_avg_return_pct:.2%}", "#F1F8E9")
 
         # =========================
         # 📊 GRÁFICOS
