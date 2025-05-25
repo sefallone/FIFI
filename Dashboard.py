@@ -6,6 +6,7 @@ from plotly.graph_objs import Scatter
 from datetime import datetime
 from PIL import Image
 import base64
+from io import BytesIO
 
 # Configuración general
 st.set_page_config(page_title="Dashboard FIFI", layout="wide")
@@ -198,8 +199,8 @@ if uploaded_file:
             })
             resumen.to_excel(writer, index=False, sheet_name="Resumen")
             df_proy.to_excel(writer, index=False, sheet_name="Proyección")
-            excel_data = output.getvalue()
-            st.download_button("📥 Descargar proyección en Excel", data=excel_data, file_name="proyeccion.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        excel_data = output.getvalue()
+        st.download_button("📥 Descargar proyección en Excel", data=excel_data, file_name="proyeccion.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
         elif pagina == "⚖️ Comparaciones":
             st.title("⚖️ Comparativa Mensual")
