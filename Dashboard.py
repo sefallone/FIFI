@@ -197,8 +197,8 @@ if uploaded_file:
                     capital_proyectado * ((1 + beneficio_mensual / 100) ** 12)
                 ]
                 })
-                resumen.to_excel(writer, index=False, sheet_name="Resumen")
-                df_proy.to_excel(writer, index=False, sheet_name="Proyección")
+            resumen.to_excel(writer, index=False, sheet_name="Resumen")
+            df_proy.to_excel(writer, index=False, sheet_name="Proyección")
             excel_data = output.getvalue()
             st.download_button("📥 Descargar proyección en Excel", data=excel_data, file_name="proyeccion.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
