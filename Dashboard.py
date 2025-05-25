@@ -37,7 +37,7 @@ def calcular_kpis(df):
     total_retiros = df['Retiro de Fondos'].sum()
     ganancias_netas = df['Ganancias/Pérdidas Netas'].sum()
     ganancias_brutas = df['Ganancias/Pérdidas Brutas'].sum()
-    comisiones = df['Comisiones Pagadas'].sum()
+    comisiones = df['Comisiones Pagadas'].iloc[-1]
 
     meses = (df['Fecha'].iloc[-1].year - df['Fecha'].iloc[0].year) * 12 + \
             (df['Fecha'].iloc[-1].month - df['Fecha'].iloc[0].month)
