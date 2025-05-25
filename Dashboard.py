@@ -162,11 +162,13 @@ if uploaded_file:
 
             st.markdown("---")
             col1, _ = st.columns(2)
+            col1, col2, col3 = st.columns(3)
             with col1:
                 styled_kpi("💼 Capital Inicial Proyectado", f"${capital_proyectado:,.2f}", "#E8F0FE")
+            with col2:
                 styled_kpi("📈 Valor Estimado Final", f"${proyeccion[-1]:,.2f}", "#E6F4EA")
-                styled_kpi("📈 Capital Compuesto Anual", f"${capital_proyectado * ((1 + beneficio_mensual / 100) ** 12):,.2f}", "#F0F4C3")
-                st.metric(label="📈 Capital Compuesto Anual", value=f"${capital_proyectado * ((1 + beneficio_mensual / 100) ** 12):,.2f}")
+            with col3:
+                styled_kpi("📈 Capital Compuesto Anual", f"${capital_proyectado * ((1 + beneficio_mensual / 100) ** 12):,.2f}", "#F0F4C3") ** 12):,.2f}", "#F0F4C3")
 
             fig = px.line(df_proy, x="Mes", y="Proyección", title="Proyección de Crecimiento de Capital", template="plotly_white")
             st.plotly_chart(fig, use_container_width=True)
