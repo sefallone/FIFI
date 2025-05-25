@@ -4,6 +4,7 @@ import numpy as np
 import plotly.express as px
 from plotly.graph_objs import Scatter
 from datetime import datetime
+from PIL import Image
 
 # Configuración general
 st.set_page_config(page_title="Dashboard FIFI", layout="wide")
