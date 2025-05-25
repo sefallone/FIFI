@@ -164,6 +164,8 @@ if uploaded_file:
             with col1:
                 st.metric(label="💼 Capital Inicial Proyectado", value=f"${capital_proyectado:,.2f}")
                 st.metric(label="📈 Valor Estimado Final", value=f"${proyeccion[-1]:,.2f}")
+                st.metric(label="📈 Capital Compuesto Anual", value=f"${capital_proyectado * ((1 + beneficio_mensual / 100) ** 12):,.2f}")
+                st.metric(label="📈 Valor Estimado Final", value=f"${proyeccion[-1]:,.2f}")
 
             fig = px.line(df_proy, x="Mes", y="Proyección", title="Proyección de Crecimiento de Capital", template="plotly_white")
             st.plotly_chart(fig, use_container_width=True)
@@ -171,8 +173,33 @@ if uploaded_file:
             st.markdown("### 📄 Detalle de Proyección (mes a mes)")
             st.dataframe(df_proy.style.format({"Proyección": "${:,.2f}"}), use_container_width=True)
 
-            csv = df_proy.to_csv(index=False).encode("utf-8")
-            st.download_button("📥 Descargar proyección en CSV", data=csv, file_name="proyeccion.csv", mime="text/csv")
+            from io import BytesIO
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+              resumen = pd.DataFrame({
+                "Descripción": [
+                "Capital Actual",
+                "% Aumento",
+                "Capital Proyectado",
+                "% Beneficio Mensual",
+                "Meses de Proyección",
+                "Valor Final Estimado",
+                "Capital Compuesto Anual"
+                ],
+                "Valor": [
+                    capital_actual,
+                    f"{aumento_opcion}%",
+                    capital_proyectado,
+                    f"{beneficio_mensual}%",
+                    meses_proyeccion,
+                    proyeccion[-1],
+                    capital_proyectado * ((1 + beneficio_mensual / 100) ** 12)
+                ]
+            })
+            resumen.to_excel(writer, index=False, sheet_name="Resumen")
+            df_proy.to_excel(writer, index=False, sheet_name="Proyección")
+            excel_data = output.getvalue()
+            st.download_button("📥 Descargar proyección en Excel", data=excel_data, file_name="proyeccion.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
         elif pagina == "⚖️ Comparaciones":
             st.title("⚖️ Comparativa Mensual")
