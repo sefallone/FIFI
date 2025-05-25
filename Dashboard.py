@@ -46,4 +46,99 @@ def calculate_cagr(df, capital_inicial, current_capital):
             return ((current_capital / capital_inicial) ** (12 / months) - 1) * 100
     return 0
 
-def calculate_max_drawdown(df
+def calculate_max_drawdown(df):
+    if 'Capital Invertido' in df.columns:
+        df['Max'] = df['Capital Invertido'].cummax()
+        df['Drawdown'] = (df['Capital Invertido'] - df['Max']) / df['Max']
+        return df['Drawdown'].min() * 100
+    return 0
+
+# =====================
+# INTERFAZ PRINCIPAL
+# =====================
+st.title("📊 Dashboard Fallone Investments")
+
+uploaded_file = st.file_uploader("📥 Cargar archivo Excel", type=["xlsx"])
+
+if uploaded_file:
+    try:
+        df = pd.read_excel(uploaded_file)
+        df = df.loc[:, ~df.columns.duplicated()]
+        df.rename(columns={
+            'Ganacias/Pérdidas Brutas': 'Ganancias/Pérdidas Brutas',
+            'Ganacias/Pérdidas Netas': 'Ganancias/Pérdidas Netas',
+            'Comisiones 10 %': 'Comisiones Pagadas'
+        }, inplace=True)
+
+        df['Fecha'] = pd.to_datetime(df['Fecha'], errors='coerce')
+
+        capitales = df['Aumento Capital'].dropna()
+        capital_inicial = float(capitales.iloc[0]) if not capitales.empty else 0.0
+        current_capital = df['Capital Invertido'].iloc[-1] if 'Capital Invertido' in df.columns else 0.0
+
+        roi = calculate_roi(df, capital_inicial)
+        cagr = calculate_cagr(df, capital_inicial, current_capital)
+        drawdown = calculate_max_drawdown(df)
+
+        ganancias_brutas = df['Ganancias/Pérdidas Brutas'].sum() if 'Ganancias/Pérdidas Brutas' in df.columns else 0.0
+        ganancias_netas = df['Ganancias/Pérdidas Netas'].sum() if 'Ganancias/Pérdidas Netas' in df.columns else 0.0
+        comisiones = df['Comisiones Pagadas'].iloc[-1] if 'Comisiones Pagadas' in df.columns else 0.0
+        retiros = df['Retiro de Fondos'].sum() if 'Retiro de Fondos' in df.columns else 0.0
+
+        # KPIs
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            display_kpi("Capital Inicial", capital_inicial)
+        with col2:
+            display_kpi("Capital Actual", current_capital)
+        with col3:
+            display_kpi("Ganancias Brutas", ganancias_brutas)
+        with col4:
+            display_kpi("Ganancias Netas", ganancias_netas)
+
+        col5, col6, col7, col8 = st.columns(4)
+        with col5:
+            display_kpi("Comisiones Pagadas", comisiones)
+        with col6:
+            display_kpi("Retiros", retiros)
+        with col7:
+            display_kpi("ROI", roi, is_currency=False, is_percentage=True)
+        with col8:
+            display_kpi("CAGR Mensual", cagr, is_currency=False, is_percentage=True)
+
+        col9, _, _, _ = st.columns(4)
+        with col9:
+            display_kpi("Drawdown Máximo", drawdown, is_currency=False, is_percentage=True)
+
+        # =====================
+        # GRÁFICOS
+        # =====================
+        st.markdown("---")
+        st.subheader("📈 Evolución del Capital Invertido")
+        fig1 = px.line(df, x='Fecha', y='Capital Invertido')
+        st.plotly_chart(fig1, use_container_width=True)
+
+        st.subheader("💰 Ganancias Brutas")
+        fig2 = px.bar(df, x='Fecha', y='Ganancias/Pérdidas Brutas')
+        st.plotly_chart(fig2, use_container_width=True)
+
+        st.subheader("↘️ Retiros")
+        fig3 = px.bar(df, x='Fecha', y='Retiro de Fondos')
+        st.plotly_chart(fig3, use_container_width=True)
+
+        st.subheader("💸 Comisiones Pagadas")
+        fig4 = px.area(
+            df,
+            x='Fecha',
+            y='Comisiones Pagadas',
+            title='Comisiones Pagadas Acumuladas',
+            labels={'Comisiones Pagadas': 'Monto ($)', 'Fecha': 'Fecha'},
+            template="plotly_dark"
+        )
+        fig4.update_layout(height=400)
+        st.plotly_chart(fig4, use_container_width=True)
+
+    except Exception as e:
+        st.error(f"❌ Error al procesar el archivo: {e}")
+else:
+    st.info("📂 Sube un archivo Excel para comenzar.")
