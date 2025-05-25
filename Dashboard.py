@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
+from plotly.graph_objs import Scatter
 from datetime import datetime
 
 # Configuración general
@@ -39,12 +40,10 @@ if uploaded_file:
         df["Acumulado"] = df["Ganacias/Pérdidas Netas Acumuladas"].fillna(method="ffill")
         df["MaxAcum"] = df["Acumulado"].cummax()
         df["Drawdown"] = df["Acumulado"] - df["MaxAcum"]
-        df["Capital Acumulado"] = df["Capital Invertido"].fillna(0).cumsum()
+        df["Capital Acumulado"] = df["Capital Invertido"]
 
-        # Navegación multipágina
         pagina = st.sidebar.radio("Selecciona la sección", ["📌 KPIs", "📊 Gráficos", "📈 Proyecciones", "⚖️ Comparaciones"])
 
-        # KPI estilizado profesional
         def styled_kpi(title, value, bg_color="#ffffff", text_color="#333"):
             st.markdown(f"""
             <div style="
@@ -60,14 +59,10 @@ if uploaded_file:
             </div>
             """, unsafe_allow_html=True)
 
-        # =========================
-        # 📌 KPIs
-        # =========================
         if pagina == "📌 KPIs":
             st.title("📌 Indicadores Clave de Desempeño (KPIs)")
             st.markdown("---")
 
-            # KPIs actualizados
             capital_invertido = df["Capital Invertido"].dropna().iloc[-1]
             capital_inicial = df["Aumento Capital"].dropna().iloc[0]
             inyeccion_total = df["Aumento Capital"].sum(skipna=True)
@@ -89,7 +84,6 @@ if uploaded_file:
 
             max_drawdown = df["Drawdown"].min()
 
-            # Mostrar KPIs con estilo
             col1, col2, col3, col4 = st.columns(4)
             with col1: styled_kpi("🧑 Inversionista", f"{inversionista}", "#D7F9F1")
             with col2: styled_kpi("💼 Capital Inicial", f"${capital_inicial:,.2f}", "#E8F0FE")
@@ -110,60 +104,43 @@ if uploaded_file:
             st.markdown("---")
             styled_kpi("📆 Rentabilidad Promedio Mensual", f"{monthly_avg_return_pct:.2%}", "#F1F8E9")
 
-        # =========================
-        # 📊 GRÁFICOS
-        # =========================
         elif pagina == "📊 Gráficos":
             st.title("📊 Visualizaciones Financieras")
 
-            # 📈 Capital Invertido (línea) + Retiros (barras)
             df_plot = df.copy()
             df_plot["Retiros"] = df_plot["Retiro de Fondos"].fillna(0)
 
-            fig_capital = px.bar(df_plot, x="Fecha", y="Retiros", title="Capital Invertido y Retiros", labels={"value": "Monto"}, template="plotly_white")
+            fig_capital = px.bar(df_plot, x="Fecha", y="Retiros", title="Capital Invertido y Retiros", template="plotly_white")
             fig_capital.add_scatter(x=df_plot["Fecha"], y=df_plot["Capital Acumulado"], mode='lines+markers', name="Capital Invertido", line=dict(color="blue"))
-
             st.plotly_chart(fig_capital, use_container_width=True)
 
-            # 📉 Ganancia Neta Acumulada
             fig1 = px.line(df, x="Fecha", y="Ganacias/Pérdidas Netas Acumuladas", title="Ganancia Neta Acumulada", template="plotly_white")
             st.plotly_chart(fig1, use_container_width=True)
 
-            # 📊 Bruta vs Neta
             fig2 = px.line(df, x="Fecha", y=["Ganacias/Pérdidas Brutas", "Ganacias/Pérdidas Netas"], title="Bruta vs Neta", template="plotly_white")
             st.plotly_chart(fig2, use_container_width=True)
 
-            # 📊 Ganancia Neta Mensual
             ganancias_mensuales = df.groupby(df["Fecha"].dt.to_period("M"))["Ganacias/Pérdidas Netas"].sum().reset_index()
             ganancias_mensuales["Fecha"] = ganancias_mensuales["Fecha"].astype(str)
             fig3 = px.bar(ganancias_mensuales, x="Fecha", y="Ganacias/Pérdidas Netas", title="Ganancia Neta Mensual", template="plotly_white")
             st.plotly_chart(fig3, use_container_width=True)
 
-            # 📊 Comisiones Mensuales
             comisiones_mensuales = df.groupby(df["Fecha"].dt.to_period("M"))["Comisiones Pagadas"].sum().reset_index()
             comisiones_mensuales["Fecha"] = comisiones_mensuales["Fecha"].astype(str)
             fig4 = px.bar(comisiones_mensuales, x="Fecha", y="Comisiones Pagadas", title="Comisiones Mensuales", template="plotly_white")
             st.plotly_chart(fig4, use_container_width=True)
 
-            # 📈 Rentabilidad Mensual (%)
             rentabilidad = df.groupby("Mes")["Beneficio en %"].mean().reset_index()
             rentabilidad["Mes"] = rentabilidad["Mes"].astype(str)
             fig6 = px.bar(rentabilidad, x="Mes", y="Beneficio en %", title="Rentabilidad Mensual (%)", template="plotly_white")
             st.plotly_chart(fig6, use_container_width=True)
 
-
-        # =========================
-        # 📈 PROYECCIONES
-        # =========================
         elif pagina == "📈 Proyecciones":
             st.title("📈 Proyecciones de Crecimiento")
 
-            # Asegurarse de que monthly_avg_return_pct esté definido de forma segura
             monthly_returns = df.groupby("Mes")["Ganacias/Pérdidas Netas"].sum()
             monthly_avg_return_pct = monthly_returns.pct_change().mean()
-
-            # Valor por defecto si es NaN o inf
-            tasa_defecto = 2.0  # Porcentaje mensual
+            tasa_defecto = 2.0
             tasa_base = monthly_avg_return_pct * 100 if pd.notna(monthly_avg_return_pct) and np.isfinite(monthly_avg_return_pct) else tasa_defecto
 
             capital_inicial_proy = st.number_input("Capital Inicial", value=float(df["Capital Invertido"].iloc[-1]), step=100.0)
@@ -176,11 +153,6 @@ if uploaded_file:
             fig_proj = px.line(df_proj, x="Mes", y="Proyección", title="Proyección de Capital Futuro", template="plotly_white")
             st.plotly_chart(fig_proj, use_container_width=True)
 
-
-
-        # =========================
-        # ⚖️ COMPARACIONES
-        # =========================
         elif pagina == "⚖️ Comparaciones":
             st.title("⚖️ Comparativa Mensual")
 
@@ -206,6 +178,7 @@ if uploaded_file:
         st.error(f"❌ Error al procesar el archivo: {e}")
 else:
     st.info("📂 Por favor, sube un archivo Excel desde la barra lateral para comenzar.")
+
 
 
 
