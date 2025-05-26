@@ -155,7 +155,7 @@ if uploaded_file:
 
             capital_actual = float(df["Capital Invertido"].dropna().iloc[-1])
             aumento_opcion = st.selectbox("Selecciona porcentaje de aumento de capital", [0, 5, 10, 20, 30, 50])
-            promedio_mensual_ganancias = (df["Ganacias/Pérdidas Brutas"].sum(skipna=True) / len(df["Ganacias/Pérdidas Brutas"]) ) * 100
+            promedio_mensual_ganancias = (df["Beneficio en %"].sum(skipna=True) / len(df["Beneficio en %"]) )
             col_kpi = st.columns(1)[0]
             with col_kpi:
                 styled_kpi("📆 Promedio Mensual de Ganancias", f"{promedio_mensual_ganancias:.2%}", "#E0F7FA", tooltip="Promedio mensual de las ganancias brutas en porcentaje sobre el capital actual.")
