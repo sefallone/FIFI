@@ -23,14 +23,10 @@ st.markdown(f"""
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 30px;
-        background-color: #BFA05A;
-        padding: 18px 35px;
-        border-radius: 15px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);'>
+        margin-bottom: 30px;'>
 
         <img src='data:image/jpeg;base64,{logo_base64}' style='height: 120px; margin-right: 25px;'/>
-        <h2 style='margin: 0; font-size: 22px; color: white;'>Fallone Investments</h2>
+        <h2 style='margin: 0; font-size: 22px; color: #333;'>Fallone Investments</h2>
     </div>
 """, unsafe_allow_html=True)
 
