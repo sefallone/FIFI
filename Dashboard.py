@@ -6,8 +6,9 @@ from plotly.graph_objs import Scatter
 from datetime import datetime
 from PIL import Image
 import base64
-from io import BytesIO
 import calendar
+from io import BytesIO
+
 
 # Configuración general
 st.set_page_config(page_title="Dashboard FIFI", layout="wide")
