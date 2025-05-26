@@ -329,16 +329,24 @@ if uploaded_file:
             # ✅ Convertir la rentabilidad a porcentaje real
             comparacion_anual["Beneficio en %"] *= 100
 
-            # 📈 Rentabilidad Promedio Mensual por Año
-            st.markdown("### 📈 Rentabilidad Promedio Mensual (%)")
-            fig_cmp3 = px.line(
+            # 📊 Rentabilidad Promedio Mensual por Año (barras agrupadas)
+            st.markdown("### 📊 Rentabilidad Promedio Mensual por Año")
+            fig_cmp3 = px.bar(
                 comparacion_anual,
                 x="MesNombre",
                 y="Beneficio en %",
                 color="Año",
+                barmode="group",
                 title="Rentabilidad Promedio Mensual por Año",
                 template="plotly_white"
             )
+            fig_cmp3.update_traces(
+                text=comparacion_anual["Beneficio en %"].round(1),
+                textposition="outside",
+                hovertemplate='Mes: %{x}<br>Rentabilidad: %{y:.1f}%'
+            )
+            fig_cmp3.update_layout(yaxis_title="Rentabilidad (%)")
+            st.plotly_chart(fig_cmp3, use_container_width=True)
             fig_cmp3.update_traces(
                 mode="lines+markers+text",
                 text=comparacion_anual["Beneficio en %"].round(1),
