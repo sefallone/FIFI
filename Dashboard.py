@@ -178,7 +178,17 @@ if uploaded_file:
             fig1 = px.line(df, x="Fecha", y="Ganacias/Pérdidas Netas Acumuladas", title="Ganancia Neta Acumulada", template="plotly_white")
             st.plotly_chart(fig1, use_container_width=True)
 
-            fig2 = px.line(df, x="Fecha", y=["Ganacias/Pérdidas Brutas", "Ganacias/Pérdidas Netas"], title="Bruta vs Neta", template="plotly_white")
+            # Nueva visualización: Ganancias Brutas Mensuales
+            ganancia_bruta_mensual = df.groupby(df["Fecha"].dt.to_period("M"))["Ganacias/Pérdidas Brutas"].sum().reset_index()
+            ganancia_bruta_mensual["Fecha"] = ganancia_bruta_mensual["Fecha"].astype(str)
+
+            fig2 = px.bar(
+                ganancia_bruta_mensual,
+                x="Fecha",
+                y="Ganacias/Pérdidas Brutas",
+                title="Ganancia Bruta Mensual",
+                template="plotly_white"
+            )
             st.plotly_chart(fig2, use_container_width=True)
 
             ganancias_mensuales = df.groupby(df["Fecha"].dt.to_period("M"))["Ganacias/Pérdidas Netas"].sum().reset_index()
