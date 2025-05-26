@@ -295,6 +295,7 @@ if uploaded_file:
 
         elif pagina == "⚖️ Comparaciones":
             st.title("⚖️ Comparaciones por Año")
+
             df['Año'] = df['Fecha'].dt.year
             df['MesNombre'] = df['Fecha'].dt.strftime('%b')
             df['MesOrden'] = df['Fecha'].dt.month
@@ -309,30 +310,10 @@ if uploaded_file:
                 "Beneficio en %": "mean"
             }).reset_index().sort_values("MesOrden")
 
-            st.markdown("### 📊 Ganancias Brutas vs Netas")
-            fig_cmp1 = px.bar(
-                comparacion_anual,
-                x="MesNombre",
-                y=["Ganacias/Pérdidas Brutas", "Ganacias/Pérdidas Netas"],
-                color="Año",
-                barmode="group",
-                title="Ganancias Brutas vs Netas por Mes y Año",
-                template="plotly_white"
-            )
-            st.plotly_chart(fig_cmp1, use_container_width=True)
+            # ✅ Convertir la rentabilidad a porcentaje real
+            comparacion_anual["Beneficio en %"] *= 100
 
-            st.markdown("### 💸 Comisiones por Mes")
-            fig_cmp2 = px.bar(
-                comparacion_anual,
-                x="MesNombre",
-                y="Comisiones Pagadas",
-                color="Año",
-                barmode="group",
-                title="Comisiones por Mes y Año",
-                template="plotly_white"
-            )
-            st.plotly_chart(fig_cmp2, use_container_width=True)
-
+            # 📈 Rentabilidad Promedio Mensual por Año
             st.markdown("### 📈 Rentabilidad Promedio Mensual (%)")
             fig_cmp3 = px.line(
                 comparacion_anual,
@@ -342,7 +323,19 @@ if uploaded_file:
                 title="Rentabilidad Promedio Mensual por Año",
                 template="plotly_white"
             )
+            fig_cmp3.update_traces(
+                mode="lines+markers+text",
+                text=comparacion_anual["Beneficio en %"].round(1),
+                textposition="top center",
+                hovertemplate='Mes: %{x}<br>Rentabilidad: %{y:.1f}%'
+            )
+            fig_cmp3.update_layout(yaxis_title="Rentabilidad (%)")
             st.plotly_chart(fig_cmp3, use_container_width=True)
+            st.markdown("---")
+
+            # 📊 Ganancia Neta Total por Año
+            st.markdown("### 📊 Gananc
+
     except Exception as e:
         st.error(f"❌ Error al procesar el archivo: {e}")
 else:
