@@ -196,9 +196,9 @@ if uploaded_file:
             fig3 = px.bar(ganancias_mensuales, x="Fecha", y="Ganacias/Pérdidas Netas", title="Ganancia Neta Mensual", template="plotly_white")
             st.plotly_chart(fig3, use_container_width=True)
 
-            comisiones_mensuales = df.groupby(df["Fecha"].dt.to_period("M"))["Comisiones Pagadas"].sum().reset_index()
+            comisiones_mensuales = df.groupby(df["Fecha"].dt.to_period("M"))["Comisiones 10 %"].sum().reset_index()
             comisiones_mensuales["Fecha"] = comisiones_mensuales["Fecha"].astype(str)
-            fig4 = px.bar(comisiones_mensuales, x="Fecha", y="Comisiones Pagadas", title="Comisiones Mensuales", template="plotly_white")
+            fig4 = px.bar(comisiones_mensuales, x="Fecha", y="Comisiones 10 %", title="Comisiones Mensuales (10%)", template="plotly_white")
             st.plotly_chart(fig4, use_container_width=True)
 
             rentabilidad = df.groupby("Mes")["Beneficio en %"].mean().reset_index()
