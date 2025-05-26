@@ -212,7 +212,10 @@ if uploaded_file:
             df['MesNombre'] = df['Fecha'].dt.strftime('%b')
             df['MesOrden'] = df['Fecha'].dt.month
 
-            comparacion_anual = df.groupby(['Año', 'MesNombre', 'MesOrden']).agg({
+            años_disponibles = df['Año'].dropna().unique().tolist()
+            años_seleccionados = st.multiselect("Selecciona los años a comparar", sorted(años_disponibles), default=sorted(años_disponibles))
+
+            comparacion_anual = df[df['Año'].isin(años_seleccionados)].groupby(['Año', 'MesNombre', 'MesOrden']).agg({
                 "Ganacias/Pérdidas Brutas": "sum",
                 "Ganacias/Pérdidas Netas": "sum",
                 "Comisiones Pagadas": "sum",
@@ -238,7 +241,7 @@ if uploaded_file:
                 y="Comisiones Pagadas",
                 color="Año",
                 barmode="group",
-                 title="Comisiones por Mes y Año",
+                title="Comisiones por Mes y Año",
                 template="plotly_white"
             )
             st.plotly_chart(fig_cmp2, use_container_width=True)
@@ -253,7 +256,6 @@ if uploaded_file:
                 template="plotly_white"
             )
             st.plotly_chart(fig_cmp3, use_container_width=True)
-
     except Exception as e:
         st.error(f"❌ Error al procesar el archivo: {e}")
 else:
