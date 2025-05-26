@@ -17,11 +17,12 @@ logo = Image.open("Logo.jpg")
 logo_base64 = base64.b64encode(open("Logo.jpg", "rb").read()).decode()
 
 st.markdown(f"""
-    <div style='display: flex; align-items: center; justify-content: center; margin-bottom: 20px;'>
-        <img src='data:image/jpeg;base64,{logo_base64}' style='height: 80px; margin-right: 20px;'/>
-        <h1 style='margin: 0; font-size: 32px;'>Fallone Investments</h1>
+    <div style='display: flex; align-items: center; justify-content: center; margin-bottom: 30px;'>
+        <img src='data:image/jpeg;base64,{logo_base64}' style='height: 120px; margin-right: 25px;'/>
+        <h2 style='margin: 0; font-size: 22px; color: #333;'>Fallone Investments</h2>
     </div>
 """, unsafe_allow_html=True)
+
 
 
 # Sidebar config
