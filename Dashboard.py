@@ -147,10 +147,22 @@ if uploaded_file:
             with col16:
                 df_mes_anio = df.copy()
                 df_mes_anio["Año"] = df_mes_anio["Fecha"].dt.year
-                promedio_meses = df_mes_anio.groupby(["Año", df_mes_anio["Fecha"].dt.month])["Ganacias/Pérdidas Brutas"].sum().reset_index()
-                meses_comunes = promedio_meses.groupby("Fecha").count()["Año"] == promedio_meses["Año"].nunique()
-                comunes = promedio_meses[promedio_meses["Fecha"].isin(meses_comunes[meses_comunes].index)]
-                mejor_mes_inv = comunes.groupby("Fecha")["Ganacias/Pérdidas Brutas"].mean().idxmax()
+                df_mes_anio["MesNum"] = df_mes_anio["Fecha"].dt.month
+
+                # Obtener la cantidad de años únicos
+                anios = df_mes_anio["Año"].nunique()
+
+                # Agrupar por Año y MesNum
+                meses_group = df_mes_anio.groupby(["Año", "MesNum"])["Ganacias/Pérdidas Brutas"].sum().reset_index()
+
+                # Filtrar meses que aparecen en todos los años
+                meses_comunes = meses_group["MesNum"].value_counts()
+                meses_validos = meses_comunes[meses_comunes == anios].index.tolist()
+
+                # Calcular promedio por mes común
+                mejor_mes_df = meses_group[meses_group["MesNum"].isin(meses_validos)]
+                mejor_mes_inv = mejor_mes_df.groupby("MesNum")["Ganacias/Pérdidas Brutas"].mean().idxmax()
+
                 styled_kpi("🌟 Mejor Mes (Inversión)", f"{calendar.month_name[mejor_mes_inv]}", "#FFF3F3", tooltip="Mes con mejor desempeño promedio considerando solo los meses en común entre todos los años.")
 
         elif pagina == "📊 Gráficos":
