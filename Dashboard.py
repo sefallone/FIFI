@@ -18,9 +18,18 @@ logo_base64 = base64.b64encode(open("Logo.jpg", "rb").read()).decode()
 
 # Encabezado principal
 st.markdown(f"""
-    <div style='display: flex; align-items: center; justify-content: center; margin-bottom: 30px;'>
+    <div style='
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 30px;
+        background-color: #FFD700;
+        padding: 15px 30px;
+        border-radius: 15px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);'>
+
         <img src='data:image/jpeg;base64,{logo_base64}' style='height: 120px; margin-right: 25px;'/>
-        <h2 style='margin: 0; font-size: 22px; color: #333;'>Fallone Investments</h2>
+        <h2 style='margin: 0; font-size: 22px; color: #000;'>Fallone Investments</h2>
     </div>
 """, unsafe_allow_html=True)
 
@@ -29,10 +38,16 @@ st.markdown(f"""
 # Sidebar config
 with st.sidebar:
     st.title("Configuración")
-    st.markdown(f"""
-        <div style='text-align: center; margin-bottom: 20px;'>
+    t.markdown(f"""
+        <div style='
+            text-align: center;
+            background-color: #FFD700;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>
             <img src='data:image/jpeg;base64,{logo_base64}' style='height:60px; margin-bottom: 10px;'/>
-            <div style='font-size:14px; color: #555;'>Fallone Investments</div>
+            <div style='font-size:14px; color: #000;'>Fallone Investments</div>
         </div>
     """, unsafe_allow_html=True)
 # Subida de archivo
