@@ -123,6 +123,23 @@ if uploaded_file:
             st.markdown("---")
             styled_kpi("📆 Rentabilidad Promedio Mensual", f"{monthly_avg_return_pct:.2%}", "#F1F8E9", tooltip="Promedio mensual de retornos netos relativos.")
 
+            # Nuevos KPIs adicionales
+            col12, col13, col14 = st.columns(3)
+            with col12:
+                frecuencia_aportes = df[df["Aumento Capital"] > 0].shape[0]
+                styled_kpi("🔁 Frecuencia de Aportes", f"{frecuencia_aportes}", "#E3F2FD", tooltip="Número de registros con aumentos de capital.")
+            with col13:
+                frecuencia_retiros = df[df["Retiro de Fondos"] > 0].shape[0]
+                styled_kpi("📤 Frecuencia de Retiros", f"{frecuencia_retiros}", "#FFF3E0", tooltip="Número de registros con retiros de fondos.")
+            with col14:
+                mejor_mes = df.loc[df["Beneficio en %"].idxmax()]["Mes"]
+                styled_kpi("📈 Mejor Mes en %", f"{mejor_mes}", "#E8F5E9", tooltip="Mes con mayor rentabilidad porcentual.")
+
+            col15 = st.columns(1)[0]
+            with col15:
+                peor_mes = df.loc[df["Beneficio en %"].idxmin()]["Mes"]
+                styled_kpi("📉 Peor Mes en %", f"{peor_mes}", "#FFEBEE", tooltip="Mes con menor rentabilidad porcentual.")
+
         elif pagina == "📊 Gráficos":
             st.title("📊 Visualizaciones Financieras")
 
