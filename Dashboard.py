@@ -16,6 +16,7 @@ st.set_page_config(page_title="Dashboard FIFI", layout="wide")
 logo = Image.open("Logo.jpg")
 logo_base64 = base64.b64encode(open("Logo.jpg", "rb").read()).decode()
 
+# Encabezado principal
 st.markdown(f"""
     <div style='display: flex; align-items: center; justify-content: center; margin-bottom: 30px;'>
         <img src='data:image/jpeg;base64,{logo_base64}' style='height: 120px; margin-right: 25px;'/>
@@ -28,6 +29,13 @@ st.markdown(f"""
 # Sidebar config
 with st.sidebar:
     st.title("Configuración")
+    with st.sidebar:
+    st.markdown(f"""
+        <div style='text-align: center; margin-bottom: 20px;'>
+            <img src='data:image/jpeg;base64,{logo_base64}' style='height:60px; margin-bottom: 10px;'/>
+            <div style='font-size:14px; color: #555;'>Fallone Investments</div>
+        </div>
+    """, unsafe_allow_html=True)
 # Subida de archivo
 uploaded_file = st.sidebar.file_uploader("Sube el archivo Excel (.xlsx)", type=["xlsx"])
 
