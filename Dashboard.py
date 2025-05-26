@@ -13,10 +13,11 @@ from io import BytesIO
 # Configuración general
 st.set_page_config(page_title="Dashboard FIFI", layout="wide")
 # Logo en página principal
-logo = Image.open("Logo.jpg")
-logo_base64 = base64.b64encode(open("Logo.jpg", "rb").read()).decode()
-
-# Encabezado principal
+with open("Logo.jpg", "rb") as f:
+    logo_bytes = f.read()
+    logo_base64 = base64.b64encode(logo_bytes).decode()
+    
+# Encabezado Principal
 st.markdown(f"""
     <div style='
         display: flex;
