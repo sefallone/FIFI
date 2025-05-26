@@ -207,24 +207,51 @@ if uploaded_file:
             st.download_button("📥 Descargar proyección en Excel", data=excel_data, file_name="proyeccion.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
         elif pagina == "⚖️ Comparaciones":
-            st.title("⚖️ Comparativa Mensual")
+            st.title("⚖️ Comparaciones por Año")
+            df['Año'] = df['Fecha'].dt.year
+            df['MesNombre'] = df['Fecha'].dt.strftime('%b')
+            df['MesOrden'] = df['Fecha'].dt.month
 
-            comparacion = df.groupby("Mes").agg({
+            comparacion_anual = df.groupby(['Año', 'MesNombre', 'MesOrden']).agg({
                 "Ganacias/Pérdidas Brutas": "sum",
                 "Ganacias/Pérdidas Netas": "sum",
                 "Comisiones Pagadas": "sum",
                 "Beneficio en %": "mean"
-            }).reset_index()
-            comparacion["Mes"] = comparacion["Mes"].astype(str)
+            }).reset_index().sort_values("MesOrden")
 
-            fig_cmp1 = px.bar(comparacion, x="Mes", y=["Ganacias/Pérdidas Brutas", "Ganacias/Pérdidas Netas"],
-                              barmode="group", title="Ganancias Brutas vs Netas", template="plotly_white")
+            st.markdown("### 📊 Ganancias Brutas vs Netas")
+            fig_cmp1 = px.bar(
+                comparacion_anual,
+                x="MesNombre",
+                y=["Ganacias/Pérdidas Brutas", "Ganacias/Pérdidas Netas"],
+                color="Año",
+                barmode="group",
+                title="Ganancias Brutas vs Netas por Mes y Año",
+                template="plotly_white"
+            )
             st.plotly_chart(fig_cmp1, use_container_width=True)
 
-            fig_cmp2 = px.bar(comparacion, x="Mes", y="Comisiones Pagadas", title="Comisiones por Mes", template="plotly_white")
+            st.markdown("### 💸 Comisiones por Mes")
+            fig_cmp2 = px.bar(
+                comparacion_anual,
+                x="MesNombre",
+                y="Comisiones Pagadas",
+                color="Año",
+                barmode="group",
+                 title="Comisiones por Mes y Año",
+                template="plotly_white"
+            )
             st.plotly_chart(fig_cmp2, use_container_width=True)
 
-            fig_cmp3 = px.line(comparacion, x="Mes", y="Beneficio en %", title="Rentabilidad Promedio Mensual (%)", template="plotly_white")
+            st.markdown("### 📈 Rentabilidad Promedio Mensual (%)")
+            fig_cmp3 = px.line(
+                comparacion_anual,
+                x="MesNombre",
+                y="Beneficio en %",
+                color="Año",
+                title="Rentabilidad Promedio Mensual por Año",
+                template="plotly_white"
+            )
             st.plotly_chart(fig_cmp3, use_container_width=True)
 
     except Exception as e:
