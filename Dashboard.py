@@ -413,6 +413,32 @@ if uploaded_file:
             fig_aportes_retiros.update_traces(texttemplate='%{y}', textposition='outside')
             st.plotly_chart(fig_aportes_retiros, use_container_width=True)
 
+            # 💵 Total Aportado y Retirado por Año (en dólares)
+            st.markdown("### 💵 Total Aportado y Retirado por Año (USD)")
+            montos_aporte_retiro = df[df['Año'].isin(años_seleccionados)].groupby("Año").agg({
+                "Aumento Capital": "sum",
+                "Retiro de Fondos": "sum"
+            }).reset_index()
+            montos_aporte_retiro = montos_aporte_retiro.rename(columns={
+                "Aumento Capital": "Monto Aportado",
+                "Retiro de Fondos": "Monto Retirado"
+            })
+
+            fig_montos = px.bar(
+                montos_aporte_retiro.melt(id_vars="Año", value_vars=["Monto Aportado", "Monto Retirado"]),
+                x="Año",
+                y="value",
+                color="variable",
+                barmode="group",
+                title="Montos Aportados vs Retirados por Año",
+                template="plotly_white",
+                labels={"value": "USD", "variable": "Tipo"}
+            )
+            fig_montos.update_traces(texttemplate='%{y:,.2f}', textposition='outside')
+            fig_montos.update_layout(yaxis_tickformat=",.2f", yaxis_title="Monto (USD)")
+            st.plotly_chart(fig_montos, use_container_width=True)
+
+
     except Exception as e:
         st.error(f"❌ Error al procesar el archivo: {e}")
 else:
