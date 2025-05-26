@@ -334,7 +334,72 @@ if uploaded_file:
             st.markdown("---")
 
             # 📊 Ganancia Neta Total por Año
-            st.markdown("### 📊 Gananc
+            st.markdown("### 📊 Ganancia Neta Total por Año")
+            ganancia_anual = df[df['Año'].isin(años_seleccionados)].groupby("Año")["Ganacias/Pérdidas Netas"].sum().reset_index()
+
+            fig_gan_anual = px.bar(
+                ganancia_anual,
+                x="Año",
+                y="Ganacias/Pérdidas Netas",
+                title="Ganancia Neta Total por Año",
+                template="plotly_white"
+            )
+            fig_gan_anual.update_traces(
+                texttemplate='%{y:,.2f}',
+                textposition='outside',
+                marker_color='green',
+                hovertemplate='Año: %{x}<br>Ganancia: %{y:,.2f} USD'
+            )
+            fig_gan_anual.update_layout(yaxis_tickformat=",", yaxis_title="Ganancia Neta (USD)")
+            st.plotly_chart(fig_gan_anual, use_container_width=True)
+            st.markdown("---")
+
+            # 📉 Drawdown Máximo por Año
+            st.markdown("### 📉 Drawdown Máximo por Año")
+            drawdown_anual = df[df['Año'].isin(años_seleccionados)].groupby("Año")["Drawdown"].min().reset_index()
+
+            fig_drawdown = px.line(
+                drawdown_anual,
+                x="Año",
+                y="Drawdown",
+                title="Drawdown Máximo por Año",
+                template="plotly_white"
+            )
+            fig_drawdown.update_traces(
+                mode="lines+markers+text",
+                line_color='red',
+                text=drawdown_anual["Drawdown"].round(2),
+                textposition="top center",
+                hovertemplate='Año: %{x}<br>Drawdown: %{y:,.2f} USD'
+            )
+            fig_drawdown.update_layout(yaxis_title="Drawdown ($)")
+            st.plotly_chart(fig_drawdown, use_container_width=True)
+            st.markdown("---")
+
+            # 🔁 Aportes vs Retiros por Año
+            st.markdown("### 🔁 Cantidad de Aportes vs Retiros por Año")
+            aport_retiro_anual = df[df['Año'].isin(años_seleccionados)].groupby("Año").agg({
+                "Aumento Capital": lambda x: (x > 0).sum(),
+                "Retiro de Fondos": lambda x: (x > 0).sum()
+            }).reset_index()
+
+            aport_retiro_anual = aport_retiro_anual.rename(columns={
+                "Aumento Capital": "Aportes",
+                "Retiro de Fondos": "Retiros"
+            })
+
+            fig_aportes_retiros = px.bar(
+                aport_retiro_anual.melt(id_vars="Año", value_vars=["Aportes", "Retiros"]),
+                x="Año",
+                y="value",
+                color="variable",
+                barmode="group",
+                title="Cantidad de Aportes vs Retiros por Año",
+                template="plotly_white",
+                labels={"value": "Cantidad", "variable": "Tipo"}
+            )
+            fig_aportes_retiros.update_traces(texttemplate='%{y}', textposition='outside')
+            st.plotly_chart(fig_aportes_retiros, use_container_width=True)
 
     except Exception as e:
         st.error(f"❌ Error al procesar el archivo: {e}")
