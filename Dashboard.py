@@ -140,6 +140,17 @@ if uploaded_file:
                 peor_mes = df.loc[df["Beneficio en %"].idxmin()]["Mes"]
                 styled_kpi("📉 Peor Mes en %", f"{peor_mes}", "#FFEBEE", tooltip="Mes con menor rentabilidad porcentual.")
 
+            # Mejor Mes Promedio entre años
+            col16 = st.columns(1)[0]
+            with col16:
+                df_mes_anio = df.copy()
+                df_mes_anio["Año"] = df_mes_anio["Fecha"].dt.year
+                promedio_meses = df_mes_anio.groupby(["Año", df_mes_anio["Fecha"].dt.month])["Ganacias/Pérdidas Brutas"].sum().reset_index()
+                meses_comunes = promedio_meses.groupby("Fecha").count()["Año"] == promedio_meses["Año"].nunique()
+                comunes = promedio_meses[promedio_meses["Fecha"].isin(meses_comunes[meses_comunes].index)]
+                mejor_mes_inv = comunes.groupby("Fecha")["Ganacias/Pérdidas Brutas"].mean().idxmax()
+                styled_kpi("🌟 Mejor Mes (Inversión)", f"{calendar.month_name[mejor_mes_inv]}", "#FFF3F3", tooltip="Mes con mejor desempeño promedio considerando solo los meses en común entre todos los años.")
+
         elif pagina == "📊 Gráficos":
             st.title("📊 Visualizaciones Financieras")
 
