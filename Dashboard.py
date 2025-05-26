@@ -58,10 +58,8 @@ if uploaded_file:
         pagina = st.sidebar.radio("Selecciona la sección", ["📌 KPIs", "📊 Gráficos", "📈 Proyecciones", "⚖️ Comparaciones"])
 
         def styled_kpi(title, value, bg_color="#ffffff", text_color="#333", tooltip=""):
-            tooltip_html = f'title="{tooltip}"' if tooltip else ""
-    
             st.markdown(f"""
-            <div style="
+            <div title="{tooltip}" style="
                 background-color: {bg_color};
                 color: {text_color};
                 padding: 20px;
@@ -73,6 +71,7 @@ if uploaded_file:
                 <div style='font-size:28px; font-weight: bold;'>{value}</div>
             </div>
             """, unsafe_allow_html=True)
+
 
 
         if pagina == "📌 KPIs":
