@@ -196,14 +196,31 @@ if uploaded_file:
             fig3 = px.bar(ganancias_mensuales, x="Fecha", y="Ganacias/Pérdidas Netas", title="Ganancia Neta Mensual", template="plotly_white")
             st.plotly_chart(fig3, use_container_width=True)
 
+            # ✅ Modificado: Comisiones usando columna "Comisiones 10 %" y formato hover
             comisiones_mensuales = df.groupby(df["Fecha"].dt.to_period("M"))["Comisiones 10 %"].sum().reset_index()
             comisiones_mensuales["Fecha"] = comisiones_mensuales["Fecha"].astype(str)
-            fig4 = px.bar(comisiones_mensuales, x="Fecha", y="Comisiones 10 %", title="Comisiones Mensuales (10%)", template="plotly_white")
-            st.plotly_chart(fig4, use_container_width=True)
+            fig4 = px.bar(
+                comisiones_mensuales,
+                x="Fecha",
+                y="Comisiones 10 %",
+                title="Comisiones Mensuales (10%)",
+                template="plotly_white"
+            )
+            fig4.update_traces(hovertemplate='Fecha: %{x}<br>Comisión: %{y:.1f}')  # ✅ Formato a 1 decimal
+             st.plotly_chart(fig4, use_container_width=True)
 
+            # Rentabilidad mensual corregida (multiplicada por 100)
             rentabilidad = df.groupby("Mes")["Beneficio en %"].mean().reset_index()
             rentabilidad["Mes"] = rentabilidad["Mes"].astype(str)
-            fig6 = px.bar(rentabilidad, x="Mes", y="Beneficio en %", title="Rentabilidad Mensual (%)", template="plotly_white")
+            rentabilidad["Beneficio en %"] *= 100  # ✅ Convertir a porcentaje real
+
+            fig6 = px.bar(
+                rentabilidad,
+                x="Mes",
+                y="Beneficio en %",
+                title="Rentabilidad Mensual (%)",
+                template="plotly_white"
+            )
             st.plotly_chart(fig6, use_container_width=True)
 
         elif pagina == "📈 Proyecciones":
