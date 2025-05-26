@@ -18,6 +18,7 @@ with open("Logo.jpg", "rb") as f:
     logo_base64 = base64.b64encode(logo_bytes).decode()
     
 # Encabezado Principal
+# Encabezado principal sin fondo
 st.markdown(f"""
     <div style='
         display: flex;
@@ -31,22 +32,10 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 
-
 # Sidebar config
 with st.sidebar:
     st.markdown("### Configuración")
-    st.markdown(f"""
-        <div style='
-            text-align: center;
-            background-color: #BFA05A;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 25px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);'>
-            <img src='data:image/jpeg;base64,{logo_base64}' style='height:60px; margin-bottom: 10px;'/>
-            <div style='font-size:14px; color: white;'>Fallone Investments</div>
-        </div>
-    """, unsafe_allow_html=True)
+    
 # Subida de archivo
 uploaded_file = st.sidebar.file_uploader("Sube el archivo Excel (.xlsx)", type=["xlsx"])
 
