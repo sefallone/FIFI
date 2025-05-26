@@ -29,7 +29,6 @@ st.markdown(f"""
 # Sidebar config
 with st.sidebar:
     st.title("Configuración")
-    with st.sidebar:
     st.markdown(f"""
         <div style='text-align: center; margin-bottom: 20px;'>
             <img src='data:image/jpeg;base64,{logo_base64}' style='height:60px; margin-bottom: 10px;'/>
