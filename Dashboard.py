@@ -156,7 +156,9 @@ if uploaded_file:
             capital_actual = float(df["Capital Invertido"].dropna().iloc[-1])
             aumento_opcion = st.selectbox("Selecciona porcentaje de aumento de capital", [0, 5, 10, 20, 30, 50])
             promedio_mensual_ganancias = df["Ganacias/Pérdidas Brutas"].mean(skipna=True)
-            styled_kpi("📆 Promedio Mensual de Ganancias", f"${promedio_mensual_ganancias:,.2f}", "#E0F7FA", tooltip="Promedio de las ganancias brutas mensuales durante el período seleccionado.")
+            col_kpi = st.columns(1)[0]
+            with col_kpi:
+                styled_kpi("📆 Promedio Mensual de Ganancias", f"${promedio_mensual_ganancias:,.2f}", "#E0F7FA", tooltip="Promedio mensual de las ganancias brutas durante el período filtrado.")
             
             beneficio_mensual = st.slider("Beneficio mensual estimado (%)", min_value=0.0, max_value=15.0, value=5.0, step=0.5)
             meses_proyeccion = st.slider("Duración de la inversión (meses)", min_value=1, max_value=60, value=12)
