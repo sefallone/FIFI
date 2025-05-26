@@ -14,12 +14,15 @@ from io import BytesIO
 st.set_page_config(page_title="Dashboard FIFI", layout="wide")
 # Logo en página principal
 logo = Image.open("Logo.jpg")
-st.markdown("""
-    <div style='text-align: center;'>
-        <img src='data:image/jpeg;base64,{}' style='width:200px;'/>
-        <h3 style='margin-top:10px;'>Fallone Investments</h3>
+logo_base64 = base64.b64encode(open("Logo.jpg", "rb").read()).decode()
+
+st.markdown(f"""
+    <div style='display: flex; align-items: center; justify-content: center; margin-bottom: 20px;'>
+        <img src='data:image/jpeg;base64,{logo_base64}' style='height: 80px; margin-right: 20px;'/>
+        <h1 style='margin: 0; font-size: 32px;'>Fallone Investments</h1>
     </div>
-    """.format(base64.b64encode(open("Logo.jpg", "rb").read()).decode()), unsafe_allow_html=True)
+""", unsafe_allow_html=True)
+
 
 # Sidebar config
 with st.sidebar:
