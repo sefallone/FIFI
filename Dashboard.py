@@ -47,6 +47,10 @@ if uploaded_file:
             st.warning("⚠️ La fecha de inicio es mayor que la fecha final.")
         else:
             df = df[(df["Fecha"] >= pd.to_datetime(fecha_inicio)) & (df["Fecha"] <= pd.to_datetime(fecha_fin))]
+            if df.empty:
+                st.warning("⚠️ No hay datos disponibles en el rango de fechas seleccionado.")
+                st.stop()
+
 
         # Preprocesamiento
         df["Mes"] = df["Fecha"].dt.to_period("M")
