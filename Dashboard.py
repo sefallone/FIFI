@@ -347,20 +347,11 @@ if uploaded_file:
             )
             fig_cmp3.update_layout(yaxis_title="Rentabilidad (%)")
             st.plotly_chart(fig_cmp3, use_container_width=True)
-            fig_cmp3.update_traces(
-                mode="lines+markers+text",
-                text=comparacion_anual["Beneficio en %"].round(1),
-                textposition="top center",
-                hovertemplate='Mes: %{x}<br>Rentabilidad: %{y:.1f}%'
-            )
-            fig_cmp3.update_layout(yaxis_title="Rentabilidad (%)")
-            st.plotly_chart(fig_cmp3, use_container_width=True)
             st.markdown("---")
 
             # 📊 Ganancia Neta Total por Año
             st.markdown("### 📊 Ganancia Neta Total por Año")
             ganancia_anual = df[df['Año'].isin(años_seleccionados)].groupby("Año")["Ganacias/Pérdidas Netas"].sum().reset_index()
-
             fig_gan_anual = px.bar(
                 ganancia_anual,
                 x="Año",
@@ -381,7 +372,6 @@ if uploaded_file:
             # 📉 Drawdown Máximo por Año
             st.markdown("### 📉 Drawdown Máximo por Año")
             drawdown_anual = df[df['Año'].isin(años_seleccionados)].groupby("Año")["Drawdown"].min().reset_index()
-
             fig_drawdown = px.line(
                 drawdown_anual,
                 x="Año",
@@ -406,12 +396,10 @@ if uploaded_file:
                 "Aumento Capital": lambda x: (x > 0).sum(),
                 "Retiro de Fondos": lambda x: (x > 0).sum()
             }).reset_index()
-
             aport_retiro_anual = aport_retiro_anual.rename(columns={
                 "Aumento Capital": "Aportes",
                 "Retiro de Fondos": "Retiros"
             })
-
             fig_aportes_retiros = px.bar(
                 aport_retiro_anual.melt(id_vars="Año", value_vars=["Aportes", "Retiros"]),
                 x="Año",
