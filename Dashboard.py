@@ -172,16 +172,27 @@ if uploaded_file:
             df_plot["Retiros"] = df_plot["Retiro de Fondos"].fillna(0)
 
             fig_capital = px.bar(df_plot, x="Fecha", y="Retiros", title="Capital Invertido y Retiros", template="plotly_white")
-            fig_capital.add_scatter(x=df_plot["Fecha"], y=df_plot["Capital Invertido"], mode='lines+markers', name="Capital Invertido", line=dict(color="blue"))
+            fig_capital.add_scatter(
+                x=df_plot["Fecha"],
+                y=df_plot["Capital Invertido"],
+                mode='lines+markers',
+                name="Capital Invertido",
+                line=dict(color="blue")
+            )
             st.plotly_chart(fig_capital, use_container_width=True)
 
-            fig1 = px.line(df, x="Fecha", y="Ganacias/Pérdidas Netas Acumuladas", title="Ganancia Neta Acumulada", template="plotly_white")
+            fig1 = px.line(
+                df,
+                x="Fecha",
+                y="Ganacias/Pérdidas Netas Acumuladas",
+                title="Ganancia Neta Acumulada",
+                template="plotly_white"
+            )
             st.plotly_chart(fig1, use_container_width=True)
 
-            # Nueva visualización: Ganancias Brutas Mensuales
+            # ✅ Nuevo gráfico: Ganancia Bruta Mensual
             ganancia_bruta_mensual = df.groupby(df["Fecha"].dt.to_period("M"))["Ganacias/Pérdidas Brutas"].sum().reset_index()
             ganancia_bruta_mensual["Fecha"] = ganancia_bruta_mensual["Fecha"].astype(str)
-
             fig2 = px.bar(
                 ganancia_bruta_mensual,
                 x="Fecha",
@@ -190,11 +201,6 @@ if uploaded_file:
                 template="plotly_white"
             )
             st.plotly_chart(fig2, use_container_width=True)
-
-            ganancias_mensuales = df.groupby(df["Fecha"].dt.to_period("M"))["Ganacias/Pérdidas Netas"].sum().reset_index()
-            ganancias_mensuales["Fecha"] = ganancias_mensuales["Fecha"].astype(str)
-            fig3 = px.bar(ganancias_mensuales, x="Fecha", y="Ganacias/Pérdidas Netas", title="Ganancia Neta Mensual", template="plotly_white")
-            st.plotly_chart(fig3, use_container_width=True)
 
             # ✅ Modificado: Comisiones usando columna "Comisiones 10 %" y formato hover
             comisiones_mensuales = df.groupby(df["Fecha"].dt.to_period("M"))["Comisiones 10 %"].sum().reset_index()
@@ -207,9 +213,9 @@ if uploaded_file:
                 template="plotly_white"
             )
             fig4.update_traces(hovertemplate='Fecha: %{x}<br>Comisión: %{y:.1f}')  # ✅ Formato a 1 decimal
-             st.plotly_chart(fig4, use_container_width=True)
+            st.plotly_chart(fig4, use_container_width=True)
 
-            # Rentabilidad mensual corregida (multiplicada por 100)
+            # ✅ Rentabilidad mensual ajustada a porcentaje real
             rentabilidad = df.groupby("Mes")["Beneficio en %"].mean().reset_index()
             rentabilidad["Mes"] = rentabilidad["Mes"].astype(str)
             rentabilidad["Beneficio en %"] *= 100  # ✅ Convertir a porcentaje real
@@ -222,6 +228,7 @@ if uploaded_file:
                 template="plotly_white"
             )
             st.plotly_chart(fig6, use_container_width=True)
+
 
         elif pagina == "📈 Proyecciones":
             st.title("📈 Proyección de Inversión Personalizada")
