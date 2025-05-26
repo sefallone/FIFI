@@ -13,28 +13,18 @@ from io import BytesIO
 # Configuración general
 st.set_page_config(page_title="Dashboard FIFI", layout="wide")
 # Logo en página principal
-with open("Logo.jpg", "rb") as f:
-    logo_bytes = f.read()
-    logo_base64 = base64.b64encode(logo_bytes).decode()
-    
-# Encabezado Principal
-# Encabezado principal sin fondo
-st.markdown(f"""
-    <div style='
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 30px;'>
-
-        <img src='data:image/jpeg;base64,{logo_base64}' style='height: 120px; margin-right: 25px;'/>
-        <h2 style='margin: 0; font-size: 22px; color: #333;'>Fallone Investments</h2>
+# Logo en página principal
+logo = Image.open("Logo.jpg")
+st.markdown("""
+    <div style='text-align: center;'>
+        <img src='data:image/jpeg;base64,{}' style='width:200px;'/>
+        <h3 style='margin-top:10px;'>Fallone Investments</h3>
     </div>
-""", unsafe_allow_html=True)
-
+    """.format(base64.b64encode(open("Logo.jpg", "rb").read()).decode()), unsafe_allow_html=True)
 
 # Sidebar config
 with st.sidebar:
-    st.markdown("### Configuración")
+    st.title("Configuración")
     
 # Subida de archivo
 uploaded_file = st.sidebar.file_uploader("Sube el archivo Excel (.xlsx)", type=["xlsx"])
