@@ -38,7 +38,7 @@ st.markdown(f"""
 # Sidebar config
 with st.sidebar:
     st.title("Configuración")
-    t.markdown(f"""
+    st.markdown(f"""
         <div style='
             text-align: center;
             background-color: #FFD700;
