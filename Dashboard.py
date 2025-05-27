@@ -35,40 +35,50 @@ uploaded_file = st.sidebar.file_uploader("Sube el archivo Excel (.xlsx)", type=[
 if uploaded_file:
     try:
         df = pd.read_excel(uploaded_file, sheet_name="Histórico")
-        df = df.dropna(subset=["Fecha"])
-        df["Fecha"] = pd.to_datetime(df["Fecha"], errors="coerce")
         df = df.sort_values("Fecha")
 
-        # Filtro de fechas: solo mes y año
+        
+
+        # Convertir 'Fecha' a datetime por seguridad
+        df["Fecha"] = pd.to_datetime(df["Fecha"], errors="coerce")
+        df = df.dropna(subset=["Fecha"])
+
+        # Extraer fecha mínima y máxima reales
+        fecha_min = df["Fecha"].min().replace(day=1)
+        fecha_max = df["Fecha"].max().replace(day=1) - pd.DateOffset(months=1)
+
+        # Extraer rangos posibles para año y mes
+        meses = list(range(1, 13))
+        años = list(range(fecha_min.year, fecha_max.year + 1))
+
+        # Filtros en el sidebar
         st.sidebar.markdown("### Filtro por Mes y Año")
 
-        # Asegurarse que la columna Fecha esté en datetime
-        df["Fecha"] = pd.to_datetime(df["Fecha"], errors="coerce")
-        df["Año"] = df["Fecha"].dt.year
-        df["Mes"] = df["Fecha"].dt.month
-
-        años_disponibles = sorted(df["Año"].dropna().unique())
-        meses_disponibles = list(range(1, 13))
-
         col1, col2 = st.sidebar.columns(2)
-        anio_inicio = col1.selectbox("Año inicio", años_disponibles, index=0)
-        mes_inicio = col2.selectbox("Mes inicio", meses_disponibles, index=0, format_func=lambda m: calendar.month_name[m])
+        anio_inicio = col1.selectbox("Año inicio", años, index=0)
+        mes_inicio = col2.selectbox("Mes inicio", meses, index=fecha_min.month - 1, format_func=lambda m: calendar.month_name[m])
 
         col3, col4 = st.sidebar.columns(2)
-        anio_fin = col3.selectbox("Año fin", años_disponibles, index=len(años_disponibles) - 1)
-        mes_fin = col4.selectbox("Mes fin", meses_disponibles, index=11, format_func=lambda m: calendar.month_name[m])
+        anio_fin = col3.selectbox("Año fin", años, index=len(años) - 1)
+        mes_fin = col4.selectbox("Mes fin", meses, index=fecha_max.month - 1, format_func=lambda m: calendar.month_name[m])
+    
+        # Construir fechas desde año y mes
+        fecha_inicio_sel = pd.Timestamp(anio_inicio, mes_inicio, 1)
+        fecha_fin_sel = pd.Timestamp(anio_fin, mes_fin, 1) + pd.offsets.MonthEnd(0)
 
-        # Construir fecha desde año y mes
-        fecha_inicio = pd.Timestamp(anio_inicio, mes_inicio, 1)
-        fecha_fin = pd.Timestamp(anio_fin, mes_fin, 1) + pd.offsets.MonthEnd(0)
-
-        # Validación
-        if fecha_inicio > fecha_fin:
-            st.warning("⚠️ La fecha de inicio es mayor que la fecha final.")
+        # Validaciones
+        if fecha_inicio_sel < fecha_min:
+            st.warning("⚠️ No se puede seleccionar antes de la fecha mínima disponible.")
+            st.stop()
+        elif fecha_fin_sel > df["Fecha"].max():
+            st.warning("⚠️ No se puede seleccionar después del último mes disponible.")
+            st.stop()
+        elif fecha_inicio_sel > fecha_fin_sel:
+            st.warning("⚠️ La fecha de inicio no puede ser mayor que la final.")
             st.stop()
 
-        # Aplicar el filtro al DataFrame
-        df = df[(df["Fecha"] >= fecha_inicio) & (df["Fecha"] <= fecha_fin)]
+        # Filtrar el DataFrame
+        df = df[(df["Fecha"] >= fecha_inicio_sel) & (df["Fecha"] <= fecha_fin_sel)]
         if df.empty:
             st.warning("⚠️ No hay datos disponibles en el rango de fechas seleccionado.")
             st.stop()
