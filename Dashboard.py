@@ -135,21 +135,21 @@ if uploaded_file:
             max_drawdown = df["Drawdown"].min()
 
             col1, col2, col3, col4 = st.columns(4)
-            with col1: styled_kpi("🧑 Inversionista", f"{inversionista}", "#1070ca", tooltip="ID del inversionista.")
-            with col2: styled_kpi("💼 Capital Inicial", f"${capital_inicial:,.2f}", "#1070ca", tooltip="Capital Inicial Invertido.")
-            with col3: styled_kpi("💰 Capital Invertido", f"${capital_invertido:,.2f}", "#1070ca", tooltip="Capital Actual invertido'.")
-            with col4: styled_kpi("💵 Inyección Capital Total", f"${inyeccion_total:,.2f}", "#1070ca", tooltip="Capital Total Inyectado.")
+            with col1: styled_kpi("🧑 Inversionista", f"{inversionista}", "#a3e4d7", tooltip="ID del inversionista.")
+            with col2: styled_kpi("💼 Capital Inicial", f"${capital_inicial:,.2f}", "#a3e4d7", tooltip="Capital Inicial Invertido.")
+            with col3: styled_kpi("💰 Capital Invertido", f"${capital_invertido:,.2f}", "#a3e4d7", tooltip="Capital Actual invertido'.")
+            with col4: styled_kpi("💵 Inyección Capital Total", f"${inyeccion_total:,.2f}", "#a3e4d7", tooltip="Capital Total Inyectado.")
 
             col5, col6, col7, col8 = st.columns(4)
-            with col5: styled_kpi("💸 Retiros", f"${total_retiros:,.2f}", "#FFE5EC", tooltip="Total de los retiros de fondos.")
-            with col6: styled_kpi("📉 Ganancia Bruta", f"${ganancia_bruta:,.2f}", "#F0F4C3", tooltip="Ganancias antes de deducir comisiones.")
-            with col7: styled_kpi("📈 Ganancia Neta", f"${ganancia_neta:,.2f}", "#E1F5FE", tooltip="Ganancias luego de deducir comisiones.")
-            with col8: styled_kpi("🧾 Comisiones Pagadas", f"${comisiones:,.2f}", "#F3E5F5", tooltip="Valor acumulado de comisiones pagadas.")
+            with col5: styled_kpi("💸 Retiros", f"${total_retiros:,.2f}", "#ec7063", tooltip="Total de los retiros de fondos.")
+            with col6: styled_kpi("📉 Ganancia Bruta", f"${ganancia_bruta:,.2f}", "#58d68d", tooltip="Ganancias antes de deducir comisiones.")
+            with col7: styled_kpi("📈 Ganancia Neta", f"${ganancia_neta:,.2f}", "#58d68d", tooltip="Ganancias luego de deducir comisiones.")
+            with col8: styled_kpi("🧾 Comisiones Pagadas", f"${comisiones:,.2f}", "#ec7063", tooltip="Valor acumulado de comisiones pagadas.")
 
             col9, col10, col11 = st.columns(3)
-            with col9: styled_kpi("📅 Fecha Ingreso", f"{fecha_ingreso.strftime('%d/%m/%Y')}", "#FFEBEE", tooltip="Fecha de Ingreso al Fondo.")
-            with col10: styled_kpi("📊 ROI Total", f"{roi:.2%}", "#DDEBF7", tooltip="Retorno total sobre el capital neto invertido.")
-            with col11: styled_kpi("📈 CAGR Mensual", f"{cagr_mensual:.2%}", "#F0F0F0", tooltip="Tasa de crecimiento promedio mensual compuesto.")
+            with col9: styled_kpi("📅 Fecha Ingreso", f"{fecha_ingreso.strftime('%d/%m/%Y')}", "#a3e4d7", tooltip="Fecha de Ingreso al Fondo.")
+            with col10: styled_kpi("📊 ROI Total", f"{roi:.2%}", "#58d68d", tooltip="Retorno total sobre el capital neto invertido.")
+            with col11: styled_kpi("📈 CAGR Mensual", f"{cagr_mensual:.2%}", "#58d68d", tooltip="Tasa de crecimiento promedio mensual compuesto.")
 
             st.markdown("---")
             # Promedio mensual de ganancias absolutas
