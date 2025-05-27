@@ -135,10 +135,10 @@ if uploaded_file:
             max_drawdown = df["Drawdown"].min()
 
             col1, col2, col3, col4 = st.columns(4)
-            with col1: styled_kpi("🧑 Inversionista", f"{inversionista}", "#D7F9F1", tooltip="ID del inversionista.")
-            with col2: styled_kpi("💼 Capital Inicial", f"${capital_inicial:,.2f}", "#E8F0FE", tooltip="Capital Inicial Invertido.")
-            with col3: styled_kpi("💰 Capital Invertido", f"${capital_invertido:,.2f}", "#E6F4EA", tooltip="Capital Actual invertido'.")
-            with col4: styled_kpi("💵 Inyección Capital Total", f"${inyeccion_total:,.2f}", "#FFF9E5", tooltip="Capital Total Inyectado.")
+            with col1: styled_kpi("🧑 Inversionista", f"{inversionista}", "#1070ca", tooltip="ID del inversionista.")
+            with col2: styled_kpi("💼 Capital Inicial", f"${capital_inicial:,.2f}", "#1070ca", tooltip="Capital Inicial Invertido.")
+            with col3: styled_kpi("💰 Capital Invertido", f"${capital_invertido:,.2f}", "#1070ca", tooltip="Capital Actual invertido'.")
+            with col4: styled_kpi("💵 Inyección Capital Total", f"${inyeccion_total:,.2f}", "#1070ca", tooltip="Capital Total Inyectado.")
 
             col5, col6, col7, col8 = st.columns(4)
             with col5: styled_kpi("💸 Retiros", f"${total_retiros:,.2f}", "#FFE5EC", tooltip="Total de los retiros de fondos.")
