@@ -153,14 +153,15 @@ if uploaded_file:
 
             st.markdown("---")
             # Promedio mensual de ganancias absolutas
-            promedio_mensual_ganancias = df.groupby("Mes")["Ganacias/Pérdidas Netas"].sum().mean()
+            promedio_mensual_ganancias_pct = df.groupby("Mes")["Beneficio en %"].mean().mean()
 
             styled_kpi(
                 "📈 Promedio Mensual de Ganancias",
-                f"${promedio_mensual_ganancias:,.2f}",
+                f"{promedio_mensual_ganancias_pct * 100:.2f}%",
                 "#F1F8E9",
-                tooltip="Promedio mensual de ganancias netas en valor absoluto."
+                tooltip="Promedio mensual de ganancias netas expresadas como porcentaje."
             )
+            
             # styled_kpi("📆 Rentabilidad Promedio Mensual", f"{monthly_avg_return_pct:.2%}", "#F1F8E9", tooltip="Promedio mensual de retornos netos relativos.")
 
             # Nuevos KPIs adicionales
