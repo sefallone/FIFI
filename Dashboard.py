@@ -135,7 +135,7 @@ if uploaded_file:
             max_drawdown = df["Drawdown"].min()
 
             col1, col2, col3, col4 = st.columns(4)
-            with col1: styled_kpi("🧑 Inversionista", f"{inversionista}", "#a3e4d7", tooltip="ID del inversionista.")
+            with col1: styled_kpi("Inversionista", f"{inversionista}", "#a3e4d7", tooltip="ID del inversionista.")
             with col2: styled_kpi("💼 Capital Inicial", f"${capital_inicial:,.2f}", "#a3e4d7", tooltip="Capital Inicial Invertido.")
             with col3: styled_kpi("💰 Capital Invertido", f"${capital_invertido:,.2f}", "#a3e4d7", tooltip="Capital Actual invertido'.")
             with col4: styled_kpi("💵 Inyección Capital Total", f"${inyeccion_total:,.2f}", "#a3e4d7", tooltip="Capital Total Inyectado.")
