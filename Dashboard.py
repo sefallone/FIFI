@@ -152,7 +152,16 @@ if uploaded_file:
             with col11: styled_kpi("📈 CAGR Mensual", f"{cagr_mensual:.2%}", "#F0F0F0", tooltip="Tasa de crecimiento promedio mensual compuesto.")
 
             st.markdown("---")
-            styled_kpi("📆 Rentabilidad Promedio Mensual", f"{monthly_avg_return_pct:.2%}", "#F1F8E9", tooltip="Promedio mensual de retornos netos relativos.")
+            # Promedio mensual de ganancias absolutas
+            promedio_mensual_ganancias = df.groupby("Mes")["Ganacias/Pérdidas Netas"].sum().mean()
+
+            styled_kpi(
+                "📈 Promedio Mensual de Ganancias",
+                f"${promedio_mensual_ganancias:,.2f}",
+                "#F1F8E9",
+                tooltip="Promedio mensual de ganancias netas en valor absoluto."
+            )
+            # styled_kpi("📆 Rentabilidad Promedio Mensual", f"{monthly_avg_return_pct:.2%}", "#F1F8E9", tooltip="Promedio mensual de retornos netos relativos.")
 
             # Nuevos KPIs adicionales
             col12, col13, col14 = st.columns(3)
