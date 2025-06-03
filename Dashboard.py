@@ -113,15 +113,30 @@ if uploaded_file:
             st.title("📌 Indicadores Clave de Desempeño (KPIs)")
             st.markdown("---")
 
-            capital_invertido = df["Capital Invertido"].dropna().iloc[-1]
-            capital_inicial = df["Aumento Capital"].dropna().iloc[0]
+            # Verificar si hay datos después del filtrado
+            if df.empty:
+                st.warning("⚠️ No hay datos disponibles en el rango de fechas seleccionado.")
+                st.stop()  # Detener la ejecución aquí
+
+            # Asegurar que las columnas necesarias existan y tengan datos
+            required_columns = ["Capital Invertido", "Aumento Capital", "ID Inv", "Retiro de Fondos", 
+                       "Ganacias/Pérdidas Brutas", "Ganacias/Pérdidas Netas", "Comisiones Pagadas", "Fecha"]
+            if not all(col in df.columns for col in required_columns):
+                st.error("❌ El archivo no tiene las columnas requeridas.")
+                st.stop()
+
+            # Usar .get() para evitar errores si una columna no existe o está vacía
+            capital_invertido = df["Capital Invertido"].dropna().iloc[-1] if not df["Capital Invertido"].dropna().empty else 0
+            capital_inicial = df["Aumento Capital"].dropna().iloc[0] if not df["Aumento Capital"].dropna().empty else 0
             inyeccion_total = df["Aumento Capital"].sum(skipna=True)
-            inversionista = df["ID Inv"].dropna().iloc[0]
+            inversionista = df["ID Inv"].dropna().iloc[0] if not df["ID Inv"].dropna().empty else "N/A"
             total_retiros = df["Retiro de Fondos"].sum(skipna=True)
             ganancia_bruta = df["Ganacias/Pérdidas Brutas"].sum(skipna=True)
             ganancia_neta = df["Ganacias/Pérdidas Netas"].sum(skipna=True)
-            comisiones = df["Comisiones Pagadas"].dropna().iloc[-1]
-            fecha_ingreso = df["Fecha"].dropna().iloc[0].date()
+            comisiones = df["Comisiones Pagadas"].dropna().iloc[-1] if not df["Comisiones Pagadas"].dropna().empty else 0
+            fecha_ingreso = df["Fecha"].dropna().iloc[0].date() if not df["Fecha"].dropna().empty else "N/A"
+
+            # Resto del código de KPIs...
 
             capital_base = capital_invertido - total_retiros
             roi = ganancia_neta / capital_base if capital_base > 0 else 0
