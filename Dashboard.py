@@ -824,6 +824,60 @@ if uploaded_file:
             fig_cmp4.update_layout(yaxis_tickprefix="$", yaxis_tickformat=",.0f", showlegend=False)
             st.plotly_chart(fig_cmp4, use_container_width=True)
 
+            # ==============================================
+        # PÁGINA: REPORTES
+        # ==============================================
+        elif pagina == "📊 Reportes":
+            st.title("📊 Reportes y Exportaciones")
+            st.markdown("Visualiza y descarga los datos utilizados en el dashboard.")
+
+            st.markdown("### 🧾 Datos Filtrados")
+            st.dataframe(df, use_container_width=True)
+
+            # Descargar datos en Excel
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                df.to_excel(writer, sheet_name='Datos Filtrados', index=False)
+            excel_data = output.getvalue()
+
+            st.download_button(
+                label="📥 Descargar Datos Filtrados en Excel",
+                data=excel_data,
+                file_name="datos_filtrados.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+
+            # (Opcional) Descargar solo los KPIs resumidos
+            st.markdown("### 📌 Exportar KPIs (Resumen Básico)")
+
+            resumen_kpis = {
+                "Capital Inicial": capital_inicial,
+                "Capital Actual": capital_invertido,
+                "Inyección Total": inyeccion_total,
+                "Ganancia Neta": ganancia_neta,
+                "ROI": roi,
+                "CAGR": cagr,
+                "Sharpe Ratio": sharpe_ratio,
+                "Max Drawdown": max_drawdown,
+                "Win Rate": win_rate,
+                "Promedio Mensual (%)": promedio_mensual_ganancias_pct
+            }
+            kpi_df = pd.DataFrame(resumen_kpis.items(), columns=["Indicador", "Valor"])
+
+            output_kpi = BytesIO()
+            with pd.ExcelWriter(output_kpi, engine='xlsxwriter') as writer:
+                kpi_df.to_excel(writer, sheet_name="KPIs", index=False)
+
+            st.download_button(
+                label="📥 Descargar KPIs en Excel",
+                data=output_kpi.getvalue(),
+                file_name="kpis_resumen.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+
+
+    
+
     except Exception as e:
         st.error(f"❌ Error al procesar el archivo: {str(e)}")
 else:
