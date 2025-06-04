@@ -704,6 +704,9 @@ if uploaded_file:
         # ==============================================
         # PÁGINA: COMPARACIONES
         # ==============================================
+                # ==============================================
+        # PÁGINA: COMPARACIONES
+        # ==============================================
         elif pagina == "⚖️ Comparaciones":
             st.title("⚖️ Comparaciones por Año")
             st.markdown("---")
@@ -719,7 +722,9 @@ if uploaded_file:
                 st.warning("Selecciona al menos un año para comparar")
                 st.stop()
 
-            comparacion_anual = df[df['Año'].isin(años_seleccionados)].groupby(['Año', 'MesNombre', 'MesOrden']).agg({
+            comparacion_anual = df[df['Año'].isin(años_seleccionados)].groupby(
+                ['Año', 'MesNombre', 'MesOrden']
+            ).agg({
                 "Ganacias/Pérdidas Brutas": "sum",
                 "Ganacias/Pérdidas Netas": "sum",
                 "Comisiones Pagadas": "sum",
@@ -728,60 +733,96 @@ if uploaded_file:
 
             comparacion_anual["Beneficio en %"] *= 100
 
-            # Gráfico de rentabilidad comparada
-            st.markdown("### 📊 Rentabilidad Mensual Comparada")
-            fig_cmp3 = px.bar(
+            # Orden correcto de meses en español
+            orden_meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", 
+                           "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
+            comparacion_anual["MesNombre"] = pd.Categorical(
+                comparacion_anual["MesNombre"], categories=orden_meses, ordered=True
+            )
+
+            # ========== Gráfico 1: Rentabilidad mensual comparada ==========
+            st.subheader("📊 Rentabilidad Promedio Mensual por Año")
+            fig_cmp1 = px.bar(
                 comparacion_anual,
                 x="MesNombre",
                 y="Beneficio en %",
                 color="Año",
                 barmode="group",
-                title="<b>Rentabilidad Promedio Mensual por Año</b>",
-                labels={"Beneficio en %": "Rentabilidad (%)", "MesNombre": "Mes"},
-                category_orders={"MesNombre": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", 
-                                            "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]}
-            )
-            fig_cmp3.update_traces(
-                text=comparacion_anual["Beneficio en %"].round(1),
-                textposition="outside",
-                hovertemplate='Año: %{x}<br>Rentabilidad: %{y:.1f}%'
-            )
-            fig_cmp3.update_layout(
-                yaxis_title="Rentabilidad (%)",
-                yaxis_ticksuffix="%",
+                labels={"Beneficio en %": "Rentabilidad (%)"},
+                category_orders={"MesNombre": orden_meses},
+                title="<b>Rentabilidad Promedio Mensual</b>",
                 height=500
             )
+            fig_cmp1.update_traces(
+                text=comparacion_anual["Beneficio en %"].round(1),
+                textposition="outside",
+                hovertemplate="Año: %{color}<br>Mes: %{x}<br>Rentabilidad: %{y:.1f}%"
+            )
+            fig_cmp1.update_layout(yaxis_ticksuffix="%")
+            st.plotly_chart(fig_cmp1, use_container_width=True)
+
+            # ========== Gráfico 2: Ganancia Neta Mensual ==========
+            st.subheader("📈 Ganancia Neta Mensual Comparada")
+            fig_cmp2 = px.bar(
+                comparacion_anual,
+                x="MesNombre",
+                y="Ganacias/Pérdidas Netas",
+                color="Año",
+                barmode="group",
+                labels={"Ganacias/Pérdidas Netas": "Ganancia Neta (USD)"},
+                category_orders={"MesNombre": orden_meses},
+                title="<b>Ganancia Neta por Mes</b>",
+                height=500
+            )
+            fig_cmp2.update_traces(
+                text=comparacion_anual["Ganacias/Pérdidas Netas"].round(0),
+                textposition="outside",
+                hovertemplate="Año: %{color}<br>Mes: %{x}<br>Ganancia: $%{y:,.0f}"
+            )
+            fig_cmp2.update_layout(yaxis_tickprefix="$", yaxis_tickformat=",.0f")
+            st.plotly_chart(fig_cmp2, use_container_width=True)
+
+            # ========== Gráfico 3: Comisiones Mensuales ==========
+            st.subheader("💸 Comisiones Mensuales Comparadas")
+            fig_cmp3 = px.bar(
+                comparacion_anual,
+                x="MesNombre",
+                y="Comisiones Pagadas",
+                color="Año",
+                barmode="group",
+                labels={"Comisiones Pagadas": "Comisiones (USD)"},
+                category_orders={"MesNombre": orden_meses},
+                title="<b>Comisiones por Mes</b>",
+                height=500
+            )
+            fig_cmp3.update_traces(
+                text=comparacion_anual["Comisiones Pagadas"].round(0),
+                textposition="outside",
+                hovertemplate="Año: %{color}<br>Mes: %{x}<br>Comisión: $%{y:,.0f}"
+            )
+            fig_cmp3.update_layout(yaxis_tickprefix="$", yaxis_tickformat=",.0f")
             st.plotly_chart(fig_cmp3, use_container_width=True)
-            st.markdown("---")
 
-            # Gráfico de ganancia neta anual
-            st.markdown("### 📈 Ganancia neta anual")
-
-            with st.expander("📈 Ganancia Neta Anual", expanded=True):
-                ganancia_anual = df[df['Año'].isin(años_seleccionados)].groupby("Año")["Ganacias/Pérdidas Netas"].sum().reset_index()
-                fig_gan_anual = px.bar(
-                    ganancia_anual,
-                    x="Año",
-                    y="Ganacias/Pérdidas Netas",
-                    title="Ganancia Neta por Año (USD)",
-                    template="plotly_white",
-                    color="Año",
-                    color_discrete_sequence=px.colors.qualitative.Prism
-                )
-                fig_gan_anual.update_traces(
-                    texttemplate='%{y:,.2f}',
-                    textposition='outside',
-                    hovertemplate='Año: %{x}<br>Ganancia: %{y:,.2f} USD'
-                )
-                fig_gan_anual.update_layout(
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    hovermode="x unified",
-                    yaxis_tickformat=",",
-                    yaxis_title="Ganancia Neta (USD)",
-                    showlegend=False
-                )
-                st.plotly_chart(fig_gan_anual, use_container_width=True)
+            # ========== Gráfico 4: Ganancia Neta Anual ==========
+            st.subheader("📊 Ganancia Neta Anual Total")
+            ganancia_anual = df[df['Año'].isin(años_seleccionados)].groupby("Año")["Ganacias/Pérdidas Netas"].sum().reset_index()
+            fig_cmp4 = px.bar(
+                ganancia_anual,
+                x="Año",
+                y="Ganacias/Pérdidas Netas",
+                title="<b>Ganancia Neta Total por Año</b>",
+                labels={"Ganacias/Pérdidas Netas": "Ganancia Neta (USD)"},
+                height=500,
+                color="Año",
+                color_discrete_sequence=px.colors.qualitative.Prism
+            )
+            fig_cmp4.update_traces(
+                texttemplate="$%{y:,.0f}",
+                textposition="outside",
+                hovertemplate="Año: %{x}<br>Ganancia: $%{y:,.0f}"
+            )
+            fig_cmp4.update_layout(yaxis_tickprefix="$", yaxis_tickformat=",.0f", showlegend=False)
+            st.plotly_chart(fig_cmp4, use_container_width=True)
 
     except Exception as e:
         st.error(f"❌ Error al procesar el archivo: {str(e)}")
