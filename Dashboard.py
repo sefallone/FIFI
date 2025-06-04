@@ -265,6 +265,3 @@ else:
     st.info("📂 Por favor, sube un archivo Excel desde la barra lateral para comenzar.")
 
 
-
-
-
