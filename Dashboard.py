@@ -479,7 +479,7 @@ if uploaded_file:
                           f"{aumento_opcion}% sobre actual", "Capital inicial proyectado")
             with col_resumen2:
                 styled_kpi("Valor Final", f"${proyeccion[-1]:,.2f}", "📈", 
-                          f"{((proyeccion[-1]/capital_proyectado-1)*100:.1f}% total", "Valor estimado al final del período")
+                          f"{((proyeccion[-1]/capital_proyectado-1)*100:.1f)}% total", "Valor estimado al final del período")
             with col_resumen3:
                 capital_comp_anual = capital_proyectado * ((1 + beneficio_mensual / 100) ** 12)
                 styled_kpi("Proyección Anual", f"${capital_comp_anual:,.2f}", "📅", 
