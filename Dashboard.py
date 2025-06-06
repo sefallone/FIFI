@@ -84,7 +84,7 @@ st.markdown("""
 # 4. FUNCIÓN PARA KPIs ESTILIZADOS (MEJORADA)
 def styled_kpi(title, value, delta=None, delta_color="auto", icon=None, help_text=None):
     """
-    Versión profesional de los KPI cards con iconos y tooltips
+    Versión mejorada de los KPI cards con formato consistente para valores delta
     """
     # Mapeo de iconos a emojis
     icon_map = {
@@ -110,25 +110,37 @@ def styled_kpi(title, value, delta=None, delta_color="auto", icon=None, help_tex
     if isinstance(value, (int, float)):
         value_color = color_classes["positive"] if value >= 0 else color_classes["negative"]
     
-    # Formateo de valores
+    # Formateo de valores principales
     if isinstance(value, (int, float)):
-        value_str = f"${value:,.2f}" if abs(value) >= 1000 else f"${value:.2f}"
+        if "%" in str(title):  # Si el título contiene %, formatear como porcentaje
+            value_str = f"{value:.2f}%"
+        elif abs(value) >= 1000:
+            value_str = f"${value:,.2f}"
+        else:
+            value_str = f"${value:.2f}"
     else:
         value_str = str(value)
     
-    # Manejo del delta
+    # Manejo del delta con formato consistente
     delta_html = ""
     if delta is not None:
-        delta_value = f"+{delta}" if isinstance(delta, (int, float)) and delta >= 0 else str(delta)
-        # Versión alternativa más legible:
-        delta_color = delta_color.lower()
+        # Determinar color automáticamente si es necesario
         if delta_color == "auto":
-            if (isinstance(delta, (int, float)) and delta >= 0) or (isinstance(delta, str) and "+" in delta):
+            if (isinstance(delta, (int, float)) and delta >= 0) or (isinstance(delta, str) and "+" in str(delta)):
                 delta_color = "positive"
             else:
                 delta_color = "negative"
         
-        delta_color_hex = color_classes[delta_color]
+        # Formatear el valor delta
+        if isinstance(delta, (int, float)):
+            if delta >= 0:
+                delta_value = f"+{delta:.2f}%"
+            else:
+                delta_value = f"{delta:.2f}%"
+        else:
+            delta_value = str(delta)
+        
+        delta_color_hex = color_classes[delta_color.lower()]
         delta_html = f"""
         <div style="
             color: {delta_color_hex};
@@ -168,7 +180,6 @@ def styled_kpi(title, value, delta=None, delta_color="auto", icon=None, help_tex
     </div>
     """
     st.markdown(html, unsafe_allow_html=True)
-
 # 5. FUNCIÓN PARA GRÁFICO DE GANANCIAS (MEJORADA)
 def create_profit_chart(df):
     """Gráfico profesional de ganancias acumuladas con drawdown"""
