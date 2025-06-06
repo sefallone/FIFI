@@ -283,7 +283,6 @@ def create_profit_chart(df):
     )
     
     return fig
-
 def calcular_kpis_globales(df, df_completo):
     """Calcula todos los KPIs y los devuelve como diccionario"""
     # Cálculo de KPIs
