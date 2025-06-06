@@ -252,6 +252,38 @@ def create_excel_report(df, kpis):
     
     return output.getvalue()
 
+def create_profit_chart(df):
+    """Crea gráfico de ganancias acumuladas con drawdown"""
+    fig = px.area(
+        df,
+        x="Fecha",
+        y="Acumulado",
+        title="<b>Ganancias Acumuladas</b>",
+        labels={"Acumulado": "Ganancia Acumulada (USD)"}
+    )
+    
+    # Agregar línea de drawdown
+    fig.add_scatter(
+        x=df["Fecha"],
+        y=df["MaxAcum"],
+        mode='lines',
+        name="Máximo Acumulado",
+        line=dict(color="#e74c3c", dash='dot')
+    )
+    
+    fig.update_layout(
+        hovermode="x unified",
+        yaxis_tickprefix="$",
+        yaxis_tickformat=",.0f",
+        height=500
+    )
+    fig.update_traces(
+        line=dict(width=3, color="#27ae60"),
+        hovertemplate="Fecha: %{x}<br>Ganancia: $%{y:,.0f}"
+    )
+    
+    return fig
+
 def calcular_kpis_globales(df, df_completo):
     """Calcula todos los KPIs y los devuelve como diccionario"""
     # Cálculo de KPIs
@@ -263,7 +295,7 @@ def calcular_kpis_globales(df, df_completo):
     ganancia_bruta = df["Ganacias/Pérdidas Brutas"].sum(skipna=True)
     ganancia_neta = df["Ganacias/Pérdidas Netas"].sum(skipna=True)
     comisiones = df["Comisiones Pagadas"].sum(skipna=True)
-    fecha_ingreso = df_completo["Fecha"].min().date()
+    fecha_ingreso = pd.to_datetime(df_completo["Fecha"].min()).date()
 
     # ROI y CAGR
     capital_inicial_neto = capital_inicial + inyeccion_total - total_retiros
@@ -271,8 +303,14 @@ def calcular_kpis_globales(df, df_completo):
     
     fecha_inicio = df["Fecha"].min()
     fecha_fin = df["Fecha"].max()
-    años_inversion = (fecha_fin - fecha_inicio).days / 365.25
-    cagr = ((capital_invertido / capital_inicial_neto) ** (1 / años_inversion) - 1) if años_inversion > 0 and capital_inicial_neto > 0 else 0
+    try:
+        años_inversion = (fecha_fin - fecha_inicio).days / 365.25
+        if años_inversion > 0 and capital_inicial_neto > 0:
+            cagr = ((capital_invertido / capital_inicial_neto) ** (1 / años_inversion) - 1)
+        else:
+            cagr = 0
+    except:
+        cagr = 0
 
     # KPIs de rendimiento adicionales
     sharpe_ratio = ganancia_neta / (df["Beneficio en %"].std() * np.sqrt(12)) if len(df) > 1 else 0
@@ -340,8 +378,12 @@ if uploaded_file:
         df_completo = df_completo.dropna(subset=["Fecha"])
 
         # Validar columnas requeridas
-        required_columns = ["Capital Invertido", "Aumento Capital", "Retiro de Fondos", 
-                          "Ganacias/Pérdidas Netas", "Comisiones Pagadas", "Fecha"]
+        required_columns = [
+            "Capital Invertido", "Aumento Capital", "Retiro de Fondos", 
+            "Ganacias/Pérdidas Netas", "Comisiones Pagadas", "Fecha",
+            "Ganacias/Pérdidas Brutas", "Beneficio en %",
+            "Ganacias/Pérdidas Netas Acumuladas", "ID Inv"
+        ]
         if not all(col in df_completo.columns for col in required_columns):
             st.error("❌ El archivo no contiene las columnas requeridas.")
             st.stop()
@@ -351,8 +393,8 @@ if uploaded_file:
             st.markdown("### 🗓️ Filtro de Fechas")
             
             # Get min/max dates from data
-            min_date = df_completo["Fecha"].min().date()
-            max_date = (df_completo["Fecha"].max() - pd.DateOffset(months=1)).date()
+            min_date = pd.to_datetime(df_completo["Fecha"].min()).date()
+            max_date = (pd.to_datetime(df_completo["Fecha"].max()) - pd.DateOffset(months=1)).date()
             
             # Create date range slider
             date_range = st.date_input(
@@ -555,14 +597,14 @@ if uploaded_file:
 
             # Gráfico de comisiones
             st.markdown("### 💸 Comisiones Mensuales")
-            comisiones_mensuales = df.groupby(df["Fecha"].dt.to_period("M"))["Comisiones 10 %"].sum().reset_index()
+            comisiones_mensuales = df.groupby(df["Fecha"].dt.to_period("M"))["Comisiones Pagadas"].sum().reset_index()
             comisiones_mensuales["Fecha"] = comisiones_mensuales["Fecha"].astype(str)
             fig4 = px.bar(
                 comisiones_mensuales,
                 x="Fecha",
-                y="Comisiones 10 %",
-                title="<b>Comisiones Mensuales (10%)</b>",
-                labels={"Comisiones 10 %": "Comisiones (USD)"}
+                y="Comisiones Pagadas",
+                title="<b>Comisiones Mensuales</b>",
+                labels={"Comisiones Pagadas": "Comisiones (USD)"}
             )
             fig4.update_traces(
                 marker_color="#e74c3c",
