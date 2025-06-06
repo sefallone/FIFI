@@ -144,13 +144,30 @@ px.defaults.width = None
 # COMPONENTES REUTILIZABLES
 # ==============================================
 def styled_kpi(title, value, delta=None, delta_color="auto", icon=None, help_text=None):
+    """
+    Enhanced KPI card with:
+    - Automatic delta coloring
+    - Icons support
+    - Help tooltips
+    - Responsive design
+    """
     # Determine delta color automatically if not specified
     if delta_color == "auto":
         if isinstance(delta, (int, float)):
             delta_color = "success" if delta >= 0 else "danger"
         elif isinstance(delta, str):
             delta_color = "success" if "+" in delta else "danger"
-
+    
+    # Determine value color class
+    value_color_class = ""
+    if isinstance(value, (int, float)):
+        value_color_class = "positive" if value >= 0 else "negative"
+    elif isinstance(value, str):
+        if "%" in value and "-" not in value:
+            value_color_class = "positive"
+        elif "%" in value and "-" in value:
+            value_color_class = "negative"
+    
     # Format value
     if isinstance(value, (int, float)):
         if abs(value) >= 1000:
@@ -159,27 +176,35 @@ def styled_kpi(title, value, delta=None, delta_color="auto", icon=None, help_tex
             value_str = f"${value:.2f}"
     else:
         value_str = str(value)
-
+    
     # Delta formatting
-    delta_str = ""
+    delta_html = ""
     if delta is not None:
-        delta_prefix = "+" if isinstance(delta, (int, float)) and delta >= 0 else ""
-        delta_str = f"<div class='kpi-delta' style='color: var(--{delta_color}); font-size: 14px; margin-top: 5px;'>{delta_prefix}{delta}</div>"
-
-    # Icon HTML
-    icon_html = f"<span style='font-size: 20px; margin-right: 5px;'>{icon}</span>" if icon else ""
-
-    # Tooltip support
-    tooltip_attr = f'title="{help_text}"' if help_text else ""
-
+        delta_value = f"+{delta}" if (isinstance(delta, (int, float)) and delta >= 0) else str(delta)
+        delta_html = f"""
+        <div class="kpi-delta" style="color: var(--{delta_color})">
+            {delta_value}
+        </div>
+        """
+    
+    # Icon support
+    icon_html = f"""
+    <div style="position: absolute; top: 15px; right: 15px; font-size: 24px; color: var(--primary); opacity: 0.2;">
+        {icon}
+    </div>
+    """ if icon else ""
+    
+    # Tooltip
+    tooltip = f'title="{help_text}"' if help_text else ""
+    
     st.markdown(f"""
-        <div class="kpi-card" {tooltip_attr}>
-            <div class="kpi-title">{icon_html}{title}</div>
-            <div class="kpi-value">{value_str}</div>
-            {delta_str}
+        <div {tooltip} class="kpi-card">
+            {icon_html}
+            <div class="kpi-title">{title}</div>
+            <div class="kpi-value {value_color_class}">{value_str}</div>
+            {delta_html}
         </div>
     """, unsafe_allow_html=True)
-
 
 def create_profit_chart(df):
     fig = px.line(
@@ -232,6 +257,60 @@ def create_excel_report(df, kpis):
         worksheet.insert_chart('B2', chart)
     
     return output.getvalue()
+
+def calcular_kpis_globales(df, df_completo):
+    """Calcula todos los KPIs y los devuelve como diccionario"""
+    # Cálculo de KPIs
+    capital_inicial = df_completo["Aumento Capital"].dropna().iloc[0] if not df_completo["Aumento Capital"].dropna().empty else 0
+    inyeccion_total = df["Aumento Capital"].sum(skipna=True)
+    capital_invertido = df["Capital Invertido"].dropna().iloc[-1] if not df["Capital Invertido"].dropna().empty else 0
+    inversionista = df["ID Inv"].dropna().iloc[0] if "ID Inv" in df.columns and not df["ID Inv"].dropna().empty else "N/A"
+    total_retiros = df["Retiro de Fondos"].sum(skipna=True)
+    ganancia_bruta = df["Ganacias/Pérdidas Brutas"].sum(skipna=True)
+    ganancia_neta = df["Ganacias/Pérdidas Netas"].sum(skipna=True)
+    comisiones = df["Comisiones Pagadas"].sum(skipna=True)
+    fecha_ingreso = df_completo["Fecha"].min().date()
+
+    # ROI y CAGR
+    capital_inicial_neto = capital_inicial + inyeccion_total - total_retiros
+    roi = (ganancia_neta / capital_inicial_neto) if capital_inicial_neto > 0 else 0
+    
+    fecha_inicio = df["Fecha"].min()
+    fecha_fin = df["Fecha"].max()
+    años_inversion = (fecha_fin - fecha_inicio).days / 365.25
+    cagr = ((capital_invertido / capital_inicial_neto) ** (1 / años_inversion) - 1) if años_inversion > 0 and capital_inicial_neto > 0 else 0
+
+    # KPIs de rendimiento adicionales
+    sharpe_ratio = ganancia_neta / (df["Beneficio en %"].std() * np.sqrt(12)) if len(df) > 1 else 0
+    max_drawdown = df["Drawdown"].min()
+    win_rate = (df["Beneficio en %"] > 0).mean()
+    promedio_mensual_ganancias_pct = df.groupby("Mes")["Beneficio en %"].mean().mean() * 100
+    frecuencia_aportes = df[df["Aumento Capital"] > 0].shape[0]
+    frecuencia_retiros = df[df["Retiro de Fondos"] > 0].shape[0]
+    mejor_mes = df.loc[df["Beneficio en %"].idxmax()]["Mes"]
+    peor_mes = df.loc[df["Beneficio en %"].idxmin()]["Mes"]
+
+    return {
+        "Inversionista": inversionista,
+        "Capital Inicial": capital_inicial,
+        "Capital Actual": capital_invertido,
+        "Inyección Total": inyeccion_total,
+        "Retiros Totales": total_retiros,
+        "Ganancia Bruta": ganancia_bruta,
+        "Ganancia Neta": ganancia_neta,
+        "Comisiones": comisiones,
+        "Fecha Ingreso": fecha_ingreso,
+        "ROI": roi,
+        "CAGR": cagr,
+        "Sharpe Ratio": sharpe_ratio,
+        "Máx Drawdown": max_drawdown,
+        "Win Rate": win_rate,
+        "Promedio Mensual (%)": promedio_mensual_ganancias_pct,
+        "Frecuencia Aportes": frecuencia_aportes,
+        "Frecuencia Retiros": frecuencia_retiros,
+        "Mejor Mes": str(mejor_mes),
+        "Peor Mes": str(peor_mes)
+    }
 
 # ==============================================
 # INTERFAZ PRINCIPAL
@@ -319,6 +398,9 @@ if uploaded_file:
         df['MesNombre'] = df['Fecha'].dt.strftime('%b')
         df['MesOrden'] = df['Fecha'].dt.month
 
+        # Calcular KPIs globales (para usar en todas las páginas)
+        kpis_globales = calcular_kpis_globales(df, df_completo)
+
         # Navegación entre páginas
         pagina = st.sidebar.radio("Secciones", 
                                 ["📌 KPIs", "📊 Gráficos", "📈 Proyecciones", "⚖️ Comparaciones", "📊 Reportes"])
@@ -330,66 +412,36 @@ if uploaded_file:
             st.title("📌 Indicadores Clave de Desempeño")
             st.markdown("---")
 
-            # Cálculo de KPIs
-            capital_inicial = df_completo["Aumento Capital"].dropna().iloc[0] if not df_completo["Aumento Capital"].dropna().empty else 0
-            inyeccion_total = df["Aumento Capital"].sum(skipna=True)
-            capital_invertido = df["Capital Invertido"].dropna().iloc[-1] if not df["Capital Invertido"].dropna().empty else 0
-            inversionista = df["ID Inv"].dropna().iloc[0] if "ID Inv" in df.columns and not df["ID Inv"].dropna().empty else "N/A"
-            total_retiros = df["Retiro de Fondos"].sum(skipna=True)
-            ganancia_bruta = df["Ganacias/Pérdidas Brutas"].sum(skipna=True)
-            ganancia_neta = df["Ganacias/Pérdidas Netas"].sum(skipna=True)
-            comisiones = df["Comisiones Pagadas"].sum(skipna=True)
-            fecha_ingreso = df_completo["Fecha"].min().date()
-
-            # ROI y CAGR mejorados
-            capital_inicial_neto = capital_inicial + inyeccion_total - total_retiros
-            roi = (ganancia_neta / capital_inicial_neto) if capital_inicial_neto > 0 else 0
-            
-            fecha_inicio = df["Fecha"].min()
-            fecha_fin = df["Fecha"].max()
-            años_inversion = (fecha_fin - fecha_inicio).days / 365.25
-            cagr = ((capital_invertido / capital_inicial_neto) ** (1 / años_inversion) - 1) if años_inversion > 0 and capital_inicial_neto > 0 else 0
-
-            # KPIs de rendimiento adicionales
-            sharpe_ratio = ganancia_neta / (df["Beneficio en %"].std() * np.sqrt(12)) if len(df) > 1 else 0
-            max_drawdown = df["Drawdown"].min()
-            win_rate = (df["Beneficio en %"] > 0).mean()
-            promedio_mensual_ganancias_pct = df.groupby("Mes")["Beneficio en %"].mean().mean() * 100
-            frecuencia_aportes = df[df["Aumento Capital"] > 0].shape[0]
-            frecuencia_retiros = df[df["Retiro de Fondos"] > 0].shape[0]
-            mejor_mes = df.loc[df["Beneficio en %"].idxmax()]["Mes"]
-            peor_mes = df.loc[df["Beneficio en %"].idxmin()]["Mes"]
-
             # Layout de KPIs mejorado
             col1, col2, col3, col4 = st.columns(4)
             with col1: 
-                styled_kpi("👤 Inversionista", f"{inversionista}", 
+                styled_kpi("👤 Inversionista", f"{kpis_globales['Inversionista']}", 
                          icon="person", help_text="Identificador único del inversionista")
             with col2: 
-                styled_kpi("💰 Capital Inicial", f"${capital_inicial:,.2f}", 
+                styled_kpi("💰 Capital Inicial", f"${kpis_globales['Capital Inicial']:,.2f}", 
                          icon="account_balance", help_text="Primer aporte realizado")
             with col3: 
-                styled_kpi("💼 Capital Actual", f"${capital_invertido:,.2f}", 
+                styled_kpi("💼 Capital Actual", f"${kpis_globales['Capital Actual']:,.2f}", 
                          icon="show_chart", help_text="Valor actual del capital invertido")
             with col4: 
-                styled_kpi("📥 Inyección Total", f"${inyeccion_total:,.2f}", 
+                styled_kpi("📥 Inyección Total", f"${kpis_globales['Inyección Total']:,.2f}", 
                          icon="savings", help_text="Total de aportes realizados")
 
             col5, col6, col7, col8 = st.columns(4)
             with col5: 
-                styled_kpi("📤 Retiros Totales", f"${total_retiros:,.2f}", 
+                styled_kpi("📤 Retiros Totales", f"${kpis_globales['Retiros Totales']:,.2f}", 
                          icon="money_off", help_text="Total retirado durante el período")
             with col6: 
-                styled_kpi("📊 Ganancia Bruta", f"${ganancia_bruta:,.2f}", 
-                         delta=f"{(ganancia_bruta/capital_inicial_neto):.1%} del capital" if capital_inicial_neto > 0 else None,
+                styled_kpi("📊 Ganancia Bruta", f"${kpis_globales['Ganancia Bruta']:,.2f}", 
+                         delta=f"{(kpis_globales['Ganancia Bruta']/(kpis_globales['Capital Inicial'] + kpis_globales['Inyección Total'] - kpis_globales['Retiros Totales'])):.1%} del capital" if (kpis_globales['Capital Inicial'] + kpis_globales['Inyección Total'] - kpis_globales['Retiros Totales']) > 0 else None,
                          icon="trending_up", help_text="Ganancias antes de comisiones")
             with col7: 
-                styled_kpi("📈 Ganancia Neta", f"${ganancia_neta:,.2f}", 
-                         delta=f"{(ganancia_neta/capital_inicial_neto):.1%} del capital" if capital_inicial_neto > 0 else None,
+                styled_kpi("📈 Ganancia Neta", f"${kpis_globales['Ganancia Neta']:,.2f}", 
+                         delta=f"{(kpis_globales['Ganancia Neta']/(kpis_globales['Capital Inicial'] + kpis_globales['Inyección Total'] - kpis_globales['Retiros Totales'])):.1%} del capital" if (kpis_globales['Capital Inicial'] + kpis_globales['Inyección Total'] - kpis_globales['Retiros Totales']) > 0 else None,
                          icon="bar_chart", help_text="Ganancias después de comisiones")
             with col8: 
-                styled_kpi("🧾 Comisiones", f"${comisiones:,.2f}", 
-                         delta=f"{(comisiones/ganancia_bruta):.1%} de ganancias" if ganancia_bruta > 0 else None,
+                styled_kpi("🧾 Comisiones", f"${kpis_globales['Comisiones']:,.2f}", 
+                         delta=f"{(kpis_globales['Comisiones']/kpis_globales['Ganancia Bruta']):.1%} de ganancias" if kpis_globales['Ganancia Bruta'] > 0 else None,
                          icon="receipt", help_text="Total pagado en comisiones")
 
             st.markdown("---")
@@ -398,25 +450,25 @@ if uploaded_file:
             st.markdown("### 📊 Métricas de Rendimiento")
             col9, col10, col11 = st.columns(3)
             with col9: 
-                styled_kpi("📅 Fecha Ingreso", f"{fecha_ingreso}", 
+                styled_kpi("📅 Fecha Ingreso", f"{kpis_globales['Fecha Ingreso']}", 
                          icon="event", help_text="Fecha del primer aporte")
             with col10: 
-                styled_kpi("📊 ROI Total", f"{roi:.1%}", 
-                         delta=f"${ganancia_neta:,.0f} absolutos",
+                styled_kpi("📊 ROI Total", f"{kpis_globales['ROI']:.1%}", 
+                         delta=f"${kpis_globales['Ganancia Neta']:,.0f} absolutos",
                          icon="donut_large", help_text="Retorno sobre la inversión total")
             with col11: 
-                styled_kpi("📈 CAGR Anual", f"{cagr:.1%}", 
+                styled_kpi("📈 CAGR Anual", f"{kpis_globales['CAGR']:.1%}", 
                          icon="timeline", help_text="Tasa de crecimiento anual compuesta")
 
             col12, col13, col14 = st.columns(3)
             with col12: 
-                styled_kpi("⚖️ Sharpe Ratio", f"{sharpe_ratio:.2f}", 
+                styled_kpi("⚖️ Sharpe Ratio", f"{kpis_globales['Sharpe Ratio']:.2f}", 
                          icon="balance", help_text="Rendimiento ajustado al riesgo")
             with col13: 
-                styled_kpi("📉 Máx Drawdown", f"${max_drawdown:,.0f}", 
+                styled_kpi("📉 Máx Drawdown", f"${kpis_globales['Máx Drawdown']:,.0f}", 
                          icon="waterfall_chart", help_text="Peor pérdida desde el máximo")
             with col14: 
-                styled_kpi("✅ Win Rate", f"{win_rate:.0%}", 
+                styled_kpi("✅ Win Rate", f"{kpis_globales['Win Rate']:.0%}", 
                          icon="check_circle", help_text="Porcentaje de meses positivos")
 
             st.markdown("---")
@@ -425,24 +477,24 @@ if uploaded_file:
             st.markdown("### 📅 Estadísticas Mensuales")
             col15, col16, col17 = st.columns(3)
             with col15: 
-                styled_kpi("📈 Prom. Mensual", f"{promedio_mensual_ganancias_pct:.1f}%", 
+                styled_kpi("📈 Prom. Mensual", f"{kpis_globales['Promedio Mensual (%)']:.1f}%", 
                          icon="calendar_today", help_text="Rentabilidad promedio mensual")
             with col16: 
-                styled_kpi("🔁 Aportes", f"{frecuencia_aportes}", 
-                         delta=f"${inyeccion_total/frecuencia_aportes:,.0f} c/u" if frecuencia_aportes > 0 else None,
+                styled_kpi("🔁 Aportes", f"{kpis_globales['Frecuencia Aportes']}", 
+                         delta=f"${kpis_globales['Inyección Total']/kpis_globales['Frecuencia Aportes']:,.0f} c/u" if kpis_globales['Frecuencia Aportes'] > 0 else None,
                          icon="repeat", help_text="Frecuencia de aportes")
             with col17: 
-                styled_kpi("📤 Retiros", f"{frecuencia_retiros}", 
-                         delta=f"${total_retiros/frecuencia_retiros:,.0f} c/u" if frecuencia_retiros > 0 else None,
+                styled_kpi("📤 Retiros", f"{kpis_globales['Frecuencia Retiros']}", 
+                         delta=f"${kpis_globales['Retiros Totales']/kpis_globales['Frecuencia Retiros']:,.0f} c/u" if kpis_globales['Frecuencia Retiros'] > 0 else None,
                          icon="exit_to_app", help_text="Frecuencia de retiros")
 
             col18, col19 = st.columns(2)
             with col18: 
-                styled_kpi("🏆 Mejor Mes", f"{mejor_mes}", 
+                styled_kpi("🏆 Mejor Mes", f"{kpis_globales['Mejor Mes']}", 
                          delta=f"{df['Beneficio en %'].max()*100:.1f}%",
                          icon="emoji_events", help_text="Mes con mayor rentabilidad")
             with col19: 
-                styled_kpi("⚠️ Peor Mes", f"{peor_mes}", 
+                styled_kpi("⚠️ Peor Mes", f"{kpis_globales['Peor Mes']}", 
                          delta=f"{df['Beneficio en %'].min()*100:.1f}%",
                          icon="warning", help_text="Mes con menor rentabilidad")
 
@@ -568,8 +620,7 @@ if uploaded_file:
                     format_func=lambda x: f"{x}%"
                 )
             with col_config2:
-                promedio_mensual_ganancias = (df["Beneficio en %"].sum(skipna=True) / len(df["Beneficio en %"]))
-                styled_kpi("📆 Promedio Histórico", f"{promedio_mensual_ganancias:.2%}",
+                styled_kpi("📆 Promedio Histórico", f"{kpis_globales['Promedio Mensual (%)']:.1f}%",
                          help_text="Rentabilidad mensual promedio histórica")
 
             # Configuración avanzada
@@ -580,7 +631,7 @@ if uploaded_file:
                         "Beneficio mensual estimado (%)", 
                         min_value=0.0, 
                         max_value=15.0, 
-                        value=float(promedio_mensual_ganancias*100), 
+                        value=float(kpis_globales['Promedio Mensual (%)']), 
                         step=0.5
                     )
                 with col_adv2:
@@ -702,9 +753,6 @@ if uploaded_file:
             )
 
         # ==============================================
-        # PÁGINA: COMPARACIONES
-        # ==============================================
-                # ==============================================
         # PÁGINA: COMPARACIONES
         # ==============================================
         elif pagina == "⚖️ Comparaciones":
@@ -847,42 +895,22 @@ if uploaded_file:
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
 
-            # Exportar KPIs básicos si las variables existen
+            # Exportar KPIs
             st.markdown("### 📌 Exportar KPIs (Resumen Básico)")
-            try:
-                resumen_kpis = {
-                    "Capital Inicial": capital_inicial,
-                    "Capital Actual": capital_invertido,
-                    "Inyección Total": inyeccion_total,
-                    "Ganancia Neta": ganancia_neta,
-                    "ROI": roi,
-                    "CAGR": cagr,
-                    "Sharpe Ratio": sharpe_ratio,
-                    "Max Drawdown": max_drawdown,
-                    "Win Rate": win_rate,
-                    "Promedio Mensual (%)": promedio_mensual_ganancias_pct
-                }
-                kpi_df = pd.DataFrame(resumen_kpis.items(), columns=["Indicador", "Valor"])
+            kpi_df = pd.DataFrame(kpis_globales.items(), columns=["Indicador", "Valor"])
 
-                output_kpi = BytesIO()
-                with pd.ExcelWriter(output_kpi, engine='xlsxwriter') as writer:
-                    kpi_df.to_excel(writer, sheet_name="KPIs", index=False)
+            output_kpi = BytesIO()
+            with pd.ExcelWriter(output_kpi, engine='xlsxwriter') as writer:
+                kpi_df.to_excel(writer, sheet_name="KPIs", index=False)
 
-                st.download_button(
-                    label="📥 Descargar KPIs en Excel",
-                    data=output_kpi.getvalue(),
-                    file_name="kpis_resumen.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
-            except Exception as e:
-                st.warning(f"No se pudieron generar los KPIs. ⚠️ {e}")
-
-
-
-    
+            st.download_button(
+                label="📥 Descargar KPIs en Excel",
+                data=output_kpi.getvalue(),
+                file_name="kpis_resumen.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
 
     except Exception as e:
         st.error(f"❌ Error al procesar el archivo: {str(e)}")
 else:
     st.info("📂 Por favor, sube un archivo Excel desde la barra lateral para comenzar.")
-
