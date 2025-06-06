@@ -120,9 +120,13 @@ def styled_kpi(title, value, delta=None, delta_color="auto", icon=None, help_tex
     delta_html = ""
     if delta is not None:
         delta_value = f"+{delta}" if isinstance(delta, (int, float)) and delta >= 0 else str(delta)
+        # Versión alternativa más legible:
         delta_color = delta_color.lower()
         if delta_color == "auto":
-            delta_color = "positive" if ((isinstance(delta, (int, float)) and delta >= 0) or (isinstance(delta, str) and "+" in delta) else "negative"
+            if (isinstance(delta, (int, float)) and delta >= 0) or (isinstance(delta, str) and "+" in delta):
+                delta_color = "positive"
+            else:
+                delta_color = "negative"
         
         delta_color_hex = color_classes[delta_color]
         delta_html = f"""
