@@ -8,6 +8,7 @@ import base64
 import calendar
 from io import BytesIO
 from dateutil.relativedelta import relativedelta
+import re
 
 # ==============================================
 # CONFIGURACIÓN GENERAL MEJORADA
