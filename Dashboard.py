@@ -197,8 +197,9 @@ def styled_kpi(title, value, delta=None, delta_color="auto", icon=None, help_tex
     # Tooltip
     tooltip = f'title="{help_text}"' if help_text else ""
     
+    # Final HTML (corregido)
     st.markdown(f"""
-        <div {tooltip} class="kpi-card">
+        <div class="kpi-card" {tooltip}>
             {icon_html}
             <div class="kpi-title">{title}</div>
             <div class="kpi-value {value_color_class}">{value_str}</div>
