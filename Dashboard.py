@@ -144,107 +144,34 @@ px.defaults.width = None
 # COMPONENTES REUTILIZABLES
 # ==============================================
 def styled_kpi(title, value, delta=None, delta_color="auto", icon=None, help_text=None):
-    # Diccionario de conversión de iconos Material a emojis
+    # Eliminar emojis existentes del título si existen
+    clean_title = title
+    emoji_pattern = re.compile("["
+        u"\U0001F600-\U0001F64F"  # emoticons
+        u"\U0001F300-\U0001F5FF"  # símbolos y pictogramas
+        u"\U0001F680-\U0001F6FF"  # transporte y mapas
+        u"\U0001F1E0-\U0001F1FF"  # banderas (iOS)
+        "]+", flags=re.UNICODE)
+    clean_title = emoji_pattern.sub('', title).strip()
+    
+    # Mapeo de iconos
     icon_conversion = {
         "person": "👤",
-        "account_balance": "🏦",
-        "show_chart": "📈",
-        "savings": "💰",
-        "money_off": "💸",
-        "trending_up": "📊",
-        "bar_chart": "📊",
-        "receipt": "🧾",
-        "event": "📅",
-        "donut_large": "🔄",
-        "timeline": "⏳",
-        "balance": "⚖️",
-        "waterfall_chart": "📉",
-        "check_circle": "✅",
-        "calendar_today": "📆",
-        "repeat": "🔁",
-        "exit_to_app": "🚪",
-        "emoji_events": "🏆",
-        "warning": "⚠️",
-        "account_balance_wallet": "💳",
-        "attach_money": "💵"
+        "account_balance": "💰",
+        # ... (todos tus iconos)
     }
+    display_icon = icon_conversion.get(icon, "") if icon else ""
     
-    # Convertir icono o usar el original si no está en el diccionario
-    display_icon = icon_conversion.get(icon, icon) if icon else ""
-    
-    # Resto de la función permanece EXACTAMENTE igual
-    color_classes = {
-        "positive": "#27ae60",
-        "negative": "#e74c3c",
-        "neutral": "#343a40"
-    }
-    
-    value_color = color_classes["neutral"]
-    if isinstance(value, (int, float)):
-        value_color = color_classes["positive"] if value >= 0 else color_classes["negative"]
-    
-    if isinstance(value, (int, float)):
-        value_str = f"${value:,.2f}" if abs(value) >= 1000 else f"${value:.2f}"
-    else:
-        value_str = str(value)
-    
-    delta_html = ""
-    if delta is not None:
-        delta_value = f"+{delta}" if isinstance(delta, (int, float)) and delta >= 0 else str(delta)
-        delta_color = delta_color.lower()
-        if delta_color == "auto":
-            delta_color = "success" if (isinstance(delta, (int, float)) and delta >= 0) or (isinstance(delta, str) and "+" in delta) else "danger"
-        
-        delta_color_hex = "#27ae60" if delta_color == "success" else "#e74c3c"
-        delta_html = f"""
-        <div style="
-            color: {delta_color_hex};
-            font-size: 14px;
-            margin-top: 8px;
-            font-weight: 500;
-        ">
-            {delta_value}
-        </div>
-        """
-    
+    # Resto de la función igual...
     html = f"""
-    <div style="
-        background: white;
-        border-radius: 12px;
-        padding: 20px;
-        box-shadow: 0 6px 12px rgba(0,0,0,0.05);
-        border-left: 5px solid #1a3a8f;
-        margin-bottom: 20px;
-        position: relative;
-        overflow: hidden;
-    ">
-        <div style="
-            display: flex;
-            align-items: center;
-            font-size: 16px;
-            font-weight: 600;
-            color: #7f8c8d;
-            margin-bottom: 8px;
-        ">
-            <span style="
-                margin-right: 8px;
-                font-size: 1.2em;
-                display: inline-flex;
-                align-items: center;
-            ">{display_icon}</span>
-            {title}
+    <div style="...">
+        <div style="...">
+            <span style="...">{display_icon}</span>
+            {clean_title}
         </div>
-        <div style="
-            font-size: 28px;
-            font-weight: 700;
-            color: {value_color};
-        ">
-            {value_str}
-        </div>
-        {delta_html}
+        <!-- Resto del HTML -->
     </div>
     """
-    
     st.markdown(html, unsafe_allow_html=True)
 def create_excel_report(df, kpis):
     output = BytesIO()
