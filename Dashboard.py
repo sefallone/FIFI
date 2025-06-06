@@ -754,7 +754,7 @@ elif not uploaded_file:
     2. Configura los filtros de fecha  
     3. Explora las diferentes secciones del dashboard
     """)
-    st.image("https://via.placeholder.com/800x400?text=Sube+tu+archivo+Excel+para+comenzar", use_column_width=True)
+    st.image("https://via.placeholder.com/800x400?text=Sube+tu+archivo+Excel+para+comenzar", use_container_width=True)
 
 
 
