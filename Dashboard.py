@@ -145,7 +145,7 @@ px.defaults.width = None
 # ==============================================
 def styled_kpi(title, value, bg_color="#ffffff", text_color="#333", tooltip="", icon=""):
             full_title = f"{icon} {title}" if icon else title
-            st.markdown(f"""
+            return f"""
                 <div title="{tooltip}" style="
                     background-color: {bg_color};
                     color: {text_color};
@@ -157,7 +157,7 @@ def styled_kpi(title, value, bg_color="#ffffff", text_color="#333", tooltip="", 
                     <div style='font-size:18px; font-weight: 600;'>{full_title}</div>
                     <div style='font-size:28px; font-weight: bold;'>{value}</div>
                 </div>
-            """, unsafe_allow_html=True)
+            """
 
 def create_profit_chart(df):
     fig = px.line(
