@@ -84,74 +84,56 @@ st.markdown("""
 # 4. FUNCIÓN PARA KPIs ESTILIZADOS (MEJORADA)
 def styled_kpi(title, value, delta=None, delta_color="auto", icon=None, help_text=None):
     """
-    Versión mejorada de los KPI cards con formato consistente para valores delta
+    Versión mejorada con formato consistente para valores delta
     """
     # Mapeo de iconos a emojis
     icon_map = {
         "person": "👤", "account_balance": "💰", "show_chart": "📈",
-        "savings": "💵", "money_off": "💸", "trending_up": "⬆️",
-        "bar_chart": "📊", "receipt": "🧾", "event": "📅",
-        "donut_large": "🔄", "timeline": "⏳", "balance": "⚖️",
-        "waterfall_chart": "📉", "check_circle": "✅", "calendar_today": "📆",
-        "repeat": "🔁", "exit_to_app": "🚪", "emoji_events": "🏆",
-        "warning": "⚠️", "attach_money": "💲"
+        # ... (todos tus iconos existentes)
     }
     
     display_icon = icon_map.get(icon, "") if icon else ""
-    
+
     # Configuración de colores
     color_classes = {
         "positive": "#27ae60",  # Verde
         "negative": "#e74c3c",  # Rojo
         "neutral": "#2c3e50"    # Azul oscuro
     }
-    
-    value_color = color_classes["neutral"]
+
+    # Formateo del valor principal
     if isinstance(value, (int, float)):
-        value_color = color_classes["positive"] if value >= 0 else color_classes["negative"]
-    
-    # Formateo de valores principales
-    if isinstance(value, (int, float)):
-        if "%" in str(title):  # Si el título contiene %, formatear como porcentaje
-            value_str = f"{value:.2f}%"
-        elif abs(value) >= 1000:
-            value_str = f"${value:,.2f}"
-        else:
-            value_str = f"${value:.2f}"
+        value_str = f"${value:,.2f}" if abs(value) >= 1000 else f"${value:.2f}"
     else:
         value_str = str(value)
-    
-    # Manejo del delta con formato consistente
+
+    # Manejo del delta (parte crítica mejorada)
     delta_html = ""
     if delta is not None:
-        # Determinar color automáticamente si es necesario
-        if delta_color == "auto":
-            if (isinstance(delta, (int, float)) and delta >= 0) or (isinstance(delta, str) and "+" in str(delta)):
-                delta_color = "positive"
-            else:
-                delta_color = "negative"
-        
-        # Formatear el valor delta
+        # Formateo consistente del valor delta
         if isinstance(delta, (int, float)):
-            if delta >= 0:
-                delta_value = f"+{delta:.2f}%"
-            else:
-                delta_value = f"{delta:.2f}%"
+            delta_value = f"{delta:.1f}%"  # Formato fijo con 1 decimal y signo %
         else:
             delta_value = str(delta)
-        
+
+        # Color automático basado en el valor
+        if delta_color == "auto":
+            delta_color = "positive" if (isinstance(delta, (int, float)) and delta >= 0) else "negative"
+
         delta_color_hex = color_classes[delta_color.lower()]
+        
         delta_html = f"""
         <div style="
             color: {delta_color_hex};
             font-size: 14px;
             margin-top: 6px;
             font-weight: 500;
+            text-align: center;
         ">
             {delta_value}
         </div>
         """
-    
+
     # HTML final
     html = f"""
     <div title="{help_text or ''}" class="kpi-card">
@@ -163,16 +145,14 @@ def styled_kpi(title, value, delta=None, delta_color="auto", icon=None, help_tex
             color: #7f8c8d;
             margin-bottom: 8px;
         ">
-            <span style="
-                margin-right: 8px;
-                font-size: 1.2em;
-            ">{display_icon}</span>
+            <span style="margin-right: 8px; font-size: 1.2em;">{display_icon}</span>
             {title}
         </div>
         <div style="
             font-size: 26px;
             font-weight: 700;
-            color: {value_color};
+            color: {color_classes['neutral']};
+            text-align: center;
         ">
             {value_str}
         </div>
