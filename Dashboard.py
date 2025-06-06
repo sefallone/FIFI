@@ -143,55 +143,20 @@ px.defaults.width = None
 # ==============================================
 # COMPONENTES REUTILIZABLES
 # ==============================================
-def styled_kpi(title, value, delta=None, delta_color="auto", icon=None, help_text=None):
-    """
-    KPI card con diseño mejorado y corrección de iconos
-    """
-    # Determinar color del delta
-    if delta_color == "auto":
-        if isinstance(delta, (int, float)):
-            delta_color = "success" if delta >= 0 else "danger"
-        elif isinstance(delta, str):
-            delta_color = "success" if "+" in delta else "danger"
-    
-    # Formatear el valor
-    if isinstance(value, (int, float)):
-        value_str = f"${value:,.2f}" if abs(value) >= 1000 else f"${value:.2f}"
-    else:
-        value_str = str(value)
-    
-    # HTML del delta
-    delta_html = ""
-    if delta is not None:
-        delta_value = f"+{delta}" if (isinstance(delta, (int, float)) and delta >= 0) else str(delta)
-        delta_html = f"""
-        <div class="kpi-delta" style="color: var(--{delta_color})">
-            {delta_value}
-        </div>
-        """
-    
-    # HTML del icono (corregido)
-    icon_html = f"""
-    <span style="
-        display: inline-block;
-        margin-right: 8px;
-        vertical-align: middle;
-        font-size: 1.2em;
-    ">{icon}</span>
-    """ if icon else ""
-
-    # HTML completo
-    st.markdown(f"""
-    <div class="kpi-card" {'title="'+help_text+'"' if help_text else ''}>
-        <div class="kpi-title">
-            {icon_html}{title}
-        </div>
-        <div class="kpi-value">
-            {value_str}
-        </div>
-        {delta_html}
-    </div>
-    """, unsafe_allow_html=True)
+def styled_kpi(title, value, bg_color="#ffffff", text_color="#333", tooltip=""):
+            st.markdown(f"""
+                <div title="{tooltip}" style="
+                    background-color: {bg_color};
+                    color: {text_color};
+                    padding: 20px;
+                    border-radius: 15px;
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                    text-align: center;
+                    margin-bottom: 15px;">
+                    <div style='font-size:18px; font-weight: 600;'>{title}</div>
+                    <div style='font-size:28px; font-weight: bold;'>{value}</div>
+                </div>
+                """, unsafe_allow_html=True)
     
 def create_profit_chart(df):
     fig = px.line(
