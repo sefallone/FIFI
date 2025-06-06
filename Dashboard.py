@@ -143,22 +143,64 @@ px.defaults.width = None
 # ==============================================
 # COMPONENTES REUTILIZABLES
 # ==============================================
-def styled_kpi(title, value, bg_color="#ffffff", text_color="#333", tooltip="", icon=""):
-            full_title = f"{icon} {title}" if icon else title
-            return f"""
-                <div title="{tooltip}" style="
-                    background-color: {bg_color};
-                    color: {text_color};
-                    padding: 20px;
-                    border-radius: 15px;
-                    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-                    text-align: center;
-                    margin-bottom: 15px;">
-                    <div style='font-size:18px; font-weight: 600;'>{full_title}</div>
-                    <div style='font-size:28px; font-weight: bold;'>{value}</div>
-                </div>
-            """
+def styled_kpi(title, value, delta=None, delta_color="auto", icon=None, help_text=None):
+    """
+    Enhanced KPI card with automatic styling and error handling
+    """
+    # Determine colors
+    value_color_class = ""
+    if isinstance(value, (int, float)):
+        value_color_class = "positive" if value >= 0 else "negative"
+    elif isinstance(value, str):
+        if "%" in value:
+            value_color_class = "positive" if "-" not in value else "negative"
+    
+    # Format value
+    if isinstance(value, (int, float)):
+        value_str = f"${value:,.2f}" if abs(value) >= 1000 else f"${value:.2f}"
+    else:
+        value_str = str(value)
+    
+    # Delta formatting
+    delta_html = ""
+    if delta is not None:
+        delta_value = f"+{delta}" if (isinstance(delta, (int, float)) and delta >= 0) else str(delta)
+        delta_color = delta_color.lower()
+        if delta_color == "auto":
+            delta_color = "success" if (isinstance(delta, (int, float)) and delta >= 0) or (isinstance(delta, str) and "+" in delta) else "danger"
+        delta_html = f'<div class="kpi-delta" style="color: var(--{delta_color})">{delta_value}</div>'
+    
+    # Icon and tooltip
+    icon_html = f'<span style="margin-right: 8px; font-size: 1.2em;">{icon}</span>' if icon else ""
+    tooltip_attr = f'title="{help_text}"' if help_text else ""
 
+    # HTML structure with inline styles as fallback
+    html = f"""
+    <div {tooltip_attr} class="kpi-card" style="
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.05);
+        border-left: 5px solid #1a3a8f;
+        margin-bottom: 20px;
+        position: relative;
+        overflow: hidden;
+    ">
+        <div class="kpi-title" style="
+            font-size: 16px;
+            font-weight: 600;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+        ">{icon_html}{title}</div>
+        <div class="kpi-value {value_color_class}" style="
+            font-size: 28px;
+            font-weight: 700;
+            color: #343a40;
+        ">{value_str}</div>
+        {delta_html}
+    </div>
+    """
+    st.markdown(html, unsafe_allow_html=True)
 def create_profit_chart(df):
     fig = px.line(
         df,
