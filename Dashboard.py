@@ -143,23 +143,21 @@ px.defaults.width = None
 # ==============================================
 # COMPONENTES REUTILIZABLES
 # ==============================================
-def styled_kpi(title, value, bg_color="#ffffff", text_color="#333", tooltip=""):
-    """
-    Tarjeta KPI simple y segura, sin etiquetas huérfanas.
-    """
-    st.markdown(f"""
-        <div title="{tooltip}" style="
-            background-color: {bg_color};
-            color: {text_color};
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            text-align: center;
-            margin-bottom: 15px;">
-            <div style='font-size:18px; font-weight: 600;'>{title}</div>
-            <div style='font-size:28px; font-weight: bold;'>{value}</div>
-        </div>
-    """, unsafe_allow_html=True)
+def styled_kpi(title, value, bg_color="#ffffff", text_color="#333", tooltip="", icon=""):
+            full_title = f"{icon} {title}" if icon else title
+            st.markdown(f"""
+                <div title="{tooltip}" style="
+                    background-color: {bg_color};
+                    color: {text_color};
+                    padding: 20px;
+                    border-radius: 15px;
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                    text-align: center;
+                    margin-bottom: 15px;">
+                    <div style='font-size:18px; font-weight: 600;'>{full_title}</div>
+                    <div style='font-size:28px; font-weight: bold;'>{value}</div>
+                </div>
+            """, unsafe_allow_html=True)
 
 def create_profit_chart(df):
     fig = px.line(
