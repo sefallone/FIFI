@@ -143,47 +143,89 @@ px.defaults.width = None
 # ==============================================
 # COMPONENTES REUTILIZABLES
 # ==============================================
-def styled_kpi(title, value, bg_color="#ffffff", text_color="#333", tooltip=""):
-            st.markdown(f"""
-                <div title="{tooltip}" style="
-                    background-color: {bg_color};
-                    color: {text_color};
-                    padding: 20px;
-                    border-radius: 15px;
-                    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-                    text-align: center;
-                    margin-bottom: 15px;">
-                    <div style='font-size:18px; font-weight: 600;'>{title}</div>
-                    <div style='font-size:28px; font-weight: bold;'>{value}</div>
-                </div>
-                """, unsafe_allow_html=True)
+def styled_kpi(title, value, delta=None, delta_color="auto", icon=None, help_text=None):
+    """
+    Versión mejorada y robusta de la función styled_kpi
+    con manejo garantizado de iconos y estilos
+    """
+    # Configuración de colores
+    color_classes = {
+        "positive": "#27ae60",  # verde
+        "negative": "#e74c3c",  # rojo
+        "neutral": "#343a40"    # negro
+    }
     
-def create_profit_chart(df):
-    fig = px.line(
-        df,
-        x="Fecha",
-        y="Ganacias/Pérdidas Netas Acumuladas",
-        title="<b>Ganancia Neta Acumulada</b>",
-        labels={"Ganacias/Pérdidas Netas Acumuladas": "Ganancia Acumulada (USD)"},
-        hover_data={"Fecha": "|%B %d, %Y"},
-        height=500
-    )
+    # Determinar clase de color para el valor
+    value_color = color_classes["neutral"]
+    if isinstance(value, (int, float)):
+        value_color = color_classes["positive"] if value >= 0 else color_classes["negative"]
     
-    fig.update_layout(
-        hovermode="x unified",
-        xaxis_title=None,
-        yaxis_tickprefix="$",
-        yaxis_tickformat=",.0f",
-        plot_bgcolor="rgba(0,0,0,0)",
-        margin=dict(l=20, r=20, t=60, b=20)
-    )
+    # Formatear el valor
+    if isinstance(value, (int, float)):
+        value_str = f"${value:,.2f}" if abs(value) >= 1000 else f"${value:.2f}"
+    else:
+        value_str = str(value)
     
-    fig.update_traces(
-        line_width=3,
-        hovertemplate="<b>%{x|%b %d, %Y}</b><br>$%{y:,.2f}"
-    )
+    # Manejo del delta
+    delta_html = ""
+    if delta is not None:
+        delta_value = f"+{delta}" if isinstance(delta, (int, float)) and delta >= 0 else str(delta)
+        delta_color = delta_color.lower()
+        if delta_color == "auto":
+            delta_color = "success" if (isinstance(delta, (int, float)) and delta >= 0) or (isinstance(delta, str) and "+" in delta) else "danger"
+        
+        delta_color_hex = "#27ae60" if delta_color == "success" else "#e74c3c"
+        delta_html = f"""
+        <div style="
+            color: {delta_color_hex};
+            font-size: 14px;
+            margin-top: 8px;
+            font-weight: 500;
+        ">
+            {delta_value}
+        </div>
+        """
     
-    return fig
+    # Construcción del HTML con estilos inline como respaldo
+    html = f"""
+    <div style="
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.05);
+        border-left: 5px solid #1a3a8f;
+        margin-bottom: 20px;
+        position: relative;
+        overflow: hidden;
+    ">
+        <div style="
+            display: flex;
+            align-items: center;
+            font-size: 16px;
+            font-weight: 600;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+        ">
+            <span style="
+                margin-right: 8px;
+                font-size: 1.2em;
+                display: inline-flex;
+                align-items: center;
+            ">{icon}</span>
+            {title}
+        </div>
+        <div style="
+            font-size: 28px;
+            font-weight: 700;
+            color: {value_color};
+        ">
+            {value_str}
+        </div>
+        {delta_html}
+    </div>
+    """
+    
+    st.markdown(html, unsafe_allow_html=True)
 
 def create_excel_report(df, kpis):
     output = BytesIO()
