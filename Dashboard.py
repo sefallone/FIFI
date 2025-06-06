@@ -144,29 +144,50 @@ px.defaults.width = None
 # COMPONENTES REUTILIZABLES
 # ==============================================
 def styled_kpi(title, value, delta=None, delta_color="auto", icon=None, help_text=None):
-    """
-    Versión mejorada y robusta de la función styled_kpi
-    con manejo garantizado de iconos y estilos
-    """
-    # Configuración de colores
-    color_classes = {
-        "positive": "#27ae60",  # verde
-        "negative": "#e74c3c",  # rojo
-        "neutral": "#343a40"    # negro
+    # Diccionario de conversión de iconos Material a emojis
+    icon_conversion = {
+        "person": "👤",
+        "account_balance": "🏦",
+        "show_chart": "📈",
+        "savings": "💰",
+        "money_off": "💸",
+        "trending_up": "📊",
+        "bar_chart": "📊",
+        "receipt": "🧾",
+        "event": "📅",
+        "donut_large": "🔄",
+        "timeline": "⏳",
+        "balance": "⚖️",
+        "waterfall_chart": "📉",
+        "check_circle": "✅",
+        "calendar_today": "📆",
+        "repeat": "🔁",
+        "exit_to_app": "🚪",
+        "emoji_events": "🏆",
+        "warning": "⚠️",
+        "account_balance_wallet": "💳",
+        "attach_money": "💵"
     }
     
-    # Determinar clase de color para el valor
+    # Convertir icono o usar el original si no está en el diccionario
+    display_icon = icon_conversion.get(icon, icon) if icon else ""
+    
+    # Resto de la función permanece EXACTAMENTE igual
+    color_classes = {
+        "positive": "#27ae60",
+        "negative": "#e74c3c",
+        "neutral": "#343a40"
+    }
+    
     value_color = color_classes["neutral"]
     if isinstance(value, (int, float)):
         value_color = color_classes["positive"] if value >= 0 else color_classes["negative"]
     
-    # Formatear el valor
     if isinstance(value, (int, float)):
         value_str = f"${value:,.2f}" if abs(value) >= 1000 else f"${value:.2f}"
     else:
         value_str = str(value)
     
-    # Manejo del delta
     delta_html = ""
     if delta is not None:
         delta_value = f"+{delta}" if isinstance(delta, (int, float)) and delta >= 0 else str(delta)
@@ -186,7 +207,6 @@ def styled_kpi(title, value, delta=None, delta_color="auto", icon=None, help_tex
         </div>
         """
     
-    # Construcción del HTML con estilos inline como respaldo
     html = f"""
     <div style="
         background: white;
@@ -211,7 +231,7 @@ def styled_kpi(title, value, delta=None, delta_color="auto", icon=None, help_tex
                 font-size: 1.2em;
                 display: inline-flex;
                 align-items: center;
-            ">{icon}</span>
+            ">{display_icon}</span>
             {title}
         </div>
         <div style="
@@ -226,7 +246,6 @@ def styled_kpi(title, value, delta=None, delta_color="auto", icon=None, help_tex
     """
     
     st.markdown(html, unsafe_allow_html=True)
-
 def create_excel_report(df, kpis):
     output = BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
