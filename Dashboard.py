@@ -656,7 +656,8 @@ elif uploaded_file and pagina == "📈 Proyecciones":
     )
 
 # 11. PÁGINA DE COMPARACIONES (MEJORADA)
-elif pagina == "⚖️ Comparaciones":
+elif uploaded_file and pagina == "⚖️ Comparaciones":
+
     st.title("📊 Comparaciones por Año")
     st.markdown("---")
     
