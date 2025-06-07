@@ -135,7 +135,7 @@ if uploaded_file:
             fecha_ingreso = df_completo["Fecha"].min().date()
 
             # ROI y CAGR con los cambios solicitados
-            capital_inicial_neto = capital_inicial + inyeccion_total - total_retiros
+            capital_inicial_neto = capital_invertido + inyeccion_total - total_retiros
             roi = (ganancia_neta / capital_inicial_neto) if capital_inicial_neto > 0 else 0
             
             fecha_inicio = df["Fecha"].min()
