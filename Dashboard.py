@@ -668,10 +668,12 @@ elif pagina == "⚖️ Comparaciones":
     st.markdown("### 💰 Relación Aportes vs Retiros")
     
     # Preparación de datos
+    df['Año'] = df['Fecha'].dt.year
+
     aportes_retiros = df[df['Año'].isin(años_seleccionados)].groupby('Año').agg({
-        'Aumento Capital': 'sum',
-        'Retiro de Fondos': 'sum'
-    }).reset_index()
+        'Aumento Capital': lambda x: (x > 0).sum(),
+        'Retiro de Fondos': lambda x: (x > 0).sum()
+    }))
     
     fig_relacion = px.bar(
         aportes_retiros.melt(id_vars='Año', 
