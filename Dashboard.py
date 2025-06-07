@@ -673,7 +673,7 @@ elif pagina == "⚖️ Comparaciones":
     aportes_retiros = df[df['Año'].isin(años_seleccionados)].groupby('Año').agg({
         'Aumento Capital': lambda x: (x > 0).sum(),
         'Retiro de Fondos': lambda x: (x > 0).sum()
-    }))
+    })
     
     fig_relacion = px.bar(
         aportes_retiros.melt(id_vars='Año', 
