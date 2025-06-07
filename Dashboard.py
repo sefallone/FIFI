@@ -110,7 +110,7 @@ if uploaded_file:
 
         # Navegación entre páginas (original)
         pagina = st.sidebar.radio("Selecciona la sección", 
-                                ["📌 KPIs", "📊 Gráficos", "📈 Proyecciones", "⚖️ Comparaciones"])
+                                ["📌 KPIs", "📊 Gráficos", "📈 Proyecciones", "⚖️ Comparaciones", "📄 Reportes"])
 
         # --------------------------------------------
         # PÁGINA: KPIs (CON LOS CAMBIOS SOLICITADOS)
@@ -431,6 +431,65 @@ if uploaded_file:
             fig_montos.update_traces(texttemplate='%{y:,.2f}', textposition='outside')
             fig_montos.update_layout(yaxis_tickformat=",.2f", yaxis_title="Monto (USD)")
             st.plotly_chart(fig_montos, use_container_width=True)
+
+        # NUEVA PÁGINA: REPORTES
+    elif pagina == "📄 Reportes":
+        st.title("📄 Generar Reportes en Excel")
+        st.markdown("Descarga un archivo Excel con todos los KPIs y los datos filtrados del periodo seleccionado.")
+
+        # KPIs para exportar
+        resumen_kpis = pd.DataFrame({
+            "KPI": [
+                "Inversionista",
+                "Capital Inicial",
+                "Capital Invertido",
+                "Inyección Capital Total",
+                "Retiros",
+                "Ganancia Bruta",
+                "Ganancia Neta",
+                "Comisiones Pagadas",
+                "Fecha Ingreso",
+                "ROI Total",
+                "CAGR Mensual",
+                "Promedio Mensual de Ganancias (%)",
+                "Frecuencia de Aportes",
+                "Frecuencia de Retiros",
+                "Mejor Mes en %",
+                "Peor Mes en %"
+            ],
+            "Valor": [
+                inversionista,
+                capital_inicial,
+                capital_invertido,
+                inyeccion_total,
+                total_retiros,
+                ganancia_bruta,
+                ganancia_neta,
+                comisiones,
+                str(fecha_ingreso),
+                f"{roi:.2%}",
+                f"{cagr:.2%}",
+                f"{promedio_mensual_ganancias_pct:.2f}%",
+                frecuencia_aportes,
+                frecuencia_retiros,
+                str(mejor_mes),
+                str(peor_mes)
+            ]
+        })
+
+        # Crear Excel
+        output_report = BytesIO()
+        with pd.ExcelWriter(output_report, engine='openpyxl') as writer:
+            resumen_kpis.to_excel(writer, index=False, sheet_name="Resumen KPIs")
+            df.to_excel(writer, index=False, sheet_name="Datos Filtrados")
+
+        st.download_button(
+            "📅 Descargar Reporte Completo",
+            data=output_report.getvalue(),
+            file_name="reporte_fifi_dashboard.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
 
     except Exception as e:
         st.error(f"❌ Error al procesar el archivo: {e}")
