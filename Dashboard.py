@@ -656,25 +656,35 @@ elif uploaded_file and pagina == "📈 Proyecciones":
     )
 
 # 11. PÁGINA DE COMPARACIONES (MEJORADA)
-elif uploaded_file and pagina == "⚖️ Comparaciones":
-
+elif pagina == "⚖️ Comparaciones":
     st.title("📊 Comparaciones por Año")
     st.markdown("---")
     
-    # [...] (código existente de configuración de años)
+    # Primero asegurarnos de crear la columna 'Año' si no existe
+    df['Año'] = df['Fecha'].dt.year  # <-- Añade esta línea
     
+    años_disponibles = sorted(df['Año'].unique().tolist())
+    años_seleccionados = st.multiselect(
+        "Selecciona los años a comparar", 
+        años_disponibles, 
+        default=años_disponibles[-2:] if len(años_disponibles) >= 2 else años_disponibles
+    )
+    
+    if not años_seleccionados:
+        st.warning("Selecciona al menos un año para comparar")
+        st.stop()
+    
+    # Ahora el código continuará con los gráficos...
     # ==============================================
     # NUEVO GRÁFICO 1: Relación Aumento Capital vs Retiros
     # ==============================================
     st.markdown("### 💰 Relación Aportes vs Retiros")
     
-    # Preparación de datos
-    df['Año'] = df['Fecha'].dt.year
-
+    # Preparación de datos (ahora 'Año' existe)
     aportes_retiros = df[df['Año'].isin(años_seleccionados)].groupby('Año').agg({
-        'Aumento Capital': lambda x: (x > 0).sum(),
-        'Retiro de Fondos': lambda x: (x > 0).sum()
-    })
+        'Aumento Capital': 'sum',
+        'Retiro de Fondos': 'sum'
+    }).reset_index()
     
     fig_relacion = px.bar(
         aportes_retiros.melt(id_vars='Año', 
