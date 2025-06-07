@@ -140,7 +140,7 @@ if uploaded_file:
             
             fecha_inicio = df["Fecha"].min()
             fecha_fin = df["Fecha"].max()
-            años_inversion = (fecha_fin - fecha_inicio).days / 365.25
+            años_inversion = (fecha_fin - fecha_inicio).days / 30
             cagr = ((capital_invertido / capital_inicial_neto) ** (1 / años_inversion) - 1) if años_inversion > 0 and capital_inicial_neto > 0 else 0
 
             # Layout de KPIs (original)
