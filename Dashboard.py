@@ -437,6 +437,29 @@ if uploaded_file:
             st.title("📄 Generar Reportes en Excel")
             st.markdown("Descarga un archivo Excel con todos los KPIs y los datos filtrados del periodo seleccionado.")
 
+            # Recalcular KPIs necesarios para exportar
+            capital_inicial = df_completo["Aumento Capital"].dropna().iloc[0] if not df_completo["Aumento Capital"].dropna().empty else 0
+            inyeccion_total = df["Aumento Capital"].sum(skipna=True)
+            capital_invertido = df["Capital Invertido"].dropna().iloc[-1] if not df["Capital Invertido"].dropna().empty else 0
+            inversionista = df["ID Inv"].dropna().iloc[0] if "ID Inv" in df.columns and not df["ID Inv"].dropna().empty else "N/A"
+            total_retiros = df["Retiro de Fondos"].sum(skipna=True)
+            ganancia_bruta = df["Ganacias/Pérdidas Brutas"].sum(skipna=True)
+            ganancia_neta = df["Ganacias/Pérdidas Netas"].sum(skipna=True)
+            comisiones = df["Comisiones Pagadas"].sum(skipna=True)
+            fecha_ingreso = df_completo["Fecha"].min().date()
+
+            capital_inicial_neto = capital_inicial + inyeccion_total - total_retiros
+            roi = (ganancia_neta / capital_inicial_neto) if capital_inicial_neto > 0 else 0
+            fecha_inicio = df["Fecha"].min()
+            fecha_fin = df["Fecha"].max()
+            anios_inversion = (fecha_fin - fecha_inicio).days / 365.25
+            cagr = ((capital_invertido / capital_inicial_neto) ** (1 / anios_inversion) - 1) if anios_inversion > 0 and capital_inicial_neto > 0 else 0
+            promedio_mensual_ganancias_pct = df.groupby("Mes")["Beneficio en %"].mean().mean() * 100
+            frecuencia_aportes = df[df["Aumento Capital"] > 0].shape[0]
+            frecuencia_retiros = df[df["Retiro de Fondos"] > 0].shape[0]
+            mejor_mes = df.loc[df["Beneficio en %"].idxmax()]["Mes"]
+            peor_mes = df.loc[df["Beneficio en %"].idxmin()]["Mes"]
+
             # KPIs para exportar
             resumen_kpis = pd.DataFrame({
                 "KPI": [
@@ -492,6 +515,7 @@ if uploaded_file:
 
     except Exception as e:
         st.error(f"❌ Error al procesar el archivo: {e}")
+
     
 
 
