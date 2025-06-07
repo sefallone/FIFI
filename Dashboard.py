@@ -656,87 +656,116 @@ elif uploaded_file and pagina == "📈 Proyecciones":
     )
 
 # 11. PÁGINA DE COMPARACIONES (MEJORADA)
-elif uploaded_file and pagina == "⚖️ Comparaciones":
+elif pagina == "⚖️ Comparaciones":
     st.title("📊 Comparaciones por Año")
     st.markdown("---")
     
-    df['Año'] = df['Fecha'].dt.year
-    df['MesNombre'] = df['Fecha'].dt.strftime('%b')
-    df['MesOrden'] = df['Fecha'].dt.month
+    # [...] (código existente de configuración de años)
     
-    años_disponibles = sorted(df['Año'].dropna().unique().tolist())
-    años_seleccionados = st.multiselect(
-        "Selecciona los años a comparar", 
-        años_disponibles, 
-        default=años_disponibles[-2:] if len(años_disponibles) >= 2 else años_disponibles
+    # ==============================================
+    # NUEVO GRÁFICO 1: Relación Aumento Capital vs Retiros
+    # ==============================================
+    st.markdown("### 💰 Relación Aportes vs Retiros")
+    
+    # Preparación de datos
+    aportes_retiros = df[df['Año'].isin(años_seleccionados)].groupby('Año').agg({
+        'Aumento Capital': 'sum',
+        'Retiro de Fondos': 'sum'
+    }).reset_index()
+    
+    fig_relacion = px.bar(
+        aportes_retiros.melt(id_vars='Año', 
+                           value_vars=['Aumento Capital', 'Retiro de Fondos'],
+                           var_name='Tipo', 
+                           value_name='Monto'),
+        x='Año',
+        y='Monto',
+        color='Tipo',
+        barmode='group',
+        color_discrete_sequence=['#27ae60', '#e74c3c'],  # Verde para aportes, rojo para retiros
+        labels={'Monto': 'Monto (USD)', 'Tipo': 'Operación'},
+        height=500
     )
     
-    if not años_seleccionados:
-        st.warning("Selecciona al menos un año para comparar")
-        st.stop()
-    
-    comparacion_anual = df[df['Año'].isin(años_seleccionados)].groupby(
-        ['Año', 'MesNombre', 'MesOrden']
-    ).agg({
-        "Ganacias/Pérdidas Brutas": "sum",
-        "Ganacias/Pérdidas Netas": "sum",
-        "Comisiones Pagadas": "sum",
-        "Beneficio en %": "mean"
-    }).reset_index().sort_values("MesOrden")
-    
-    comparacion_anual["Beneficio en %"] *= 100
-    
-    # Gráfico 1 - Rentabilidad comparada
-    st.markdown("### 📈 Rentabilidad Promedio Mensual")
-    fig_cmp1 = px.bar(
-        comparacion_anual,
-        x="MesNombre",
-        y="Beneficio en %",
-        color="Año",
-        barmode="group",
-        title="<b>Rentabilidad Promedio Mensual por Año</b>",
-        labels={"Beneficio en %": "Rentabilidad (%)"},
-        template="plotly_white",
-        color_discrete_sequence=px.colors.qualitative.Prism
-    )
-    fig_cmp1.update_traces(
-        text=comparacion_anual["Beneficio en %"].round(1),
-        textposition="outside",
-        hovertemplate="Año: %{color}<br>Mes: %{x}<br>Rentabilidad: %{y:.1f}%"
-    )
-    fig_cmp1.update_layout(
-        yaxis_ticksuffix="%",
-        height=500,
+    # Personalización
+    fig_relacion.update_layout(
+        yaxis_tickprefix='$',
+        hovermode='x unified',
+        plot_bgcolor='rgba(0,0,0,0)',
+        legend_title_text='',
         xaxis_title=None
     )
-    st.plotly_chart(fig_cmp1, use_container_width=True)
     
-    # Gráfico 2 - Ganancia neta comparada
+    fig_relacion.update_traces(
+        hovertemplate='<b>Año %{x}</b><br>%{customdata[0]}: $%{y:,.0f}',
+        customdata=aportes_retiros[['Tipo']]
+    )
+    
+    st.plotly_chart(fig_relacion, use_container_width=True)
     st.markdown("---")
-    st.markdown("### 💰 Ganancia Neta Mensual")
-    fig_cmp2 = px.bar(
-        comparacion_anual,
-        x="MesNombre",
-        y="Ganacias/Pérdidas Netas",
-        color="Año",
-        barmode="group",
-        title="<b>Ganancia Neta Mensual por Año</b>",
-        labels={"Ganacias/Pérdidas Netas": "Ganancia Neta (USD)"},
-        template="plotly_white",
-        color_discrete_sequence=px.colors.qualitative.Prism
+    
+    # ==============================================
+    # NUEVO GRÁFICO 2: Sugerencia - Eficiencia de Capital (Gráfico de Radar)
+    # ==============================================
+    st.markdown("### 📊 Eficiencia de Capital por Año")
+    
+    # Cálculo de métricas de eficiencia
+    eficiencia = df[df['Año'].isin(años_seleccionados)].groupby('Año').apply(
+        lambda x: pd.Series({
+            'ROI': (x['Ganacias/Pérdidas Netas'].sum() / 
+                   (x['Aumento Capital'].sum() - x['Retiro de Fondos'].sum())) * 100,
+            'Frecuencia Aportes': x[x['Aumento Capital'] > 0].shape[0],
+            'Retorno Promedio': x['Beneficio en %'].mean() * 100,
+            'Ratio Retiros/Aportes': (x['Retiro de Fondos'].sum() / 
+                                     x['Aumento Capital'].sum()) * 100
+        })
+    ).reset_index()
+    
+    # Normalización para el gráfico de radar
+    eficiencia_norm = eficiencia.copy()
+    for col in ['ROI', 'Frecuencia Aportes', 'Retorno Promedio', 'Ratio Retiros/Aportes']:
+        eficiencia_norm[col] = (eficiencia[col] - eficiencia[col].min()) / \
+                              (eficiencia[col].max() - eficiencia[col].min()) * 100
+    
+    # Gráfico de radar
+    fig_radar = px.line_polar(
+        eficiencia_norm,
+        r=eficiencia_norm.iloc[0, 2:].values,  # Primer año como ejemplo
+        theta=eficiencia_norm.columns[2:],
+        line_close=True,
+        template='plotly_white',
+        color_discrete_sequence=['#3498db']
     )
-    fig_cmp2.update_traces(
-        text=comparacion_anual["Ganacias/Pérdidas Netas"].round(0),
-        textposition="outside",
-        hovertemplate="Año: %{color}<br>Mes: %{x}<br>Ganancia: $%{y:,.0f}"
-    )
-    fig_cmp2.update_layout(
-        yaxis_tickprefix="$",
+    
+    # Añadir más años como trazas adicionales
+    for año in eficiencia_norm['Año'].unique()[1:]:
+        fig_radar.add_trace(
+            px.line_polar(
+                eficiencia_norm[eficiencia_norm['Año'] == año],
+                r=eficiencia_norm[eficiencia_norm['Año'] == año].iloc[0, 2:].values,
+                theta=eficiencia_norm.columns[2:]
+            ).data[0]
+        )
+    
+    # Personalización
+    fig_radar.update_layout(
+        polar=dict(
+            radialaxis=dict(visible=True, range=[0, 100]),
+            angularaxis=dict(direction='clockwise')
+        ),
         height=500,
-        xaxis_title=None
+        legend_title_text='Año',
+        hovermode='closest'
     )
-    st.plotly_chart(fig_cmp2, use_container_width=True)
-
+    
+    st.plotly_chart(fig_radar, use_container_width=True)
+    st.markdown("""
+    **Interpretación:**
+    - **ROI:** Porcentaje de retorno sobre el capital neto
+    - **Frec. Aportes:** Cantidad de operaciones de inyección
+    - **Retorno Prom.:** Rentabilidad promedio mensual
+    - **Ratio Ret/Aport:** Porcentaje de capital retirado vs aportado
+    """)
 # 12. MENSAJE INICIAL (CUANDO NO HAY ARCHIVO CARGADO)
 elif not uploaded_file:
     st.info("""
