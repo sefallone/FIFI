@@ -115,6 +115,12 @@ if uploaded_file:
         if pagina == "📌 KPIs":
             st.title("📌 KPIs")
 
+            st.markdown("""
+        <div style="background-color: yellow; padding: 20px; border-radius: 10px;">
+            <h3 style="color: black;">⚠️ SI VES ESTA CAJA AMARILLA, HTML ESTÁ FUNCIONANDO</h3>
+        </div>
+        """, unsafe_allow_html=True)
+
             # ===== SECCIÓN 1: TOTALES HISTÓRICOS =====
             st.subheader("📊 Totales Históricos (sin filtro de fecha)")
 
