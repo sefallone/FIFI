@@ -187,6 +187,37 @@ if uploaded_file:
 
                 st.markdown("</div>", unsafe_allow_html=True)
 
+        def calcular_roi(data):
+            try:
+                capital_inicial = data['Aumento Capital'].iloc[0]
+                capital_final = data['Capital Invertido'].iloc[-1]
+                return (capital_final - capital_inicial) / capital_inicial
+            except:
+                return 0
+
+        def calcular_cagr_mensual(data):
+            try:
+                inicio = data['Fecha'].iloc[0]
+                fin = data['Fecha'].iloc[-1]
+                meses = (fin.year - inicio.year) * 12 + (fin.month - inicio.month) + 1
+                capital_inicial = data['Aumento Capital'].iloc[0]
+                capital_final = data['Capital Invertido'].iloc[-1]
+                return (capital_final / capital_inicial) ** (1 / meses) - 1
+            except:
+                return 0
+
+        def calcular_drawdown_maximo(data):
+            try:
+                capital_series = data['Capital Invertido']
+                max_anterior = capital_series.cummax()
+                drawdowns = (capital_series - max_anterior) / max_anterior
+                return drawdowns.min()
+            except:
+                return 0
+
+
+
+
         # --------------------------------------------
         # PÁGINAS RESTANTES (ORIGINALES SIN MODIFICAR)
         # --------------------------------------------
