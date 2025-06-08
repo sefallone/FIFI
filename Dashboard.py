@@ -120,7 +120,7 @@ if uploaded_file:
             st.markdown("---")
 
             # CAPITAL INICIAL: Primer valor histórico (sin filtrar)
-            capital_inicial = df_completo["Aumento Capital"].dropna().iloc[0] if not df_completo["Aumento Capital"].dropna().empty else 0
+            capital_invertido = df["Capital Invertido"].ffill().iloc[-1] if not df["Capital Invertido"].empty else 0
             
             # INYECCIÓN TOTAL: Suma de aportes en el período filtrado
             inyeccion_total = df["Aumento Capital"].sum(skipna=True)
