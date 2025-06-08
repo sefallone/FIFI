@@ -126,7 +126,7 @@ if uploaded_file:
             inyeccion_total = df["Aumento Capital"].sum(skipna=True)
             
             # Resto de KPIs con datos filtrados
-            capital_invertido = df["Capital Invertido"].dropna().iloc[-1] if not df["Capital Invertido"].dropna().empty else 0
+            capital_invertido = df["Capital Invertido"].iloc[-1] if not df["Capital Invertido"].dropna().empty else 0
             inversionista = df["ID Inv"].dropna().iloc[0] if "ID Inv" in df.columns and not df["ID Inv"].dropna().empty else "N/A"
             total_retiros = df["Retiro de Fondos"].sum(skipna=True)
             ganancia_bruta = df["Ganacias/Pérdidas Brutas"].sum(skipna=True)
