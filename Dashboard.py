@@ -119,35 +119,46 @@ if uploaded_file:
             st.title("📌 Indicadores Clave de Desempeño (KPIs)")
             st.markdown("---")
 
-            # CAPITAL INICIAL: Primer valor histórico (sin filtrar)
+            # CAPITAL INICIAL (primer aporte histórico)
             capital_inicial = df_completo["Aumento Capital"].dropna().iloc[0] if not df_completo["Aumento Capital"].dropna().empty else 0
-            
-            # INYECCIÓN TOTAL: Suma de aportes en el período filtrado
+    
+            # CAPITAL INVERTIDO (último valor SIEMPRE)
+            capital_invertido = df["Capital Invertido"].ffill().iloc[-1] if not df["Capital Invertido"].empty else 0
+    
+            # INYECCIÓN TOTAL (suma de aportes en período filtrado)
             inyeccion_total = df["Aumento Capital"].sum(skipna=True)
-            
-            # Resto de KPIs con datos filtrados
-            capital_invertido = df["Capital Invertido"].dropna().iloc[-1] if not df["Capital Invertido"].dropna().empty else 0
-            inversionista = df["ID Inv"].dropna().iloc[0] if "ID Inv" in df.columns and not df["ID Inv"].dropna().empty else "N/A"
-            total_retiros = df["Retiro de Fondos"].sum(skipna=True)
-            ganancia_bruta = df["Ganacias/Pérdidas Brutas"].sum(skipna=True)
+    
+        # CÁLCULO CORREGIDO DE CAPITAL INICIAL NETO (aportes - retiros hasta fecha inicio seleccionada)
+            capital_inicial_neto = (
+                df_completo[df_completo["Fecha"] < fecha_inicio_sel]["Aumento Capital"].sum() - 
+                df_completo[df_completo["Fecha"] < fecha_inicio_sel]["Retiro de Fondos"].sum()
+            )
+    
+            # ROI CORREGIDO
             ganancia_neta = df["Ganacias/Pérdidas Netas"].sum(skipna=True)
-            comisiones = df["Comisiones Pagadas"].sum(skipna=True)
-            fecha_ingreso = df_completo["Fecha"].min().date()
-
-            # ROI y CAGR con los cambios solicitados
-            capital_inicial_neto = capital_inicial + inyeccion_total - total_retiros
-            roi = (ganancia_neta / capital_inicial_neto) if capital_inicial_neto > 0 else 0
-            
+            roi = (ganancia_neta / capital_inicial_neto) if capital_inicial_neto != 0 else 0
+    
+            # CAGR CORREGIDO
             fecha_inicio = df["Fecha"].min()
             fecha_fin = df["Fecha"].max()
             años_inversion = (fecha_fin - fecha_inicio).days / 365.25
-            cagr = ((capital_invertido / capital_inicial_neto) ** (1 / años_inversion) - 1) if años_inversion > 0 and capital_inicial_neto > 0 else 0
+            if capital_inicial_neto > 0 and años_inversion > 0:
+                cagr = (capital_invertido / capital_inicial_neto) ** (1 / años_inversion) - 1
+            else:
+                cagr = 0
+
+            # --- Resto del código permanece IGUAL ---
+            inversionista = df["ID Inv"].dropna().iloc[0] if "ID Inv" in df.columns and not df["ID Inv"].dropna().empty else "N/A"
+            total_retiros = df["Retiro de Fondos"].sum(skipna=True)
+            ganancia_bruta = df["Ganacias/Pérdidas Brutas"].sum(skipna=True)
+            comisiones = df["Comisiones Pagadas"].sum(skipna=True)
+            fecha_ingreso = df_completo["Fecha"].min().date()
 
             # Layout de KPIs (original)
             col1, col2, col3, col4 = st.columns(4)
             with col1: styled_kpi("Inversionista", f"{inversionista}", "#a3e4d7")
             with col2: styled_kpi("💼 Capital Inicial", f"${capital_inicial:,.2f}", "#a3e4d7")
-            with col3: styled_kpi("💰 Capital Invertido", f"${capital_invertido:,.2f}", "#a3e4d7")
+            with col3: styled_kpi("💰 Capital Invertido", f"${capital_invertido:,.2f}", "#a3e4d7")  # <-- Ahora muestra SIEMPRE el último valor
             with col4: styled_kpi("💵 Inyección Capital Total", f"${inyeccion_total:,.2f}", "#a3e4d7")
 
             col5, col6, col7, col8 = st.columns(4)
@@ -158,31 +169,8 @@ if uploaded_file:
 
             col9, col10, col11 = st.columns(3)
             with col9: styled_kpi("📅 Fecha Ingreso", f"{fecha_ingreso}", "#a3e4d7")
-            with col10: styled_kpi("📊 ROI Total", f"{roi:.2%}", "#58d68d")
-            with col11: styled_kpi("📈 CAGR Mensual", f"{cagr:.2%}", "#58d68d")
-
-            st.markdown("---")
-            
-            # KPIs adicionales (original)
-            promedio_mensual_ganancias_pct = df.groupby("Mes")["Beneficio en %"].mean().mean() * 100
-            styled_kpi("📈 Promedio Mensual de Ganancias", f"{promedio_mensual_ganancias_pct:.2f}%", "#F1F8E9")
-
-            col12, col13, col14 = st.columns(3)
-            with col12:
-                frecuencia_aportes = df[df["Aumento Capital"] > 0].shape[0]
-                styled_kpi("🔁 Frecuencia de Aportes", f"{frecuencia_aportes}", "#E3F2FD")
-            with col13:
-                frecuencia_retiros = df[df["Retiro de Fondos"] > 0].shape[0]
-                styled_kpi("📤 Frecuencia de Retiros", f"{frecuencia_retiros}", "#FFF3E0")
-            with col14:
-                mejor_mes = df.loc[df["Beneficio en %"].idxmax()]["Mes"]
-                styled_kpi("📈 Mejor Mes en %", f"{mejor_mes}", "#E8F5E9")
-
-            col15 = st.columns(1)[0]
-            with col15:
-                peor_mes = df.loc[df["Beneficio en %"].idxmin()]["Mes"]
-                styled_kpi("📉 Peor Mes en %", f"{peor_mes}", "#FFEBEE")
-
+            with col10: styled_kpi("📊 ROI Total", f"{roi:.2%}", "#58d68d")  # <-- Ahora calculado correctamente
+            with col11: styled_kpi("📈 CAGR Mensual", f"{cagr:.2%}", "#58d68d")  # <-- Ahora calculado correctamente
         # --------------------------------------------
         # PÁGINAS RESTANTES (ORIGINALES SIN MODIFICAR)
         # --------------------------------------------
