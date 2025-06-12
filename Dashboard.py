@@ -114,13 +114,12 @@ if uploaded_file:
 
         if pagina == "📌 KPIs":
             st.title("📌 Indicadores Clave de Desempeño (KPIs)")
-            # =============================================
-            # SECCIÓN 1: KPIs HISTÓRICOS (TODO EL PERÍODO)
-            # =============================================
-            st.markdown("---")
-            st.subheader("📜 Histórico Completo (Desde Inicio)")
             
-            # Calcular KPIs históricos (usando df_completo)
+            # =============================================
+            # CÁLCULOS COMUNES PARA AMBAS SECCIONES
+            # =============================================
+            
+            # 1. Cálculos HISTÓRICOS (df_completo)
             capital_inicial_historico = df_completo["Aumento Capital"].dropna().iloc[0] if not df_completo["Aumento Capital"].dropna().empty else 0
             capital_invertido_historico = df_completo["Capital Invertido"].ffill().iloc[-1]
             inyeccion_total_historico = df_completo["Aumento Capital"].sum()
@@ -133,16 +132,40 @@ if uploaded_file:
             años_total = (df_completo["Fecha"].max() - df_completo["Fecha"].min()).days / 365.25
             cagr_historico = ((capital_invertido_historico / capital_inicial_historico) ** (1 / años_total) - 1) if años_total > 0 else 0
             
-            # Layout histórico (4 columnas)
+            # 2. Cálculos del PERÍODO FILTRADO (df)
+            capital_invertido_filtrado = df.loc[df['Fecha'].idxmax(), 'Capital Invertido'] if not df.empty else 0
+            
+            # Capital inicial neto CORREGIDO (aportes - retiros antes del período filtrado)
+            capital_inicial_neto = (
+                df_completo[df_completo['Fecha'] < fecha_inicio_sel]['Aumento Capital'].sum() - 
+                df_completo[df_completo['Fecha'] < fecha_inicio_sel]['Retiro de Fondos'].sum()
+            ) or capital_inicial_historico  # Fallback al capital inicial histórico
+            
+            inyeccion_total_filtrado = df["Aumento Capital"].sum()
+            total_retiros_filtrado = df["Retiro de Fondos"].sum()
+            ganancia_neta_filtrado = df["Ganacias/Pérdidas Netas"].sum()
+            comisiones_filtrado = df["Comisiones Pagadas"].sum()
+            
+            # ROI y CAGR del período filtrado
+            roi_filtrado = (ganancia_neta_filtrado / capital_inicial_neto) if capital_inicial_neto > 0 else 0
+            años_filtrado = (df['Fecha'].max() - df['Fecha'].min()).days / 365.25
+            cagr_filtrado = ((capital_invertido_filtrado / capital_inicial_neto) ** (1 / años_filtrado) - 1) if años_filtrado > 0 else 0
+            
+            # =============================================
+            # SECCIÓN 1: KPIs HISTÓRICOS
+            # =============================================
+            st.markdown("---")
+            st.subheader("📜 Histórico Completo (Desde Inicio)")
+            
             col_h1, col_h2, col_h3, col_h4 = st.columns(4)
             with col_h1:
-                styled_kpi("💼 Capital Inicial Hist.", f"${capital_inicial_historico:,.2f}", "#E1F5FE")
+                styled_kpi("Capital Inicial", f"${capital_inicial_historico:,.2f}", "#E1F5FE")
             with col_h2:
-                styled_kpi("💰 Capital Actual Hist.", f"${capital_invertido_historico:,.2f}", "#E1F5FE")
+                styled_kpi("Capital Actual", f"${capital_invertido_historico:,.2f}", "#E1F5FE")
             with col_h3:
-                styled_kpi("📊 ROI Histórico", f"{roi_historico:.2%}", "#B3E5FC")
+                styled_kpi("ROI Total", f"{roi_historico:.2%}", "#B3E5FC")
             with col_h4:
-                styled_kpi("📈 CAGR Histórico", f"{cagr_historico:.2%}", "#B3E5FC")
+                styled_kpi("CAGR Anual", f"{cagr_historico:.2%}", "#B3E5FC")
             
             # =============================================
             # SECCIÓN 2: KPIs DEL PERÍODO FILTRADO
@@ -150,54 +173,24 @@ if uploaded_file:
             st.markdown("---")
             st.subheader(f"🔍 Período Seleccionado ({fecha_inicio_sel.date()} a {fecha_fin_sel.date()})")
             
-            # KPIs filtrados (ya calculados previamente)
             col_f1, col_f2, col_f3, col_f4 = st.columns(4)
             with col_f1:
-                styled_kpi("💼 Capital Inicial", f"${capital_inicial_neto:,.2f}", "#E8F5E9")
+                styled_kpi("Capital Inicial Neto", f"${capital_inicial_neto:,.2f}", "#E8F5E9")
             with col_f2:
-                styled_kpi("💰 Capital Actual", f"${capital_invertido:,.2f}", "#E8F5E9")
+                styled_kpi("Capital Final", f"${capital_invertido_filtrado:,.2f}", "#E8F5E9")
             with col_f3:
-                styled_kpi("📊 ROI Período", f"{roi:.2%}", "#C8E6C9")
+                styled_kpi("ROI Período", f"{roi_filtrado:.2%}", "#C8E6C9")
             with col_f4:
-                styled_kpi("📈 CAGR Período", f"{cagr:.2%}", "#C8E6C9")
+                styled_kpi("CAGR Período", f"{cagr_filtrado:.2%}", "#C8E6C9")
             
             # =============================================
-            # SECCIÓN 3: COMPARATIVO (HISTÓRICO vs FILTRADO)
+            # SECCIÓN OPCIONAL: VALIDACIÓN DE CÁLCULOS
             # =============================================
-            st.markdown("---")
-            st.subheader("📊 Comparativo")
-            
-            # Gráfico comparativo de rendimiento
-            fig_comp = px.bar(
-                x=["Histórico", "Período Filtrado"],
-                y=[cagr_historico*100, cagr*100],
-                labels={'y': 'Rendimiento (%)', 'x': ''},
-                title="Comparación CAGR",
-                color=["Histórico", "Período Filtrado"],
-                color_discrete_map={"Histórico": "#29B6F6", "Período Filtrado": "#66BB6A"}
-            )
-            st.plotly_chart(fig_comp, use_container_width=True)
-            
-            # Tabla comparativa
-            comparativo = pd.DataFrame({
-                "KPI": ["Capital Inicial", "Capital Actual", "ROI", "CAGR"],
-                "Histórico": [
-                    f"${capital_inicial_historico:,.2f}",
-                    f"${capital_invertido_historico:,.2f}",
-                    f"{roi_historico:.2%}",
-                    f"{cagr_historico:.2%}"
-                ],
-                "Período Filtrado": [
-                    f"${capital_inicial_neto:,.2f}",
-                    f"${capital_invertido:,.2f}",
-                    f"{roi:.2%}",
-                    f"{cagr:.2%}"
-                ]
-            })
-            st.dataframe(comparativo, hide_index=True, use_container_width=True)       
+            if st.checkbox("Mostrar detalles de cálculo", False):
+                st.markdown("---")
+                st.write(f"**Capital inicial neto:** Suma aportes (${df_completo[df_completo['Fecha'] < fecha_inicio_sel]['Aumento Capital'].sum():,.2f}) - Suma retiros (${df_completo[df_completo['Fecha'] < fecha_inicio_sel]['Retiro de Fondos'].sum():,.2f})")
+                st.write(f"**Base CAGR:** ({capital_invertido_filtrado:,.2f}/{capital_inicial_neto:,.2f})^(1/{años_filtrado:.2f}) - 1")
                 # --------------------------------------------
-        # PÁGINAS RESTANTES (ORIGINALES SIN MODIFICAR)
-        # --------------------------------------------
         elif pagina == "📊 Gráficos":
             st.title("📊 Visualizaciones Financieras")
 
