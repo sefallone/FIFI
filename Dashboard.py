@@ -112,83 +112,111 @@ if uploaded_file:
         pagina = st.sidebar.radio("Selecciona la sección", 
                                 ["📌 KPIs", "📊 Gráficos", "📈 Proyecciones", "⚖️ Comparaciones"])
 
-        # --------------------------------------------
-        # PÁGINA: KPIs (CON CORRECCIONES SOLICITADAS)
-        # --------------------------------------------
         if pagina == "📌 KPIs":
-            st.title("📌 Indicadores Clave de Desempeño (KPIs)")
-            st.markdown("---")
-
-            # 1. CAPITAL INVERTIDO (ÚLTIMO VALOR DEL PERÍODO) ----------------------------
-            capital_invertido = df.loc[df['Fecha'].idxmax(), 'Capital Invertido'] if not df.empty else 0
-
-            # 2. CÁLCULO DE CAPITAL INICIAL NETO (PARA ROI/CAGR) ------------------------
-            # Suma histórica de aportes - retiros ANTES del filtro seleccionado
-            capital_inicial_neto = (
-                df_completo[df_completo['Fecha'] < fecha_inicio_sel]['Aumento Capital'].sum() - 
-                df_completo[df_completo['Fecha'] < fecha_inicio_sel]['Retiro de Fondos'].sum()
-            )
-            
-            # Si no hay capital inicial, usamos el primer aporte como referencia
-            if capital_inicial_neto <= 0:
-                capital_inicial_neto = df_completo['Aumento Capital'].dropna().iloc[0] if not df_completo['Aumento Capital'].dropna().empty else 1  # Evitar división por cero
-
-            # 3. ROI CORREGIDO ----------------------------------------------------------
-            ganancia_neta = df['Ganacias/Pérdidas Netas'].sum()
-            roi = (ganancia_neta / capital_inicial_neto) if capital_inicial_neto > 0 else 0
-
-            # 4. CAGR CORREGIDO ---------------------------------------------------------
-            fecha_inicio = df['Fecha'].min()
-            fecha_fin = df['Fecha'].max()
-            años_inversion = (fecha_fin - fecha_inicio).days / 365.25
-            
-            if capital_inicial_neto > 0 and años_inversion >= 1/12:
-                cagr = ((capital_invertido / capital_inicial_neto) ** (1 / años_inversion)) - 1
-            else:
-                cagr = 0
-
-            # --- Resto de KPIs ---
-            inversionista = df["ID Inv"].iloc[0] if "ID Inv" in df.columns else "N/A"
-            total_retiros = df["Retiro de Fondos"].sum()
-            ganancia_bruta = df["Ganacias/Pérdidas Brutas"].sum()
-            comisiones = df["Comisiones Pagadas"].sum()
-            fecha_ingreso = df_completo["Fecha"].min().date()
-
-            # Layout de KPIs
-            col1, col2, col3, col4 = st.columns(4)
-            with col1: styled_kpi("Inversionista", inversionista, "#a3e4d7")
-            with col2: styled_kpi("💼 Capital Inicial Neto", f"${capital_inicial_neto:,.2f}", "#a3e4d7")
-            with col3: styled_kpi("💰 Capital Invertido", f"${capital_invertido:,.2f}", "#a3e4d7")
-            with col4: styled_kpi("📊 ROI Total", f"{roi:.2%}", "#58d68d")
-
-            col5, col6, col7, col8 = st.columns(4)
-            with col5: styled_kpi("📈 CAGR Anualizado", f"{cagr:.2%}", "#58d68d")
-            with col6: styled_kpi("💸 Retiros", f"${total_retiros:,.2f}", "#ec7063")
-            with col7: styled_kpi("📉 Ganancia Bruta", f"${ganancia_bruta:,.2f}", "#58d68d")
-            with col8: styled_kpi("🧾 Comisiones", f"${comisiones:,.2f}", "#ec7063")
-
-            st.markdown("---")
-            
-            # KPIs adicionales
-            promedio_mensual_ganancias_pct = df.groupby("Mes")["Beneficio en %"].mean().mean() * 100
-            styled_kpi("📈 Promedio Mensual de Ganancias", f"{promedio_mensual_ganancias_pct:.2f}%", "#F1F8E9")
-
-            col12, col13, col14 = st.columns(3)
-            with col12:
-                frecuencia_aportes = df[df["Aumento Capital"] > 0].shape[0]
-                styled_kpi("🔁 Frecuencia de Aportes", f"{frecuencia_aportes}", "#E3F2FD")
-            with col13:
-                frecuencia_retiros = df[df["Retiro de Fondos"] > 0].shape[0]
-                styled_kpi("📤 Frecuencia de Retiros", f"{frecuencia_retiros}", "#FFF3E0")
-            with col14:
-                mejor_mes = df.loc[df["Beneficio en %"].idxmax()]["Mes"]
-                styled_kpi("📈 Mejor Mes en %", f"{mejor_mes}", "#E8F5E9")
-
-            col15 = st.columns(1)[0]
-            with col15:
-                peor_mes = df.loc[df["Beneficio en %"].idxmin()]["Mes"]
-                styled_kpi("📉 Peor Mes en %", f"{peor_mes}", "#FFEBEE")
-        # --------------------------------------------
+    st.title("📌 Indicadores Clave de Desempeño (KPIs)")
+    
+    # =============================================
+    # SECCIÓN 1: RESUMEN FINANCIERO (2 columnas)
+    # =============================================
+    st.markdown("---")
+    st.subheader("📋 Resumen Financiero")
+    st.markdown("""
+    <style>
+    .section-box {
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+        background-color: #f9f9f9;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # Contenedor principal de 2 columnas
+    col_resumen1, col_resumen2 = st.columns(2)
+    
+    with col_resumen1:
+        st.markdown('<div class="section-box">', unsafe_allow_html=True)
+        st.markdown("**💼 Capital y Movimientos**")
+        
+        # Fila 1 (3 KPIs)
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            styled_kpi("Capital Inicial", f"${capital_inicial_neto:,.2f}", "#E3F2FD")
+        with col2:
+            styled_kpi("Capital Actual", f"${capital_invertido:,.2f}", "#E3F2FD")
+        with col3:
+            styled_kpi("Inyección Total", f"${inyeccion_total:,.2f}", "#BBDEFB")
+        
+        # Fila 2 (2 KPIs)
+        col4, col5 = st.columns(2)
+        with col4:
+            styled_kpi("Retiros Totales", f"${total_retiros:,.2f}", "#FFCDD2")
+        with col5:
+            styled_kpi("Comisiones", f"${comisiones:,.2f}", "#FFCDD2")
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col_resumen2:
+        st.markdown('<div class="section-box">', unsafe_allow_html=True)
+        st.markdown("**📈 Rentabilidad**")
+        
+        # Fila 1 (3 KPIs)
+        col6, col7, col8 = st.columns(3)
+        with col6:
+            styled_kpi("ROI Total", f"{roi:.2%}", "#C8E6C9")
+        with col7:
+            styled_kpi("CAGR", f"{cagr:.2%}", "#C8E6C9")
+        with col8:
+            styled_kpi("Rent. Prom.", f"{promedio_mensual_ganancias_pct:.2f}%", "#C8E6C9")
+        
+        # Fila 2 (2 KPIs)
+        col9, col10 = st.columns(2)
+        with col9:
+            styled_kpi("Mejor Mes", f"{mejor_mes}", "#DCEDC8")
+        with col10:
+            styled_kpi("Peor Mes", f"{peor_mes}", "#FFEBEE")
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # =============================================
+    # SECCIÓN 2: ESTADÍSTICAS OPERATIVAS (Full width)
+    # =============================================
+    st.markdown("---")
+    st.subheader("📊 Estadísticas Operativas")
+    st.markdown('<div class="section-box">', unsafe_allow_html=True)
+    
+    # Fila 1 (4 KPIs)
+    col11, col12, col13, col14 = st.columns(4)
+    with col11:
+        styled_kpi("Inversionista", inversionista, "#F5F5F5")
+    with col12:
+        styled_kpi("Fecha Ingreso", f"{fecha_ingreso}", "#F5F5F5")
+    with col13:
+        styled_kpi("Frec. Aportes", f"{frecuencia_aportes}", "#E1BEE7")
+    with col14:
+        styled_kpi("Frec. Retiros", f"{frecuencia_retiros}", "#D1C4E9")
+    
+    # Fila 2 (3 KPIs)
+    col15, col16, col17 = st.columns(3)
+    with col15:
+        styled_kpi("Ganancia Bruta", f"${ganancia_bruta:,.2f}", "#B3E5FC")
+    with col16:
+        styled_kpi("Ganancia Neta", f"${ganancia_neta:,.2f}", "#B3E5FC")
+    with col17:
+        styled_kpi("Duración", f"{años_inversion:.1f} años", "#F5F5F5")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # =============================================
+    # SECCIÓN OPCIONAL: DEBUG (solo en desarrollo)
+    # =============================================
+    if False:  # Cambiar a True para depuración
+        st.markdown("---")
+        st.subheader("🔍 Datos de Depuración")
+        st.write(f"Capital inicial neto calculado: ${capital_inicial_neto:,.2f}")
+        st.write(f"Período analizado: {fecha_inicio.date()} a {fecha_fin.date()}")
+        st.write("Últimos 3 registros:", df[['Fecha', 'Capital Invertido']].tail(3))        # --------------------------------------------
         # PÁGINAS RESTANTES (ORIGINALES SIN MODIFICAR)
         # --------------------------------------------
         elif pagina == "📊 Gráficos":
