@@ -116,40 +116,56 @@ if uploaded_file:
             st.title("📌 Indicadores Clave de Desempeño (KPIs)")
             
             # =============================================
-            # CÁLCULOS COMUNES PARA AMBAS SECCIONES
+            # CÁLCULOS PARA HISTÓRICO (df_completo)
             # =============================================
-            
-            # 1. Cálculos HISTÓRICOS (df_completo)
+            # KPIs básicos
             capital_inicial_historico = df_completo["Aumento Capital"].dropna().iloc[0] if not df_completo["Aumento Capital"].dropna().empty else 0
             capital_invertido_historico = df_completo["Capital Invertido"].ffill().iloc[-1]
             inyeccion_total_historico = df_completo["Aumento Capital"].sum()
             total_retiros_historico = df_completo["Retiro de Fondos"].sum()
+            ganancia_bruta_historico = df_completo["Ganacias/Pérdidas Brutas"].sum()
             ganancia_neta_historico = df_completo["Ganacias/Pérdidas Netas"].sum()
             comisiones_historico = df_completo["Comisiones Pagadas"].sum()
             
-            # ROI y CAGR históricos
+            # Rentabilidad
             roi_historico = (ganancia_neta_historico / capital_inicial_historico) if capital_inicial_historico > 0 else 0
             años_total = (df_completo["Fecha"].max() - df_completo["Fecha"].min()).days / 365.25
             cagr_historico = ((capital_invertido_historico / capital_inicial_historico) ** (1 / años_total) - 1) if años_total > 0 else 0
             
-            # 2. Cálculos del PERÍODO FILTRADO (df)
-            capital_invertido_filtrado = df.loc[df['Fecha'].idxmax(), 'Capital Invertido'] if not df.empty else 0
+            # Estadísticas adicionales
+            frecuencia_aportes_historico = df_completo[df_completo["Aumento Capital"] > 0].shape[0]
+            frecuencia_retiros_historico = df_completo[df_completo["Retiro de Fondos"] > 0].shape[0]
+            mejor_mes_historico = df_completo.loc[df_completo["Beneficio en %"].idxmax()]["Mes"] if "Beneficio en %" in df_completo.columns else "N/A"
+            peor_mes_historico = df_completo.loc[df_completo["Beneficio en %"].idxmin()]["Mes"] if "Beneficio en %" in df_completo.columns else "N/A"
+            promedio_rentabilidad_historico = df_completo["Beneficio en %"].mean() * 100 if "Beneficio en %" in df_completo.columns else 0
             
-            # Capital inicial neto CORREGIDO (aportes - retiros antes del período filtrado)
+            # =============================================
+            # CÁLCULOS PARA PERÍODO FILTRADO (df)
+            # =============================================
+            # KPIs básicos
+            capital_invertido_filtrado = df.loc[df['Fecha'].idxmax(), 'Capital Invertido'] if not df.empty else 0
             capital_inicial_neto = (
                 df_completo[df_completo['Fecha'] < fecha_inicio_sel]['Aumento Capital'].sum() - 
                 df_completo[df_completo['Fecha'] < fecha_inicio_sel]['Retiro de Fondos'].sum()
-            ) or capital_inicial_historico  # Fallback al capital inicial histórico
+            ) or capital_inicial_historico
             
             inyeccion_total_filtrado = df["Aumento Capital"].sum()
             total_retiros_filtrado = df["Retiro de Fondos"].sum()
+            ganancia_bruta_filtrado = df["Ganacias/Pérdidas Brutas"].sum()
             ganancia_neta_filtrado = df["Ganacias/Pérdidas Netas"].sum()
             comisiones_filtrado = df["Comisiones Pagadas"].sum()
             
-            # ROI y CAGR del período filtrado
+            # Rentabilidad
             roi_filtrado = (ganancia_neta_filtrado / capital_inicial_neto) if capital_inicial_neto > 0 else 0
             años_filtrado = (df['Fecha'].max() - df['Fecha'].min()).days / 365.25
             cagr_filtrado = ((capital_invertido_filtrado / capital_inicial_neto) ** (1 / años_filtrado) - 1) if años_filtrado > 0 else 0
+            
+            # Estadísticas adicionales
+            frecuencia_aportes_filtrado = df[df["Aumento Capital"] > 0].shape[0]
+            frecuencia_retiros_filtrado = df[df["Retiro de Fondos"] > 0].shape[0]
+            mejor_mes_filtrado = df.loc[df["Beneficio en %"].idxmax()]["Mes"] if "Beneficio en %" in df.columns else "N/A"
+            peor_mes_filtrado = df.loc[df["Beneficio en %"].idxmin()]["Mes"] if "Beneficio en %" in df.columns else "N/A"
+            promedio_rentabilidad_filtrado = df["Beneficio en %"].mean() * 100 if "Beneficio en %" in df.columns else 0
             
             # =============================================
             # SECCIÓN 1: KPIs HISTÓRICOS
@@ -157,6 +173,7 @@ if uploaded_file:
             st.markdown("---")
             st.subheader("📜 Histórico Completo (Desde Inicio)")
             
+            # Fila 1 - Capital y Rentabilidad
             col_h1, col_h2, col_h3, col_h4 = st.columns(4)
             with col_h1:
                 styled_kpi("Capital Inicial", f"${capital_inicial_historico:,.2f}", "#E1F5FE")
@@ -167,30 +184,71 @@ if uploaded_file:
             with col_h4:
                 styled_kpi("CAGR Anual", f"{cagr_historico:.2%}", "#B3E5FC")
             
+            # Fila 2 - Movimientos
+            col_h5, col_h6, col_h7, col_h8 = st.columns(4)
+            with col_h5:
+                styled_kpi("Aportes Totales", f"${inyeccion_total_historico:,.2f}", "#BBDEFB")
+            with col_h6:
+                styled_kpi("Retiros Totales", f"${total_retiros_historico:,.2f}", "#FFCDD2")
+            with col_h7:
+                styled_kpi("Ganancia Bruta", f"${ganancia_bruta_historico:,.2f}", "#C8E6C9")
+            with col_h8:
+                styled_kpi("Comisiones", f"${comisiones_historico:,.2f}", "#FFCCBC")
+            
+            # Fila 3 - Estadísticas
+            col_h9, col_h10, col_h11, col_h12 = st.columns(4)
+            with col_h9:
+                styled_kpi("Frec. Aportes", f"{frecuencia_aportes_historico}", "#E3F2FD")
+            with col_h10:
+                styled_kpi("Frec. Retiros", f"{frecuencia_retiros_historico}", "#FFECB3")
+            with col_h11:
+                styled_kpi("Mejor Mes", f"{mejor_mes_historico}", "#DCEDC8")
+            with col_h12:
+                styled_kpi("Peor Mes", f"{peor_mes_historico}", "#FFEBEE")
+            
             # =============================================
             # SECCIÓN 2: KPIs DEL PERÍODO FILTRADO
             # =============================================
             st.markdown("---")
             st.subheader(f"🔍 Período Seleccionado ({fecha_inicio_sel.date()} a {fecha_fin_sel.date()})")
             
+            # Fila 1 - Capital y Rentabilidad
             col_f1, col_f2, col_f3, col_f4 = st.columns(4)
             with col_f1:
                 styled_kpi("Capital Inicial Neto", f"${capital_inicial_neto:,.2f}", "#E8F5E9")
             with col_f2:
                 styled_kpi("Capital Final", f"${capital_invertido_filtrado:,.2f}", "#E8F5E9")
             with col_f3:
-                styled_kpi("ROI Período", f"{roi_filtrado:.2%}", "#C8E6C9")
+                styled_kpi("ROI Período", f"{roi_filtrado:.2%}", "#A5D6A7")
             with col_f4:
-                styled_kpi("CAGR Período", f"{cagr_filtrado:.2%}", "#C8E6C9")
+                styled_kpi("CAGR Período", f"{cagr_filtrado:.2%}", "#A5D6A7")
             
-            # =============================================
-            # SECCIÓN OPCIONAL: VALIDACIÓN DE CÁLCULOS
-            # =============================================
-            if st.checkbox("Mostrar detalles de cálculo", False):
-                st.markdown("---")
-                st.write(f"**Capital inicial neto:** Suma aportes (${df_completo[df_completo['Fecha'] < fecha_inicio_sel]['Aumento Capital'].sum():,.2f}) - Suma retiros (${df_completo[df_completo['Fecha'] < fecha_inicio_sel]['Retiro de Fondos'].sum():,.2f})")
-                st.write(f"**Base CAGR:** ({capital_invertido_filtrado:,.2f}/{capital_inicial_neto:,.2f})^(1/{años_filtrado:.2f}) - 1")
-                # --------------------------------------------
+            # Fila 2 - Movimientos
+            col_f5, col_f6, col_f7, col_f8 = st.columns(4)
+            with col_f5:
+                styled_kpi("Aportes", f"${inyeccion_total_filtrado:,.2f}", "#BBDEFB")
+            with col_f6:
+                styled_kpi("Retiros", f"${total_retiros_filtrado:,.2f}", "#FFCDD2")
+            with col_f7:
+                styled_kpi("Ganancia Bruta", f"${ganancia_bruta_filtrado:,.2f}", "#C8E6C9")
+            with col_f8:
+                styled_kpi("Comisiones", f"${comisiones_filtrado:,.2f}", "#FFCCBC")
+            
+            # Fila 3 - Estadísticas
+            col_f9, col_f10, col_f11, col_f12 = st.columns(4)
+            with col_f9:
+                styled_kpi("Frec. Aportes", f"{frecuencia_aportes_filtrado}", "#E3F2FD")
+            with col_f10:
+                styled_kpi("Frec. Retiros", f"{frecuencia_retiros_filtrado}", "#FFECB3")
+            with col_f11:
+                styled_kpi("Mejor Mes", f"{mejor_mes_filtrado}", "#DCEDC8")
+            with col_f12:
+                styled_kpi("Peor Mes", f"{peor_mes_filtrado}", "#FFEBEE")
+            
+            # Fila 4 - Rentabilidad Promedio
+            col_f13 = st.columns(1)[0]
+            with col_f13:
+                styled_kpi("Rentabilidad Promedio", f"{promedio_rentabilidad_filtrado:.2f}%", "#F1F8E9")
         elif pagina == "📊 Gráficos":
             st.title("📊 Visualizaciones Financieras")
 
