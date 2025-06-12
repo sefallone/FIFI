@@ -114,110 +114,88 @@ if uploaded_file:
 
         if pagina == "📌 KPIs":
             st.title("📌 Indicadores Clave de Desempeño (KPIs)")
-    
             # =============================================
-            # SECCIÓN 1: RESUMEN FINANCIERO (2 columnas)
-            # =============================================
-            st.markdown("---")
-            st.subheader("📋 Resumen Financiero")
-            st.markdown("""
-            <style>
-            .section-box {
-                border-radius: 10px;
-                padding: 15px;
-                margin-bottom: 20px;
-                background-color: #f9f9f9;
-                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            }
-            </style>
-            """, unsafe_allow_html=True)
-    
-            # Contenedor principal de 2 columnas
-            col_resumen1, col_resumen2 = st.columns(2)
-    
-            with col_resumen1:
-                st.markdown('<div class="section-box">', unsafe_allow_html=True)
-                st.markdown("**💼 Capital y Movimientos**")
-        
-                # Fila 1 (3 KPIs)
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    styled_kpi("Capital Inicial", f"${capital_inicial_neto:,.2f}", "#E3F2FD")
-                with col2:
-                    styled_kpi("Capital Actual", f"${capital_invertido:,.2f}", "#E3F2FD")
-                with col3:
-                    styled_kpi("Inyección Total", f"${inyeccion_total:,.2f}", "#BBDEFB")
-        
-                # Fila 2 (2 KPIs)
-                col4, col5 = st.columns(2)
-                with col4:
-                    styled_kpi("Retiros Totales", f"${total_retiros:,.2f}", "#FFCDD2")
-                with col5:
-                    styled_kpi("Comisiones", f"${comisiones:,.2f}", "#FFCDD2")
-        
-                st.markdown('</div>', unsafe_allow_html=True)
-    
-            with col_resumen2:
-                st.markdown('<div class="section-box">', unsafe_allow_html=True)
-                st.markdown("**📈 Rentabilidad**")
-        
-                # Fila 1 (3 KPIs)
-                col6, col7, col8 = st.columns(3)
-                with col6:
-                    styled_kpi("ROI Total", f"{roi:.2%}", "#C8E6C9")
-                with col7:
-                    styled_kpi("CAGR", f"{cagr:.2%}", "#C8E6C9")
-                with col8:
-                    styled_kpi("Rent. Prom.", f"{promedio_mensual_ganancias_pct:.2f}%", "#C8E6C9")
-        
-                # Fila 2 (2 KPIs)
-                col9, col10 = st.columns(2)
-                with col9:
-                    styled_kpi("Mejor Mes", f"{mejor_mes}", "#DCEDC8")
-                with col10:
-                    styled_kpi("Peor Mes", f"{peor_mes}", "#FFEBEE")
-        
-                st.markdown('</div>', unsafe_allow_html=True)
-    
-            # =============================================
-            # SECCIÓN 2: ESTADÍSTICAS OPERATIVAS (Full width)
+            # SECCIÓN 1: KPIs HISTÓRICOS (TODO EL PERÍODO)
             # =============================================
             st.markdown("---")
-            st.subheader("📊 Estadísticas Operativas")
-            st.markdown('<div class="section-box">', unsafe_allow_html=True)
-    
-            # Fila 1 (4 KPIs)
-            col11, col12, col13, col14 = st.columns(4)
-            with col11:
-                styled_kpi("Inversionista", inversionista, "#F5F5F5")
-            with col12:
-                styled_kpi("Fecha Ingreso", f"{fecha_ingreso}", "#F5F5F5")
-            with col13:
-                styled_kpi("Frec. Aportes", f"{frecuencia_aportes}", "#E1BEE7")
-            with col14:
-                styled_kpi("Frec. Retiros", f"{frecuencia_retiros}", "#D1C4E9")
-    
-            # Fila 2 (3 KPIs)
-            col15, col16, col17 = st.columns(3)
-            with col15:
-                styled_kpi("Ganancia Bruta", f"${ganancia_bruta:,.2f}", "#B3E5FC")
-            with col16:
-                styled_kpi("Ganancia Neta", f"${ganancia_neta:,.2f}", "#B3E5FC")
-            with col17:
-                styled_kpi("Duración", f"{años_inversion:.1f} años", "#F5F5F5")
-    
-            st.markdown('</div>', unsafe_allow_html=True)
-    
+            st.subheader("📜 Histórico Completo (Desde Inicio)")
+            
+            # Calcular KPIs históricos (usando df_completo)
+            capital_inicial_historico = df_completo["Aumento Capital"].dropna().iloc[0] if not df_completo["Aumento Capital"].dropna().empty else 0
+            capital_invertido_historico = df_completo["Capital Invertido"].ffill().iloc[-1]
+            inyeccion_total_historico = df_completo["Aumento Capital"].sum()
+            total_retiros_historico = df_completo["Retiro de Fondos"].sum()
+            ganancia_neta_historico = df_completo["Ganacias/Pérdidas Netas"].sum()
+            comisiones_historico = df_completo["Comisiones Pagadas"].sum()
+            
+            # ROI y CAGR históricos
+            roi_historico = (ganancia_neta_historico / capital_inicial_historico) if capital_inicial_historico > 0 else 0
+            años_total = (df_completo["Fecha"].max() - df_completo["Fecha"].min()).days / 365.25
+            cagr_historico = ((capital_invertido_historico / capital_inicial_historico) ** (1 / años_total) - 1) if años_total > 0 else 0
+            
+            # Layout histórico (4 columnas)
+            col_h1, col_h2, col_h3, col_h4 = st.columns(4)
+            with col_h1:
+                styled_kpi("💼 Capital Inicial Hist.", f"${capital_inicial_historico:,.2f}", "#E1F5FE")
+            with col_h2:
+                styled_kpi("💰 Capital Actual Hist.", f"${capital_invertido_historico:,.2f}", "#E1F5FE")
+            with col_h3:
+                styled_kpi("📊 ROI Histórico", f"{roi_historico:.2%}", "#B3E5FC")
+            with col_h4:
+                styled_kpi("📈 CAGR Histórico", f"{cagr_historico:.2%}", "#B3E5FC")
+            
             # =============================================
-            # SECCIÓN OPCIONAL: DEBUG (solo en desarrollo)
+            # SECCIÓN 2: KPIs DEL PERÍODO FILTRADO
             # =============================================
-            if False:  # Cambiar a True para depuración
-                st.markdown("---")
-                st.subheader("🔍 Datos de Depuración")
-                st.write(f"Capital inicial neto calculado: ${capital_inicial_neto:,.2f}")
-                st.write(f"Período analizado: {fecha_inicio.date()} a {fecha_fin.date()}")
-                st.write("Últimos 3 registros:", df[['Fecha', 'Capital Invertido']].tail(3))       
-        # --------------------------------------------
+            st.markdown("---")
+            st.subheader(f"🔍 Período Seleccionado ({fecha_inicio_sel.date()} a {fecha_fin_sel.date()})")
+            
+            # KPIs filtrados (ya calculados previamente)
+            col_f1, col_f2, col_f3, col_f4 = st.columns(4)
+            with col_f1:
+                styled_kpi("💼 Capital Inicial", f"${capital_inicial_neto:,.2f}", "#E8F5E9")
+            with col_f2:
+                styled_kpi("💰 Capital Actual", f"${capital_invertido:,.2f}", "#E8F5E9")
+            with col_f3:
+                styled_kpi("📊 ROI Período", f"{roi:.2%}", "#C8E6C9")
+            with col_f4:
+                styled_kpi("📈 CAGR Período", f"{cagr:.2%}", "#C8E6C9")
+            
+            # =============================================
+            # SECCIÓN 3: COMPARATIVO (HISTÓRICO vs FILTRADO)
+            # =============================================
+            st.markdown("---")
+            st.subheader("📊 Comparativo")
+            
+            # Gráfico comparativo de rendimiento
+            fig_comp = px.bar(
+                x=["Histórico", "Período Filtrado"],
+                y=[cagr_historico*100, cagr*100],
+                labels={'y': 'Rendimiento (%)', 'x': ''},
+                title="Comparación CAGR",
+                color=["Histórico", "Período Filtrado"],
+                color_discrete_map={"Histórico": "#29B6F6", "Período Filtrado": "#66BB6A"}
+            )
+            st.plotly_chart(fig_comp, use_container_width=True)
+            
+            # Tabla comparativa
+            comparativo = pd.DataFrame({
+                "KPI": ["Capital Inicial", "Capital Actual", "ROI", "CAGR"],
+                "Histórico": [
+                    f"${capital_inicial_historico:,.2f}",
+                    f"${capital_invertido_historico:,.2f}",
+                    f"{roi_historico:.2%}",
+                    f"{cagr_historico:.2%}"
+                ],
+                "Período Filtrado": [
+                    f"${capital_inicial_neto:,.2f}",
+                    f"${capital_invertido:,.2f}",
+                    f"{roi:.2%}",
+                    f"{cagr:.2%}"
+                ]
+            })
+            st.dataframe(comparativo, hide_index=True, use_container_width=True)       
+                # --------------------------------------------
         # PÁGINAS RESTANTES (ORIGINALES SIN MODIFICAR)
         # --------------------------------------------
         elif pagina == "📊 Gráficos":
