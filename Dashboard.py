@@ -9,21 +9,81 @@ import base64
 import calendar
 from io import BytesIO
 
+# =============================================================================
+# 🔐 SISTEMA DE AUTENTICACIÓN (13 inversionistas via st.secrets)
+# =============================================================================
+def check_password():
+    """Autenticación segura usando st.secrets para 13 inversionistas."""
+    
+    # Verificar si ya está autenticado
+    if st.session_state.get("authenticated"):
+        return True
+    
+    # Mostrar formulario de login
+    st.title("🔐 Acceso al Dashboard FIFI")
+    st.markdown("Por favor ingrese sus credenciales de acceso")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        username = st.text_input("Usuario").strip()
+    with col2:
+        password = st.text_input("Contraseña", type="password").strip()
+    
+    login_button = st.button("Ingresar")
+    
+    # Validar credenciales
+    if login_button:
+        try:
+            # Obtener credenciales de secrets.toml
+            credenciales_validas = st.secrets["inversionistas"]
+            
+            if username in credenciales_validas and credenciales_validas[username] == password:
+                st.session_state["authenticated"] = True
+                st.session_state["username"] = username
+                st.success(f"Bienvenido, {username}!")
+                st.experimental_rerun()
+            else:
+                st.error("Credenciales incorrectas")
+        except Exception as e:
+            st.error(f"Error al verificar credenciales: {str(e)}")
+            st.stop()
+    
+    return False
+
+# Bloquear acceso si no está autenticado
+if not check_password():
+    st.stop()
+
+# =============================================================================
+# 🚀 DASHBOARD FIFI
+# =============================================================================
 
 # Configuración general
 st.set_page_config(page_title="Dashboard FIFI", layout="wide")
+
+# Mostrar usuario actual y botón de logout
+with st.sidebar:
+    st.markdown(f"### 👤 Usuario: **{st.session_state['username']}**")
+    if st.button("🚪 Cerrar sesión"):
+        st.session_state["authenticated"] = False
+        st.experimental_rerun()
+
 # Logo en página principal
-logo = Image.open("Logo.jpg")
-st.markdown("""
-    <div style='text-align: center;'>
-        <img src='data:image/jpeg;base64,{}' style='width:200px;'/>
-        <h3 style='margin-top:10px;'>Fallone Investments</h3>
-    </div>
-    """.format(base64.b64encode(open("Logo.jpg", "rb").read()).decode()), unsafe_allow_html=True)
+try:
+    logo = Image.open("Logo.jpg")
+    st.markdown("""
+        <div style='text-align: center;'>
+            <img src='data:image/jpeg;base64,{}' style='width:200px;'/>
+            <h3 style='margin-top:10px;'>Fallone Investments</h3>
+        </div>
+        """.format(base64.b64encode(open("Logo.jpg", "rb").read()).decode()), unsafe_allow_html=True)
+except FileNotFoundError:
+    st.warning("No se encontró el archivo Logo.jpg")
 
 # Sidebar config
 with st.sidebar:
     st.title("Configuración")
+
 # Subida de archivo
 uploaded_file = st.sidebar.file_uploader("Sube el archivo Excel (.xlsx)", type=["xlsx"])
 
@@ -53,7 +113,6 @@ if uploaded_file:
                 st.warning("⚠️ No hay datos disponibles en el rango de fechas seleccionado.")
                 st.stop()
 
-
         # Preprocesamiento
         df["Mes"] = df["Fecha"].dt.to_period("M")
         df["Acumulado"] = df["Ganacias/Pérdidas Netas Acumuladas"].fillna(method="ffill")
@@ -61,7 +120,8 @@ if uploaded_file:
         df["Drawdown"] = df["Acumulado"] - df["MaxAcum"]
         df["Capital Acumulado"] = df["Capital Invertido"]
 
-        pagina = st.sidebar.radio("Selecciona la sección", ["📌 KPIs", "📊 Gráficos", "📈 Proyecciones", "⚖️ Comparaciones"])
+        pagina = st.sidebar.radio("Selecciona la sección", 
+                                ["📌 KPIs", "📊 Gráficos", "📈 Proyecciones", "⚖️ Comparaciones"])
 
         def styled_kpi(title, value, bg_color="#ffffff", text_color="#333", tooltip=""):
             st.markdown(f"""
@@ -77,8 +137,6 @@ if uploaded_file:
                 <div style='font-size:28px; font-weight: bold;'>{value}</div>
             </div>
             """, unsafe_allow_html=True)
-
-
 
         if pagina == "📌 KPIs":
             st.title("📌 Indicadores Clave de Desempeño (KPIs)")
@@ -190,7 +248,7 @@ if uploaded_file:
             )
             st.plotly_chart(fig1, use_container_width=True)
 
-            # ✅ Nuevo gráfico: Ganancia Bruta Mensual
+            # Gráfico: Ganancia Bruta Mensual
             ganancia_bruta_mensual = df.groupby(df["Fecha"].dt.to_period("M"))["Ganacias/Pérdidas Brutas"].sum().reset_index()
             ganancia_bruta_mensual["Fecha"] = ganancia_bruta_mensual["Fecha"].astype(str)
             fig2 = px.bar(
@@ -202,7 +260,7 @@ if uploaded_file:
             )
             st.plotly_chart(fig2, use_container_width=True)
 
-            # ✅ Modificado: Comisiones usando columna "Comisiones 10 %" y formato hover
+            # Gráfico: Comisiones
             comisiones_mensuales = df.groupby(df["Fecha"].dt.to_period("M"))["Comisiones 10 %"].sum().reset_index()
             comisiones_mensuales["Fecha"] = comisiones_mensuales["Fecha"].astype(str)
             fig4 = px.bar(
@@ -212,13 +270,13 @@ if uploaded_file:
                 title="Comisiones Mensuales (10%)",
                 template="plotly_white"
             )
-            fig4.update_traces(hovertemplate='Fecha: %{x}<br>Comisión: %{y:.1f}')  # ✅ Formato a 1 decimal
+            fig4.update_traces(hovertemplate='Fecha: %{x}<br>Comisión: %{y:.1f}')
             st.plotly_chart(fig4, use_container_width=True)
 
-            # ✅ Rentabilidad mensual ajustada a porcentaje real
+            # Gráfico: Rentabilidad mensual
             rentabilidad = df.groupby("Mes")["Beneficio en %"].mean().reset_index()
             rentabilidad["Mes"] = rentabilidad["Mes"].astype(str)
-            rentabilidad["Beneficio en %"] *= 100  # ✅ Convertir a porcentaje real
+            rentabilidad["Beneficio en %"] *= 100
 
             fig6 = px.bar(
                 rentabilidad,
@@ -228,7 +286,6 @@ if uploaded_file:
                 template="plotly_white"
             )
             st.plotly_chart(fig6, use_container_width=True)
-
 
         elif pagina == "📈 Proyecciones":
             st.title("📈 Proyección de Inversión Personalizada")
@@ -248,7 +305,6 @@ if uploaded_file:
             df_proy = pd.DataFrame({"Mes": list(range(meses_proyeccion + 1)), "Proyección": proyeccion})
 
             st.markdown("---")
-            col1, _ = st.columns(2)
             col1, col2, col3 = st.columns(3)
             with col1:
                 styled_kpi("💼 Capital Inicial Proyectado", f"${capital_proyectado:,.2f}", "#E8F0FE")
@@ -268,28 +324,28 @@ if uploaded_file:
             from io import BytesIO
             output = BytesIO()
             with pd.ExcelWriter(output, engine='openpyxl') as writer:
-              resumen = pd.DataFrame({
-                    "Descripción": [
-                    "Capital Actual",
-                    "% Aumento",
-                    "Capital Proyectado",
-                    "% Beneficio Mensual",
-                    "Meses de Proyección",
-                    "Valor Final Estimado",
-                    "Capital Compuesto Anual"
-                ],
-                "Valor": [
-                    capital_actual,
-                    f"{aumento_opcion}%",
-                    capital_proyectado,
-                    f"{beneficio_mensual}%",
-                    meses_proyeccion,
-                    proyeccion[-1],
-                    capital_proyectado * ((1 + beneficio_mensual / 100) ** 12)
-                ]
-              })
-              resumen.to_excel(writer, index=False, sheet_name="Resumen")
-              df_proy.to_excel(writer, index=False, sheet_name="Proyección")
+                resumen = pd.DataFrame({
+                        "Descripción": [
+                        "Capital Actual",
+                        "% Aumento",
+                        "Capital Proyectado",
+                        "% Beneficio Mensual",
+                        "Meses de Proyección",
+                        "Valor Final Estimado",
+                        "Capital Compuesto Anual"
+                    ],
+                    "Valor": [
+                        capital_actual,
+                        f"{aumento_opcion}%",
+                        capital_proyectado,
+                        f"{beneficio_mensual}%",
+                        meses_proyeccion,
+                        proyeccion[-1],
+                        capital_proyectado * ((1 + beneficio_mensual / 100) ** 12)
+                    ]
+                })
+                resumen.to_excel(writer, index=False, sheet_name="Resumen")
+                df_proy.to_excel(writer, index=False, sheet_name="Proyección")
             excel_data = output.getvalue()
             st.download_button("📥 Descargar proyección en Excel", data=excel_data, file_name="proyeccion.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
@@ -310,7 +366,7 @@ if uploaded_file:
                 "Beneficio en %": "mean"
             }).reset_index().sort_values("MesOrden")
 
-            # ✅ Convertir la rentabilidad a porcentaje real
+            # Convertir la rentabilidad a porcentaje real
             comparacion_anual["Beneficio en %"] *= 100
 
             # 📈 Rentabilidad Promedio Mensual por Año
@@ -405,15 +461,6 @@ if uploaded_file:
         st.error(f"❌ Error al procesar el archivo: {e}")
 else:
     st.info("📂 Por favor, sube un archivo Excel desde la barra lateral para comenzar.")
-
-
-
-
-
-    
-
-
-
 
 
 
