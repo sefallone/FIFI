@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
-from plotly.graph_objs import Scatter
 from datetime import datetime
 from PIL import Image
 import base64
@@ -41,7 +40,7 @@ def check_password():
                 st.session_state["authenticated"] = True
                 st.session_state["username"] = username
                 st.success(f"Bienvenido, {username}!")
-                st.experimental_rerun()
+                st.rerun()  # Cambiado de experimental_rerun() a rerun()
             else:
                 st.error("Credenciales incorrectas")
         except Exception as e:
@@ -66,7 +65,7 @@ with st.sidebar:
     st.markdown(f"### 👤 Usuario: **{st.session_state['username']}**")
     if st.button("🚪 Cerrar sesión"):
         st.session_state["authenticated"] = False
-        st.experimental_rerun()
+        st.rerun()
 
 # Logo en página principal
 try:
@@ -461,6 +460,7 @@ if uploaded_file:
         st.error(f"❌ Error al procesar el archivo: {e}")
 else:
     st.info("📂 Por favor, sube un archivo Excel desde la barra lateral para comenzar.")
+
 
 
 
