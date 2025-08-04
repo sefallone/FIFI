@@ -142,7 +142,7 @@ except Exception as e:
 # =============================================================================
 # 📌 SECCIÓN DE KPIs
 # =============================================================================
-def styled_kpi(title, value, bg_color="#325EB8", text_color="#10141C", tooltip=""):
+def styled_kpi(title, value, bg_color="#45403D", text_color="#10141C", tooltip=""):
     
     st.markdown(f"""
     <div title="{tooltip}" style="
@@ -548,6 +548,7 @@ elif pagina == "📈 Proyecciones":
     show_projections()
 elif pagina == "⚖️ Comparaciones":
     show_comparisons()
+
 
 
 
