@@ -142,7 +142,7 @@ except Exception as e:
 # =============================================================================
 # 📌 SECCIÓN DE KPIs
 # =============================================================================
-def styled_kpi(title, value, bg_color="#45403D", text_color="#10141C", tooltip=""):
+def styled_kpi(title, value, bg_color="#45403D", text_color="#DDE2ED", tooltip=""):
     
     st.markdown(f"""
     <div title="{tooltip}" style="
@@ -361,10 +361,10 @@ def show_projections():
     df_proy = pd.DataFrame({"Mes": list(range(meses_proyeccion + 1)), "Proyección": proyeccion})
 
     st.markdown("---")
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
     with col1: styled_kpi("💼 Capital Inicial Proyectado", f"${capital_proyectado:,.2f}", "#E8F0FE")
     with col2: styled_kpi("📈 Valor Estimado Final", f"${proyeccion[-1]:,.2f}", "#E6F4EA")
-    with col3: styled_kpi("📈 Capital Compuesto Anual", f"${capital_proyectado * ((1 + beneficio_mensual / 100) ** 12):,.2f}", "#F0F4C3")
+    #with col3: styled_kpi("📈 Capital Compuesto Anual", f"${capital_proyectado * ((1 + beneficio_mensual / 100) ** 12):,.2f}", "#F0F4C3")
 
     fig = px.line(df_proy, x="Mes", y="Proyección", title="Proyección de Crecimiento de Capital", template="plotly_white")
     st.plotly_chart(fig, use_container_width=True)
@@ -548,6 +548,7 @@ elif pagina == "📈 Proyecciones":
     show_projections()
 elif pagina == "⚖️ Comparaciones":
     show_comparisons()
+
 
 
 
