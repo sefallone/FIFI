@@ -118,7 +118,9 @@ def load_user_data(file_path):
         
         df = df.dropna(subset=["Fecha"])
         df["Fecha"] = pd.to_datetime(df["Fecha"], errors="coerce")
+        df["Mes"] = df["Fecha"].dt.to_period("M")
         return df.sort_values("Fecha")
+        
     except Exception as e:
         st.error(f"Error al cargar datos: {str(e)}")
         st.stop()
@@ -156,51 +158,113 @@ def styled_kpi(title, value, bg_color="#ffffff", text_color="#333", tooltip=""):
     """, unsafe_allow_html=True)
 
 def show_kpis():
+    """Muestra los KPIs financieros con validación robusta de datos."""
+    
     st.title("📌 Indicadores Clave de Desempeño (KPIs)")
     st.markdown("---")
 
-    capital_invertido = df["Capital Invertido"].dropna().iloc[-1]
-    capital_inicial = df["Aumento Capital"].dropna().iloc[0]
-    inyeccion_total = df["Aumento Capital"].sum(skipna=True)
-    inversionista = df["ID Inv"].dropna().iloc[0]
-    total_retiros = df["Retiro de Fondos"].sum(skipna=True)
-    ganancia_bruta = df["Ganacias/Pérdidas Brutas"].sum(skipna=True)
-    ganancia_neta = df["Ganacias/Pérdidas Netas"].sum(skipna=True)
-    comisiones = df["Comisiones Pagadas"].dropna().iloc[-1]
-    fecha_ingreso = df["Fecha"].dropna().iloc[0].date()
+    # =========================================================================
+    # 🔍 VALIDACIÓN DE COLUMNAS REQUERIDAS
+    # =========================================================================
+    required_columns = {
+        "Fecha": "datetime",
+        "Capital Invertido": "numeric",
+        "Aumento Capital": "numeric",
+        "ID Inv": "any",
+        "Retiro de Fondos": "numeric",
+        "Ganacias/Pérdidas Brutas": "numeric",
+        "Ganacias/Pérdidas Netas": "numeric",
+        "Comisiones Pagadas": "numeric",
+        "Ganacias/Pérdidas Netas Acumuladas": "numeric",
+        "Beneficio en %": "numeric"
+    }
 
-    capital_base = capital_invertido - total_retiros
-    roi = ganancia_neta / capital_base if capital_base > 0 else 0
+    missing_cols = [col for col in required_columns if col not in df.columns]
+    if missing_cols:
+        st.error(f"❌ Columnas faltantes en el archivo: {', '.join(missing_cols)}")
+        st.stop()
 
-    monthly_returns = df.groupby("Mes")["Ganacias/Pérdidas Netas"].sum()
-    monthly_avg_return_pct = monthly_returns.pct_change().mean()
+    # =========================================================================
+    # 📊 CÁLCULO DE KPIs
+    # =========================================================================
+    try:
+        # Preprocesamiento esencial
+        df["Mes"] = df["Fecha"].dt.to_period("M")
+        df["Acumulado"] = df["Ganacias/Pérdidas Netas Acumuladas"].fillna(method="ffill")
+        df["MaxAcum"] = df["Acumulado"].cummax()
+        df["Drawdown"] = df["Acumulado"] - df["MaxAcum"]
 
-    months = (df["Fecha"].max() - df["Fecha"].min()).days / 30.0
-    cagr_mensual = (1 + roi) ** (1 / months) - 1 if months > 0 else 0
+        # Datos básicos
+        capital_invertido = df["Capital Invertido"].dropna().iloc[-1]
+        capital_inicial = df["Aumento Capital"].dropna().iloc[0]
+        inyeccion_total = df["Aumento Capital"].sum(skipna=True)
+        inversionista = df["ID Inv"].dropna().iloc[0]
+        total_retiros = df["Retiro de Fondos"].sum(skipna=True)
+        ganancia_bruta = df["Ganacias/Pérdidas Brutas"].sum(skipna=True)
+        ganancia_neta = df["Ganacias/Pérdidas Netas"].sum(skipna=True)
+        comisiones = df["Comisiones Pagadas"].sum(skipna=True)
+        fecha_ingreso = df["Fecha"].dropna().iloc[0].date()
 
-    max_drawdown = df["Drawdown"].min()
+        # Cálculos avanzados
+        capital_base = capital_invertido - total_retiros
+        roi = (ganancia_neta / capital_base) if capital_base > 0 else 0
+        
+        monthly_returns = df.groupby("Mes")["Ganacias/Pérdidas Netas"].sum()
+        monthly_avg_return_pct = monthly_returns.pct_change().mean() if not monthly_returns.empty else 0
+        
+        months_active = (df["Fecha"].max() - df["Fecha"].min()).days / 30.44
+        cagr_mensual = ((1 + roi) ** (1 / months_active) - 1) if months_active > 0 else 0
+        
+        max_drawdown = df["Drawdown"].min()
+        mejor_mes = df.loc[df["Beneficio en %"].idxmax()]["Mes"] if not df.empty else "N/A"
+        peor_mes = df.loc[df["Beneficio en %"].idxmin()]["Mes"] if not df.empty else "N/A"
 
-    # Mostrar KPIs
-    col1, col2, col3, col4 = st.columns(4)
-    with col1: styled_kpi("🧑 Inversionista", f"{inversionista}", "#D7F9F1", tooltip="ID del inversionista.")
-    with col2: styled_kpi("💼 Capital Inicial", f"${capital_inicial:,.2f}", "#E8F0FE", tooltip="Capital Inicial Invertido.")
-    with col3: styled_kpi("💰 Capital Invertido", f"${capital_invertido:,.2f}", "#E6F4EA", tooltip="Capital Actual invertido'.")
-    with col4: styled_kpi("💵 Inyección Capital Total", f"${inyeccion_total:,.2f}", "#FFF9E5", tooltip="Capital Total Inyectado.")
+        # =========================================================================
+        # 🎨 VISUALIZACIÓN DE KPIs
+        # =========================================================================
+        col1, col2, col3, col4 = st.columns(4)
+        with col1: 
+            styled_kpi("🧑 Inversionista", f"{inversionista}", "#D7F9F1", "ID del inversionista")
+        with col2: 
+            styled_kpi("💼 Capital Inicial", f"${capital_inicial:,.2f}", "#E8F0FE", "Capital inicial invertido")
+        with col3: 
+            styled_kpi("💰 Capital Actual", f"${capital_invertido:,.2f}", "#E6F4EA", "Capital actual en cartera")
+        with col4: 
+            styled_kpi("💵 Inyección Total", f"${inyeccion_total:,.2f}", "#FFF9E5", "Total de aportes realizados")
 
-    col5, col6, col7, col8 = st.columns(4)
-    with col5: styled_kpi("💸 Retiros", f"${total_retiros:,.2f}", "#FFE5EC", tooltip="Total de los retiros de fondos.")
-    with col6: styled_kpi("📉 Ganancia Bruta", f"${ganancia_bruta:,.2f}", "#F0F4C3", tooltip="Ganancias antes de deducir comisiones.")
-    with col7: styled_kpi("📈 Ganancia Neta", f"${ganancia_neta:,.2f}", "#E1F5FE", tooltip="Ganancias luego de deducir comisiones.")
-    with col8: styled_kpi("🧾 Comisiones Pagadas", f"${comisiones:,.2f}", "#F3E5F5", tooltip="Valor acumulado de comisiones pagadas.")
+        col5, col6, col7, col8 = st.columns(4)
+        with col5: 
+            styled_kpi("💸 Retiros Totales", f"${total_retiros:,.2f}", "#FFE5EC", "Total retirado de la inversión")
+        with col6: 
+            styled_kpi("📉 Ganancia Bruta", f"${ganancia_bruta:,.2f}", "#F0F4C3", "Ganancias antes de comisiones")
+        with col7: 
+            styled_kpi("📈 Ganancia Neta", f"${ganancia_neta:,.2f}", "#E1F5FE", "Ganancias después de comisiones")
+        with col8: 
+            styled_kpi("🧾 Comisiones", f"${comisiones:,.2f}", "#F3E5F5", "Total en comisiones pagadas")
 
-    col9, col10, col11 = st.columns(3)
-    with col9: styled_kpi("📅 Fecha Ingreso", f"{fecha_ingreso.strftime('%d/%m/%Y')}", "#FFEBEE", tooltip="Fecha de Ingreso al Fondo.")
-    with col10: styled_kpi("📊 ROI Total", f"{roi:.2%}", "#DDEBF7", tooltip="Retorno total sobre el capital neto invertido.")
-    with col11: styled_kpi("📈 CAGR Mensual", f"{cagr_mensual:.2%}", "#F0F0F0", tooltip="Tasa de crecimiento promedio mensual compuesto.")
+        col9, col10, col11 = st.columns(3)
+        with col9: 
+            styled_kpi("📅 Fecha Ingreso", fecha_ingreso.strftime("%d/%m/%Y"), "#FFEBEE", "Fecha de inicio de inversión")
+        with col10: 
+            styled_kpi("📊 ROI Total", f"{roi:.2%}", "#DDEBF7", "Retorno total sobre la inversión")
+        with col11: 
+            styled_kpi("🚀 CAGR Mensual", f"{cagr_mensual:.2%}", "#F0F0F0", "Tasa de crecimiento anualizada")
 
-    st.markdown("---")
-    styled_kpi("📆 Rentabilidad Promedio Mensual", f"{monthly_avg_return_pct:.2%}", "#F1F8E9", tooltip="Promedio mensual de retornos netos relativos.")
+        st.markdown("---")
+        
+        col12, col13, col14 = st.columns(3)
+        with col12:
+            styled_kpi("📆 Rentabilidad Prom.", f"{monthly_avg_return_pct:.2%}", "#F1F8E9", "Rentabilidad mensual promedio")
+        with col13:
+            styled_kpi("📉 Máximo Drawdown", f"${max_drawdown:,.2f}", "#FFCDD2", "Peor pérdida acumulada")
+        with col14:
+            styled_kpi("📅 Mejor Mes", f"{mejor_mes}", "#C8E6C9", "Mes con mayor rentabilidad")
 
+        st.markdown("---")
+        
+    except Exception as e:
+        st.error(f"❌ Error al calcular KPIs: {str(e)}")
+        st.stop()
 # =============================================================================
 # 📊 SECCIÓN DE GRÁFICOS
 # =============================================================================
@@ -448,6 +512,7 @@ elif pagina == "📈 Proyecciones":
     show_projections()
 elif pagina == "⚖️ Comparaciones":
     show_comparisons()
+
 
 
 
