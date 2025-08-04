@@ -362,9 +362,9 @@ def show_projections():
 
     st.markdown("---")
     col1, col2 = st.columns(2)
-    with col1: styled_kpi("💼 Capital Inicial Proyectado", f"${capital_proyectado:,.2f}", "#E8F0FE")
-    with col2: styled_kpi("📈 Valor Estimado Final", f"${proyeccion[-1]:,.2f}", "#E6F4EA")
-    #with col3: styled_kpi("📈 Capital Compuesto Anual", f"${capital_proyectado * ((1 + beneficio_mensual / 100) ** 12):,.2f}", "#F0F4C3")
+    with col1: styled_kpi("💼 Capital Inicial Proyectado", f"${capital_proyectado:,.2f}", "#276CF5")
+    with col2: styled_kpi("📈 Valor Estimado Final", f"${proyeccion[-1]:,.2f}", "#276CF5")
+    #with col3: styled_kpi("📈 Capital Compuesto Anual", f"${capital_proyectado * ((1 + beneficio_mensual / 100) ** 12):,.2f}", "#276CF5")
 
     fig = px.line(df_proy, x="Mes", y="Proyección", title="Proyección de Crecimiento de Capital", template="plotly_white")
     st.plotly_chart(fig, use_container_width=True)
@@ -548,6 +548,7 @@ elif pagina == "📈 Proyecciones":
     show_projections()
 elif pagina == "⚖️ Comparaciones":
     show_comparisons()
+
 
 
 
