@@ -210,7 +210,7 @@ def show_kpis():
         roi = (ganancia_neta / capital_base) if capital_base > 0 else 0
         
         monthly_returns = df.groupby("Mes")["Ganacias/Pérdidas Netas"].sum()
-        monthly_avg_return_pct = monthly_returns.pct_change().mean() if not monthly_returns.empty else 0
+        monthly_avg_return_pct = (df["Beneficio en %"].sum(skipna=True) / len(df["Beneficio en %"]))
         
         months_active = (df["Fecha"].max() - df["Fecha"].min()).days / 30.44
         cagr_mensual = ((1 + roi) ** (1 / months_active) - 1) if months_active > 0 else 0
@@ -548,6 +548,7 @@ elif pagina == "📈 Proyecciones":
     show_projections()
 elif pagina == "⚖️ Comparaciones":
     show_comparisons()
+
 
 
 
