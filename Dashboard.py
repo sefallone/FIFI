@@ -143,17 +143,38 @@ except Exception as e:
 # 📌 SECCIÓN DE KPIs
 # =============================================================================
 def styled_kpi(title, value, bg_color="#325EB8", text_color="#10141C", tooltip=""):
+    
     st.markdown(f"""
-    <div title="{tooltip}" style="
+    <div style="
+        position: relative;
         background-color: {bg_color};
         color: {text_color};
         padding: 20px;
         border-radius: 15px;
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         text-align: center;
-        margin-bottom: 15px;">
+        margin-bottom: 15px;"
+        onmouseover="this.querySelector('.tooltip').style.display='block'"
+        onmouseout="this.querySelector('.tooltip').style.display='none'">
+        
         <div style='font-size:18px; font-weight: 600;'>{title}</div>
         <div style='font-size:28px; font-weight: bold;'>{value}</div>
+        
+        <div class="tooltip" style="
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            white-space: nowrap;
+            z-index: 100;">
+            {tooltip}
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -162,6 +183,29 @@ def show_kpis():
     
     st.title("📌 Indicadores Clave de Desempeño (KPIs)")
     st.markdown("---")
+
+    st.markdown("""
+    <style>
+        .tooltip {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            white-space: nowrap;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        div:hover .tooltip {
+            display: block !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
 
     # =========================================================================
     # 🔍 VALIDACIÓN DE COLUMNAS REQUERIDAS
@@ -548,6 +592,7 @@ elif pagina == "📈 Proyecciones":
     show_projections()
 elif pagina == "⚖️ Comparaciones":
     show_comparisons()
+
 
 
 
