@@ -412,89 +412,125 @@ def show_projections():
 # =============================================================================
 def show_comparisons():
     st.title("⚖️ Comparaciones por Año")
+    
+    try:
+        # Verificar y crear columnas necesarias
+        if 'Fecha' not in df.columns:
+            st.error("La columna 'Fecha' no existe en los datos")
+            st.stop()
+            
+        # Crear columnas de año y mes si no existen
+        df['Año'] = df['Fecha'].dt.year
+        df['MesNombre'] = df['Fecha'].dt.strftime('%b')
+        df['MesOrden'] = df['Fecha'].dt.month
+        
+        # Asegurar que existe la columna Drawdown
+        if 'Drawdown' not in df.columns:
+            if 'Ganacias/Pérdidas Netas Acumuladas' in df.columns:
+                df['Acumulado'] = df['Ganacias/Pérdidas Netas Acumuladas'].fillna(method='ffill')
+                df['MaxAcum'] = df['Acumulado'].cummax()
+                df['Drawdown'] = df['Acumulado'] - df['MaxAcum']
+            else:
+                st.error("No se puede calcular Drawdown: faltan columnas necesarias")
+                st.stop()
 
-    df['Año'] = df['Fecha'].dt.year
-    df['MesNombre'] = df['Fecha'].dt.strftime('%b')
-    df['MesOrden'] = df['Fecha'].dt.month
+        # Selección de años
+        años_disponibles = sorted(df['Año'].unique().tolist())
+        if not años_disponibles:
+            st.warning("No hay datos de años disponibles para comparar")
+            st.stop()
+            
+        años_seleccionados = st.multiselect(
+            "Selecciona los años a comparar",
+            años_disponibles,
+            default=años_disponibles[-2:] if len(años_disponibles) > 1 else años_disponibles
+        )
+        
+        if not años_seleccionados:
+            st.warning("Por favor selecciona al menos un año")
+            st.stop()
 
-    años_disponibles = df['Año'].dropna().unique().tolist()
-    años_seleccionados = st.multiselect(
-        "Selecciona los años a comparar",
-        sorted(años_disponibles),
-        default=sorted(años_disponibles)
-    )
+        # Gráfico 1: Rentabilidad Promedio Mensual
+        st.markdown("### 📈 Rentabilidad Promedio Mensual (%)")
+        
+        # Calcular rentabilidad mensual
+        if 'Beneficio en %' not in df.columns:
+            st.error("Columna 'Beneficio en %' no encontrada")
+            st.stop()
+            
+        comparacion_anual = df[df['Año'].isin(años_seleccionados)].groupby(
+            ['Año', 'MesNombre', 'MesOrden']).agg({
+                'Beneficio en %': 'mean'
+            }).reset_index().sort_values(['Año', 'MesOrden'])
+        
+        comparacion_anual["Beneficio en %"] *= 100  # Convertir a porcentaje
 
-    comparacion_anual = df[df['Año'].isin(años_seleccionados)].groupby(
-        ['Año', 'MesNombre', 'MesOrden']).agg({
-            "Ganacias/Pérdidas Brutas": "sum",
-            "Ganacias/Pérdidas Netas": "sum",
-            "Comisiones Pagadas": "sum",
-            "Beneficio en %": "mean"
-        }).reset_index().sort_values("MesOrden")
+        fig_rentabilidad = px.line(
+            comparacion_anual,
+            x="MesNombre",
+            y="Beneficio en %",
+            color="Año",
+            title="Rentabilidad Promedio Mensual por Año",
+            template="plotly_white",
+            category_orders={"MesNombre": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+                                         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]}
+        )
+        fig_rentabilidad.update_traces(
+            mode="lines+markers+text",
+            text=comparacion_anual["Beneficio en %"].round(1),
+            textposition="top center",
+            hovertemplate='Mes: %{x}<br>Rentabilidad: %{y:.1f}%'
+        )
+        fig_rentabilidad.update_layout(yaxis_title="Rentabilidad (%)")
+        st.plotly_chart(fig_rentabilidad, use_container_width=True)
+        st.markdown("---")
 
-    comparacion_anual["Beneficio en %"] *= 100
+        # Gráfico 2: Ganancia Neta Anual
+        st.markdown("### 📊 Ganancia Neta Anual")
+        ganancia_anual = df[df['Año'].isin(años_seleccionados)].groupby("Año").agg({
+            'Ganacias/Pérdidas Netas': 'sum'
+        }).reset_index()
 
-    # Gráfico 1: Rentabilidad Promedio Mensual
-    st.markdown("### 📈 Rentabilidad Promedio Mensual (%)")
-    fig_cmp3 = px.line(
-        comparacion_anual,
-        x="MesNombre",
-        y="Beneficio en %",
-        color="Año",
-        title="Rentabilidad Promedio Mensual por Año",
-        template="plotly_white"
-    )
-    fig_cmp3.update_traces(
-        mode="lines+markers+text",
-        text=comparacion_anual["Beneficio en %"].round(1),
-        textposition="top center",
-        hovertemplate='Mes: %{x}<br>Rentabilidad: %{y:.1f}%'
-    )
-    fig_cmp3.update_layout(yaxis_title="Rentabilidad (%)")
-    st.plotly_chart(fig_cmp3, use_container_width=True)
-    st.markdown("---")
+        fig_ganancia = px.bar(
+            ganancia_anual,
+            x="Año",
+            y="Ganacias/Pérdidas Netas",
+            title="Ganancia Neta Anual",
+            template="plotly_white",
+            text_auto='.2s'
+        )
+        fig_ganancia.update_traces(
+            marker_color='#4CAF50',
+            hovertemplate='Año: %{x}<br>Ganancia: %{y:,.2f} USD'
+        )
+        fig_ganancia.update_layout(yaxis_tickformat=",", yaxis_title="Ganancia Neta (USD)")
+        st.plotly_chart(fig_ganancia, use_container_width=True)
+        st.markdown("---")
 
-    # Gráfico 2: Ganancia Neta Total por Año
-    st.markdown("### 📊 Ganancia Neta Total por Año")
-    ganancia_anual = df[df['Año'].isin(años_seleccionados)].groupby("Año")["Ganacias/Pérdidas Netas"].sum().reset_index()
+        # Gráfico 3: Drawdown Máximo Anual
+        st.markdown("### 📉 Drawdown Máximo Anual")
+        drawdown_anual = df[df['Año'].isin(años_seleccionados)].groupby("Año").agg({
+            'Drawdown': 'min'
+        }).reset_index()
 
-    fig_gan_anual = px.bar(
-        ganancia_anual,
-        x="Año",
-        y="Ganacias/Pérdidas Netas",
-        title="Ganancia Neta Total por Año",
-        template="plotly_white"
-    )
-    fig_gan_anual.update_traces(
-        texttemplate='%{y:,.2f}',
-        textposition='outside',
-        marker_color='green',
-        hovertemplate='Año: %{x}<br>Ganancia: %{y:,.2f} USD'
-    )
-    fig_gan_anual.update_layout(yaxis_tickformat=",", yaxis_title="Ganancia Neta (USD)")
-    st.plotly_chart(fig_gan_anual, use_container_width=True)
-    st.markdown("---")
+        fig_drawdown = px.bar(
+            drawdown_anual,
+            x="Año",
+            y="Drawdown",
+            title="Drawdown Máximo Anual",
+            template="plotly_white",
+            text_auto='.2s'
+        )
+        fig_drawdown.update_traces(
+            marker_color='#F44336',
+            hovertemplate='Año: %{x}<br>Drawdown: %{y:,.2f} USD'
+        )
+        fig_drawdown.update_layout(yaxis_title="Drawdown (USD)")
+        st.plotly_chart(fig_drawdown, use_container_width=True)
 
-    # Gráfico 3: Drawdown Máximo por Año
-    st.markdown("### 📉 Drawdown Máximo por Año")
-    drawdown_anual = df[df['Año'].isin(años_seleccionados)].groupby("Año")["Drawdown"].min().reset_index()
-
-    fig_drawdown = px.line(
-        drawdown_anual,
-        x="Año",
-        y="Drawdown",
-        title="Drawdown Máximo por Año",
-        template="plotly_white"
-    )
-    fig_drawdown.update_traces(
-        mode="lines+markers+text",
-        line_color='red',
-        text=drawdown_anual["Drawdown"].round(2),
-        textposition="top center",
-        hovertemplate='Año: %{x}<br>Drawdown: %{y:,.2f} USD'
-    )
-    fig_drawdown.update_layout(yaxis_title="Drawdown ($)")
-    st.plotly_chart(fig_drawdown, use_container_width=True)
+    except Exception as e:
+        st.error(f"Error al generar comparaciones: {str(e)}")
+        st.stop()
 
 # =============================================================================
 # 🏁 MENÚ PRINCIPAL
@@ -512,6 +548,7 @@ elif pagina == "📈 Proyecciones":
     show_projections()
 elif pagina == "⚖️ Comparaciones":
     show_comparisons()
+
 
 
 
