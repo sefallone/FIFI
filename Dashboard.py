@@ -224,41 +224,41 @@ def show_kpis():
         # =========================================================================
         col1, col2, col3, col4 = st.columns(4)
         with col1: 
-            styled_kpi("🧑 Inversionista", f"{inversionista}", "#276CF5", "ID del inversionista")
+            styled_kpi("🧑 Inversionista", f"{inversionista}", "#276CF5", tooltip="ID del inversionista")
         with col2: 
             styled_kpi("💼 Capital Inicial", f"${capital_inicial:,.2f}", "#276CF5", tooltip="Capital inicial invertido")
         with col3: 
-            styled_kpi("💰 Capital Actual", f"${capital_invertido:,.2f}", "#276CF5", "Capital actual en cartera")
+            styled_kpi("💰 Capital Actual", f"${capital_invertido:,.2f}", "#276CF5", tooltip="Capital actual en cartera")
         with col4: 
-            styled_kpi("💵 Inyección Total", f"${inyeccion_total:,.2f}", "#276CF5", "Total de aportes realizados")
+            styled_kpi("💵 Inyección Total", f"${inyeccion_total:,.2f}", "#276CF5", tooltip="Total de aportes realizados")
 
         col5, col6, col7, col8 = st.columns(4)
         with col5: 
-            styled_kpi("💸 Retiros Totales", f"${total_retiros:,.2f}", "#276CF5", "Total retirado de la inversión")
+            styled_kpi("💸 Retiros Totales", f"${total_retiros:,.2f}", "#276CF5", tooltip="Total retirado de la inversión")
         with col6: 
-            styled_kpi("📉 Ganancia Bruta", f"${ganancia_bruta:,.2f}", "#276CF5", "Ganancias antes de comisiones")
+            styled_kpi("📉 Ganancia Bruta", f"${ganancia_bruta:,.2f}", "#276CF5", tooltip="Ganancias antes de comisiones")
         with col7: 
-            styled_kpi("📈 Ganancia Neta", f"${ganancia_neta:,.2f}", "#276CF5", "Ganancias después de comisiones")
+            styled_kpi("📈 Ganancia Neta", f"${ganancia_neta:,.2f}", "#276CF5", tooltip="Ganancias después de comisiones")
         with col8: 
-            styled_kpi("🧾 Comisiones", f"${comisiones:,.2f}", "#276CF5", "Total en comisiones pagadas")
+            styled_kpi("🧾 Comisiones", f"${comisiones:,.2f}", "#276CF5", tooltip="Total en comisiones pagadas")
 
         col9, col10, col11 = st.columns(3)
         with col9: 
-            styled_kpi("📅 Fecha Ingreso", fecha_ingreso.strftime("%d/%m/%Y"), "#276CF5", "Fecha de inicio de inversión")
+            styled_kpi("📅 Fecha Ingreso", fecha_ingreso.strftime("%d/%m/%Y"), "#276CF5", tooltip="Fecha de inicio de inversión")
         with col10: 
-            styled_kpi("📊 ROI Total", f"{roi:.2%}", "#276CF5", "Retorno total sobre la inversión")
+            styled_kpi("📊 ROI Total", f"{roi:.2%}", "#276CF5", tooltip="Retorno total sobre la inversión")
         with col11: 
-            styled_kpi("🚀 CAGR Mensual", f"{cagr_mensual:.2%}", "#276CF5", "Tasa de crecimiento anualizada")
+            styled_kpi("🚀 CAGR Mensual", f"{cagr_mensual:.2%}", "#276CF5", tooltip="Tasa de crecimiento anualizada")
 
         st.markdown("---")
         
         col12, col13, col14 = st.columns(3)
         with col12:
-            styled_kpi("📆 Rentabilidad Prom.", f"{monthly_avg_return_pct:.2%}", "#276CF5", "Rentabilidad mensual promedio")
+            styled_kpi("📆 Rentabilidad Prom.", f"{monthly_avg_return_pct:.2%}", "#276CF5", tooltip="Rentabilidad mensual promedio")
         with col13:
-            styled_kpi("📉 Máximo Drawdown", f"${max_drawdown:,.2f}", "#276CF5", "Peor pérdida acumulada")
+            styled_kpi("📉 Máximo Drawdown", f"${max_drawdown:,.2f}", "#276CF5", tooltip="Peor pérdida acumulada")
         with col14:
-            styled_kpi("📅 Mejor Mes", f"{mejor_mes}", "#276CF5", "Mes con mayor rentabilidad")
+            styled_kpi("📅 Mejor Mes", f"{mejor_mes}", "#276CF5", tooltip="Mes con mayor rentabilidad en %")
 
         st.markdown("---")
         
@@ -548,6 +548,7 @@ elif pagina == "📈 Proyecciones":
     show_projections()
 elif pagina == "⚖️ Comparaciones":
     show_comparisons()
+
 
 
 
