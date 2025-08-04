@@ -226,7 +226,7 @@ def show_kpis():
         with col1: 
             styled_kpi("🧑 Inversionista", f"{inversionista}", "#276CF5", "ID del inversionista")
         with col2: 
-            styled_kpi("💼 Capital Inicial", f"${capital_inicial:,.2f}", "#276CF5", "Capital inicial invertido")
+            styled_kpi("💼 Capital Inicial", f"${capital_inicial:,.2f}", "#276CF5", tooltip="Capital inicial invertido")
         with col3: 
             styled_kpi("💰 Capital Actual", f"${capital_invertido:,.2f}", "#276CF5", "Capital actual en cartera")
         with col4: 
@@ -548,6 +548,7 @@ elif pagina == "📈 Proyecciones":
     show_projections()
 elif pagina == "⚖️ Comparaciones":
     show_comparisons()
+
 
 
 
