@@ -202,7 +202,7 @@ def show_kpis():
         total_retiros = df["Retiro de Fondos"].sum(skipna=True)
         ganancia_bruta = df["Ganacias/Pérdidas Brutas"].sum(skipna=True)
         ganancia_neta = df["Ganacias/Pérdidas Netas"].sum(skipna=True)
-        comisiones = df["Comisiones Pagadas"].sum(skipna=True)
+        comisiones = df["Comisiones Pagadas"].iloc[-1]
         fecha_ingreso = df["Fecha"].dropna().iloc[0].date()
 
         # Cálculos avanzados
@@ -512,6 +512,7 @@ elif pagina == "📈 Proyecciones":
     show_projections()
 elif pagina == "⚖️ Comparaciones":
     show_comparisons()
+
 
 
 
