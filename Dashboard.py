@@ -80,7 +80,7 @@ with st.sidebar:
 # Logo
 def load_logo():
     try:
-        logo_path = os.path.join("images", "logo.jpg")
+        logo_path = os.path.join("logo.jpg")
         with open(logo_path, "rb") as f:
             logo_b64 = base64.b64encode(f.read()).decode()
         st.markdown(f"""
@@ -448,6 +448,7 @@ elif pagina == "📈 Proyecciones":
     show_projections()
 elif pagina == "⚖️ Comparaciones":
     show_comparisons()
+
 
 
 
