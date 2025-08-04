@@ -70,10 +70,10 @@ with st.sidebar:
 # Logo
 def load_logo():
     try:
-        logo = Image.open("images/logo.jpg")
+        logo = Image.open("logo.jpg")
         st.markdown(f"""
             <div style='text-align: center;'>
-                <img src='data:image/jpeg;base64,{base64.b64encode(open("images/logo.jpg", "rb").read()).decode()}' 
+                <img src='data:image/jpeg;base64,{base64.b64encode(open("logo.jpg", "rb").read()).decode()}' 
                      style='width:200px;'/>
                 <h3 style='margin-top:10px;'>Fallone Investments</h3>
             </div>
@@ -422,4 +422,5 @@ elif pagina == "📈 Proyecciones":
     show_projections()
 elif pagina == "⚖️ Comparaciones":
     show_comparisons()
+
 
