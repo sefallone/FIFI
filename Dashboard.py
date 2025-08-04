@@ -182,31 +182,7 @@ def show_kpis():
     """Muestra los KPIs financieros con validación robusta de datos."""
     
     st.title("📌 Indicadores Clave de Desempeño (KPIs)")
-    st.markdown("---")
-
-    st.markdown("""
-    <style>
-        .tooltip {
-            display: none;
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #333;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 14px;
-            white-space: nowrap;
-            z-index: 1000;
-            pointer-events: none;
-        }
-        div:hover .tooltip {
-            display: block !important;
-        }
-    </style>
-    """, unsafe_allow_html=True)
-
+    
     # =========================================================================
     # 🔍 VALIDACIÓN DE COLUMNAS REQUERIDAS
     # =========================================================================
@@ -592,6 +568,7 @@ elif pagina == "📈 Proyecciones":
     show_projections()
 elif pagina == "⚖️ Comparaciones":
     show_comparisons()
+
 
 
 
