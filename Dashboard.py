@@ -145,36 +145,16 @@ except Exception as e:
 def styled_kpi(title, value, bg_color="#325EB8", text_color="#10141C", tooltip=""):
     
     st.markdown(f"""
-    <div style="
-        position: relative;
+    <div title="{tooltip}" style="
         background-color: {bg_color};
         color: {text_color};
         padding: 20px;
         border-radius: 15px;
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         text-align: center;
-        margin-bottom: 15px;"
-        onmouseover="this.querySelector('.tooltip').style.display='block'"
-        onmouseout="this.querySelector('.tooltip').style.display='none'">
-        
+        margin-bottom: 15px;">
         <div style='font-size:18px; font-weight: 600;'>{title}</div>
         <div style='font-size:28px; font-weight: bold;'>{value}</div>
-        
-        <div class="tooltip" style="
-            display: none;
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #333;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 14px;
-            white-space: nowrap;
-            z-index: 100;">
-            {tooltip}
-        </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -568,6 +548,7 @@ elif pagina == "📈 Proyecciones":
     show_projections()
 elif pagina == "⚖️ Comparaciones":
     show_comparisons()
+
 
 
 
