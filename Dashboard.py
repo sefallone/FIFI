@@ -143,42 +143,24 @@ except Exception as e:
 # 📌 SECCIÓN DE KPIs
 # =============================================================================
 def styled_kpi(title, value, bg_color="#ffffff", text_color="#333", tooltip=""):
-    """Muestra un KPI con estilo usando componentes nativos de Streamlit"""
-    with st.container():
-        st.markdown(f"""
-        <style>
-            .kpi-container {{
-                background-color: {bg_color};
-                color: {text_color};
-                padding: 20px;
-                border-radius: 15px;
-                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-                text-align: center;
-                margin-bottom: 15px;
-            }}
-            .kpi-title {{
-                font-size: 18px;
-                font-weight: 600;
-            }}
-            .kpi-value {{
-                font-size: 28px;
-                font-weight: bold;
-            }}
-        </style>
-        """, unsafe_allow_html=True)
-        
-        # Usamos st.markdown para el contenedor y st.tooltip para el tooltip
-        with st.tooltip(tooltip):
-            st.markdown(f"""
-            <div class="kpi-container">
-                <div class="kpi-title">{title}</div>
-                <div class="kpi-value">{value}</div>
-            </div>
-            """, unsafe_allow_html=True)
+    """Muestra un KPI con estilo usando markdown y hover text"""
+    st.markdown(f"""
+    <div title="{tooltip}" style="
+        background-color: {bg_color};
+        color: {text_color};
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        text-align: center;
+        margin-bottom: 15px;">
+        <div style='font-size:18px; font-weight: 600;'>{title}</div>
+        <div style='font-size:28px; font-weight: bold;'>{value}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 def show_kpis():
-    """Muestra los KPIs financieros usando componentes nativos"""
+    """Muestra los KPIs financieros con tooltips básicos"""
     
     st.title("📌 Indicadores Clave de Desempeño (KPIs)")
     st.markdown("---")
@@ -270,6 +252,8 @@ def show_kpis():
     except Exception as e:
         st.error(f"Error al calcular KPIs: {str(e)}")
         st.stop()
+
+        
 # =============================================================================
 # 📊 SECCIÓN DE GRÁFICOS
 # =============================================================================
@@ -553,6 +537,7 @@ elif pagina == "📈 Proyecciones":
     show_projections()
 elif pagina == "⚖️ Comparaciones":
     show_comparisons()
+
 
 
 
