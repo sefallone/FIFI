@@ -236,7 +236,7 @@ def show_kpis():
         with col5: 
             styled_kpi("💸 Retiros Totales", f"${total_retiros:,.2f}", "#FFE5EC", "Total retirado de la inversión")
         with col6: 
-            styled_kpi("📉 Ganancia Bruta", f"${ganancia_bruta:,.2f}", "#F0F4C3", "Ganancias antes de comisiones")
+            styled_kpi("📉 Ganancia Bruta", f"${ganancia_bruta:,.2f}", "#10141C", "Ganancias antes de comisiones")
         with col7: 
             styled_kpi("📈 Ganancia Neta", f"${ganancia_neta:,.2f}", "#E1F5FE", "Ganancias después de comisiones")
         with col8: 
@@ -512,6 +512,7 @@ elif pagina == "📈 Proyecciones":
     show_projections()
 elif pagina == "⚖️ Comparaciones":
     show_comparisons()
+
 
 
 
