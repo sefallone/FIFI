@@ -10,10 +10,10 @@ from io import BytesIO
 import os
 
 # =============================================================================
-# 🔐 SISTEMA DE AUTENTICACIÓN
+# 🔐 SISTEMA DE AUTENTICACIÓN MEJORADO
 # =============================================================================
 def check_password():
-    """Autenticación segura con carga automática de archivos por usuario."""
+    """Autenticación segura con manejo mejorado de archivos."""
     
     if st.session_state.get("authenticated"):
         return True
@@ -34,7 +34,17 @@ def check_password():
                 if username in credenciales_validas and credenciales_validas[username] == password:
                     st.session_state["authenticated"] = True
                     st.session_state["username"] = username
-                    st.session_state["archivo_usuario"] = archivos_usuarios[username]
+                    
+                    # Manejo mejorado de rutas de archivos
+                    archivo_usuario = archivos_usuarios[username]
+                    
+                    # Verificar si es una URL o ruta local
+                    if archivo_usuario.startswith(("http://", "https://")):
+                        st.session_state["archivo_usuario"] = archivo_usuario
+                    else:
+                        # Para compatibilidad con Streamlit Cloud
+                        st.session_state["archivo_usuario"] = os.path.join("data", archivo_usuario)
+                    
                     st.rerun()
                 else:
                     st.error("Credenciales incorrectas")
@@ -70,30 +80,41 @@ with st.sidebar:
 # Logo
 def load_logo():
     try:
-        logo = Image.open("logo.jpg")
+        logo_path = os.path.join("images", "logo.jpg")
+        with open(logo_path, "rb") as f:
+            logo_b64 = base64.b64encode(f.read()).decode()
         st.markdown(f"""
             <div style='text-align: center;'>
-                <img src='data:image/jpeg;base64,{base64.b64encode(open("logo.jpg", "rb").read()).decode()}' 
-                     style='width:200px;'/>
+                <img src='data:image/jpeg;base64,{logo_b64}' style='width:200px;'/>
                 <h3 style='margin-top:10px;'>Fallone Investments</h3>
             </div>
             """, unsafe_allow_html=True)
     except FileNotFoundError:
-        st.warning("Logo no encontrado")
+        st.warning("Logo no encontrado en la ruta especificada")
 
 load_logo()
 
 # =============================================================================
-# 📁 CARGA DE DATOS
+# 📁 CARGA DE DATOS MEJORADA
 # =============================================================================
 @st.cache_data(ttl=3600)
 def load_user_data(file_path):
-    """Carga los datos del usuario."""
+    """Carga los datos del usuario con manejo robusto de errores."""
     try:
         if file_path.startswith(("http://", "https://")):
+            # Para archivos remotos
             df = pd.read_excel(file_path, sheet_name="Histórico")
         else:
-            df = pd.read_excel(f"data/{file_path}", sheet_name="Histórico")
+            # Para archivos locales
+            if not os.path.exists(file_path):
+                raise FileNotFoundError(f"No se encontró el archivo: {file_path}")
+            df = pd.read_excel(file_path, sheet_name="Histórico")
+        
+        # Validación básica de datos
+        required_columns = ["Fecha", "Capital Invertido", "Ganacias/Pérdidas Netas"]
+        for col in required_columns:
+            if col not in df.columns:
+                raise ValueError(f"Columna requerida no encontrada: {col}")
         
         df = df.dropna(subset=["Fecha"])
         df["Fecha"] = pd.to_datetime(df["Fecha"], errors="coerce")
@@ -102,13 +123,18 @@ def load_user_data(file_path):
         st.error(f"Error al cargar datos: {str(e)}")
         st.stop()
 
-# Cargar datos
+# Cargar datos con manejo de errores
 try:
-    archivo_usuario = st.session_state["archivo_usuario"]
+    archivo_usuario = st.session_state.get("archivo_usuario", "")
+    if not archivo_usuario:
+        st.error("No se ha configurado archivo para este usuario")
+        st.stop()
+    
     df = load_user_data(archivo_usuario)
     st.sidebar.success(f"Archivo cargado: {os.path.basename(archivo_usuario)}")
-except KeyError:
-    st.error("No se ha configurado archivo para este usuario")
+    
+except Exception as e:
+    st.error(f"Error al cargar datos del usuario: {str(e)}")
     st.stop()
 
 # =============================================================================
@@ -422,5 +448,6 @@ elif pagina == "📈 Proyecciones":
     show_projections()
 elif pagina == "⚖️ Comparaciones":
     show_comparisons()
+
 
 
