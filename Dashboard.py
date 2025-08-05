@@ -207,7 +207,11 @@ def show_kpis():
 
         # Cálculos avanzados
         capital_base = capital_invertido - total_retiros
-        roi = (ganancia_neta / capital_base) if capital_base > 0 else 0
+        capital_base2 = capital_invertido
+        if capital_base > 0:
+            roi = (ganancia_neta / capital_base) 
+        else:
+            roi = (ganancia_neta / capital_base2)
         
         monthly_returns = df.groupby("Mes")["Ganacias/Pérdidas Netas"].sum()
         monthly_avg_return_pct = (df["Beneficio en %"].sum(skipna=True) / len(df["Beneficio en %"]))
@@ -548,6 +552,7 @@ elif pagina == "📈 Proyecciones":
     show_projections()
 elif pagina == "⚖️ Comparaciones":
     show_comparisons()
+
 
 
 
