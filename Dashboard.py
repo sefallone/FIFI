@@ -2,115 +2,385 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
-from datetime import datetime
+import plotly.graph_objects as go
+from datetime import datetime, timedelta
 from PIL import Image
 import base64
-import calendar
-from io import BytesIO
 import os
+import io
+import requests
+from io import BytesIO
+import calendar
 
 # =============================================================================
-# 🔐 SISTEMA DE AUTENTICACIÓN MEJORADO
+# 🎨 CONFIGURACIÓN DE PÁGINA Y ESTILOS
 # =============================================================================
-def check_password():
-    """Autenticación segura con manejo mejorado de archivos."""
+
+st.set_page_config(
+    page_title="FIFI Investment Dashboard",
+    page_icon="🏛️",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# CSS personalizado para diseño premium
+st.markdown("""
+<style>
+    /* Fondo general oscuro premium */
+    .stApp {
+        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+    }
+    
+    /* Sidebar premium */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #0a0a0a 0%, #16213e 100%);
+        border-right: 1px solid rgba(255,215,0,0.1);
+    }
+    
+    [data-testid="stSidebar"] [data-testid="stMarkdown"] {
+        color: #c0c0c0;
+    }
+    
+    /* Tarjetas de KPI premium */
+    .kpi-card {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        border-radius: 20px;
+        padding: 25px;
+        margin: 10px 0;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        border: 1px solid rgba(255,215,0,0.1);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .kpi-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #ffd700, #f7971e);
+    }
+    
+    .kpi-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+        border-color: rgba(255,215,0,0.3);
+    }
+    
+    .kpi-title {
+        color: #c0c0c0;
+        font-size: 14px;
+        font-weight: 500;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+    }
+    
+    .kpi-value {
+        color: #ffffff;
+        font-size: 32px;
+        font-weight: 700;
+        margin: 10px 0 5px 0;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .kpi-sub {
+        color: #ffd700;
+        font-size: 13px;
+        font-weight: 400;
+        margin-top: 8px;
+    }
+    
+    .kpi-icon {
+        font-size: 24px;
+        margin-right: 10px;
+    }
+    
+    /* Header premium */
+    .premium-header {
+        background: linear-gradient(90deg, #1a1a2e 0%, #16213e 50%, #1a1a2e 100%);
+        padding: 25px 30px;
+        border-radius: 15px;
+        border: 1px solid rgba(255,215,0,0.1);
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    
+    .premium-header h1 {
+        color: #ffffff;
+        font-weight: 300;
+        font-size: 36px;
+    }
+    
+    .premium-header h1 span {
+        color: #ffd700;
+        font-weight: 700;
+    }
+    
+    .premium-header p {
+        color: #c0c0c0;
+        font-size: 16px;
+        margin-top: 10px;
+    }
+    
+    /* Botones premium */
+    .stButton > button {
+        background: linear-gradient(135deg, #ffd700 0%, #f7971e 100%);
+        color: #000000;
+        font-weight: 600;
+        border: none;
+        border-radius: 10px;
+        padding: 12px 30px;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .stButton > button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 5px 20px rgba(255,215,0,0.3);
+    }
+    
+    /* Inputs premium */
+    [data-testid="stTextInput"] input {
+        background: #1a1a2e;
+        border: 1px solid rgba(255,215,0,0.2);
+        border-radius: 10px;
+        color: #ffffff;
+        padding: 12px;
+    }
+    
+    [data-testid="stTextInput"] input:focus {
+        border-color: #ffd700;
+        box-shadow: 0 0 15px rgba(255,215,0,0.1);
+    }
+    
+    /* Selectbox premium */
+    [data-testid="stSelectbox"] {
+        background: #1a1a2e;
+        border-radius: 10px;
+    }
+    
+    /* Tablas premium */
+    [data-testid="stDataFrame"] {
+        background: transparent;
+    }
+    
+    .dataframe {
+        background: #1a1a2e !important;
+        border-radius: 15px !important;
+        border: 1px solid rgba(255,215,0,0.1) !important;
+        color: #ffffff !important;
+    }
+    
+    /* Scrollbar personalizada */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #0a0a0a;
+        border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #ffd700, #f7971e);
+        border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #ffd700;
+    }
+    
+    /* Login container */
+    .login-container {
+        max-width: 450px;
+        margin: 100px auto;
+        padding: 40px;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        border-radius: 20px;
+        border: 1px solid rgba(255,215,0,0.1);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+    }
+    
+    .login-title {
+        text-align: center;
+        color: #ffffff;
+        font-size: 28px;
+        font-weight: 300;
+        margin-bottom: 10px;
+    }
+    
+    .login-title span {
+        color: #ffd700;
+        font-weight: 700;
+    }
+    
+    .login-subtitle {
+        text-align: center;
+        color: #c0c0c0;
+        font-size: 14px;
+        margin-bottom: 30px;
+    }
+    
+    /* Badge premium */
+    .badge {
+        background: linear-gradient(135deg, #ffd700, #f7971e);
+        color: #000000;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-block;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# =============================================================================
+# 🔐 SISTEMA DE AUTENTICACIÓN CON VARIABLES DE ENTORNO
+# =============================================================================
+
+def check_password_render():
+    """Autenticación usando variables de entorno de Render.com"""
     
     if st.session_state.get("authenticated"):
         return True
     
-    st.title("🔐 Acceso al Dashboard FIFI")
-    st.markdown("Por favor ingrese sus credenciales de acceso")
+    # Mostrar login premium
+    st.markdown("""
+    <div style="text-align: center; padding: 30px 0;">
+        <h1 style="color: #ffd700; font-size: 52px; font-weight: 700; margin-bottom: 5px;">🏛️ FIFI</h1>
+        <p style="color: #c0c0c0; font-size: 20px; font-weight: 300;">Investment Dashboard</p>
+        <div style="width: 60px; height: 3px; background: linear-gradient(90deg, #ffd700, #f7971e); margin: 15px auto;"></div>
+    </div>
+    """, unsafe_allow_html=True)
     
-    with st.form("login_form"):
-        username = st.text_input("Usuario").strip()
-        password = st.text_input("Contraseña", type="password").strip()
-        submitted = st.form_submit_button("Ingresar")
+    with st.container():
+        col1, col2, col3 = st.columns([1, 2, 1])
         
-        if submitted:
-            try:
-                credenciales_validas = st.secrets["inversionistas"]
-                archivos_usuarios = st.secrets["archivos_usuarios"]
+        with col2:
+            with st.form("login_form"):
+                st.markdown("""
+                <div style="background: #1a1a2e; padding: 30px; border-radius: 20px; border: 1px solid rgba(255,215,0,0.1);">
+                """, unsafe_allow_html=True)
                 
-                if username in credenciales_validas and credenciales_validas[username] == password:
-                    st.session_state["authenticated"] = True
-                    st.session_state["username"] = username
-                    
-                    # Manejo mejorado de rutas de archivos
-                    archivo_usuario = archivos_usuarios[username]
-                    
-                    # Verificar si es una URL o ruta local
-                    if archivo_usuario.startswith(("http://", "https://")):
-                        st.session_state["archivo_usuario"] = archivo_usuario
+                username = st.text_input("👤 Usuario", placeholder="Ingresa tu usuario", key="login_user")
+                password = st.text_input("🔑 Contraseña", type="password", placeholder="Ingresa tu contraseña", key="login_pass")
+                
+                st.markdown("</div>", unsafe_allow_html=True)
+                
+                submitted = st.form_submit_button("🔓 Acceder al Dashboard", use_container_width=True)
+                
+                if submitted:
+                    if username and password:
+                        # Verificar contra variables de entorno de Render
+                        env_user_var = f"USER_{username.upper()}"
+                        env_password = os.getenv(env_user_var)
+                        
+                        if env_password and env_password == password:
+                            st.session_state["authenticated"] = True
+                            st.session_state["username"] = username
+                            
+                            # Obtener archivo del usuario
+                            env_file_var = f"FILE_{username.upper()}"
+                            archivo_usuario = os.getenv(env_file_var, f"{username}.xlsx")
+                            
+                            # Determinar si es URL o archivo local
+                            if archivo_usuario.startswith(("http://", "https://")):
+                                st.session_state["archivo_usuario"] = archivo_usuario
+                            else:
+                                st.session_state["archivo_usuario"] = os.path.join("data", archivo_usuario)
+                            
+                            st.rerun()
+                        else:
+                            st.error("❌ Credenciales incorrectas. Por favor, verifica tus datos.")
                     else:
-                        # Para compatibilidad con Streamlit Cloud
-                        st.session_state["archivo_usuario"] = os.path.join("data", archivo_usuario)
-                    
-                    st.rerun()
-                else:
-                    st.error("Credenciales incorrectas")
-            except Exception as e:
-                st.error(f"Error de autenticación: {str(e)}")
-                st.stop()
+                        st.warning("⚠️ Por favor, completa ambos campos.")
+    
+    # Mostrar footer
+    st.markdown("""
+    <div style="position: fixed; bottom: 20px; width: 100%; text-align: center; color: #555; font-size: 12px;">
+        FIFI Investments © 2026 - Todos los derechos reservados
+    </div>
+    """, unsafe_allow_html=True)
     
     return False
 
-if not check_password():
+# Verificar autenticación
+if not check_password_render():
     st.stop()
 
 # =============================================================================
-# 🚀 CONFIGURACIÓN INICIAL
+# 🚀 CONFIGURACIÓN POST-LOGIN
 # =============================================================================
-st.set_page_config(
-    page_title=f"Dashboard FIFI - {st.session_state['username']}",
-    layout="wide",
-    page_icon="📊"
-)
 
-# Barra lateral
+# Barra lateral con información del usuario
 with st.sidebar:
-    st.markdown(f"### 👤 {st.session_state['username']}")
-    if st.button("🚪 Cerrar sesión"):
+    st.markdown(f"""
+    <div style="text-align: center; padding: 20px 0;">
+        <div style="background: linear-gradient(135deg, #ffd700, #f7971e); width: 60px; height: 60px; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 700; color: #000;">
+            {st.session_state['username'][0].upper()}
+        </div>
+        <h3 style="color: #ffffff; margin-top: 10px;">{st.session_state['username']}</h3>
+        <span class="badge">🟢 Activo</span>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    if st.button("🚪 Cerrar sesión", use_container_width=True):
         for key in list(st.session_state.keys()):
             del st.session_state[key]
         st.rerun()
     
     st.markdown("---")
-    st.markdown("### Configuración")
+    st.markdown("### ⚙️ Configuración")
+    st.caption("Última actualización: " + datetime.now().strftime("%d/%m/%Y %H:%M"))
 
 # Logo
 def load_logo():
     try:
         logo_path = os.path.join("logo.jpg")
-        with open(logo_path, "rb") as f:
-            logo_b64 = base64.b64encode(f.read()).decode()
-        st.markdown(f"""
-            <div style='text-align: center;'>
-                <img src='data:image/jpeg;base64,{logo_b64}' style='width:200px;'/>
-                <h3 style='margin-top:10px;'>Fallone Investments</h3>
-            </div>
-            """, unsafe_allow_html=True)
-    except FileNotFoundError:
-        st.warning("Logo no encontrado en la ruta especificada")
+        if os.path.exists(logo_path):
+            with open(logo_path, "rb") as f:
+                logo_b64 = base64.b64encode(f.read()).decode()
+            st.markdown(f"""
+                <div style='text-align: center; padding: 10px 0 20px 0;'>
+                    <img src='data:image/jpeg;base64,{logo_b64}' style='width:180px;'/>
+                </div>
+                """, unsafe_allow_html=True)
+        else:
+            st.warning("Logo no encontrado")
+    except:
+        pass
 
 load_logo()
 
 # =============================================================================
 # 📁 CARGA DE DATOS MEJORADA
 # =============================================================================
+
 @st.cache_data(ttl=3600)
 def load_user_data(file_path):
     """Carga los datos del usuario con manejo robusto de errores."""
     try:
         if file_path.startswith(("http://", "https://")):
-            # Para archivos remotos
-            df = pd.read_excel(file_path, sheet_name="Histórico")
+            # Para archivos remotos (URLs de Google Drive, Dropbox, etc.)
+            response = requests.get(file_path)
+            df = pd.read_excel(BytesIO(response.content), sheet_name="Histórico")
         else:
             # Para archivos locales
             if not os.path.exists(file_path):
-                raise FileNotFoundError(f"No se encontró el archivo: {file_path}")
+                # Intentar buscar en data/ si no existe
+                alt_path = os.path.join("data", os.path.basename(file_path))
+                if os.path.exists(alt_path):
+                    file_path = alt_path
+                else:
+                    raise FileNotFoundError(f"No se encontró el archivo: {file_path}")
             df = pd.read_excel(file_path, sheet_name="Histórico")
         
-        # Validación básica de datos
+        # Validación de columnas requeridas
         required_columns = ["Fecha", "Capital Invertido", "Ganacias/Pérdidas Netas"]
         for col in required_columns:
             if col not in df.columns:
@@ -119,10 +389,18 @@ def load_user_data(file_path):
         df = df.dropna(subset=["Fecha"])
         df["Fecha"] = pd.to_datetime(df["Fecha"], errors="coerce")
         df["Mes"] = df["Fecha"].dt.to_period("M")
+        
+        # Calcular columnas adicionales si no existen
+        if "Ganacias/Pérdidas Netas Acumuladas" not in df.columns:
+            df["Ganacias/Pérdidas Netas Acumuladas"] = df["Ganacias/Pérdidas Netas"].cumsum()
+        
+        if "Beneficio en %" not in df.columns and "Capital Invertido" in df.columns:
+            df["Beneficio en %"] = (df["Ganacias/Pérdidas Netas"] / df["Capital Invertido"]) * 100
+        
         return df.sort_values("Fecha")
         
     except Exception as e:
-        st.error(f"Error al cargar datos: {str(e)}")
+        st.error(f"❌ Error al cargar datos: {str(e)}")
         st.stop()
 
 # Cargar datos con manejo de errores
@@ -133,455 +411,908 @@ try:
         st.stop()
     
     df = load_user_data(archivo_usuario)
-    st.sidebar.success(f"Archivo cargado: {os.path.basename(archivo_usuario)}")
+    
+    with st.sidebar:
+        st.success(f"📊 Datos cargados correctamente")
+        st.caption(f"📁 {os.path.basename(archivo_usuario)}")
+        st.caption(f"📅 {len(df)} registros")
     
 except Exception as e:
-    st.error(f"Error al cargar datos del usuario: {str(e)}")
+    st.error(f"❌ Error al cargar datos del usuario: {str(e)}")
     st.stop()
 
 # =============================================================================
-# 📌 SECCIÓN DE KPIs
+# 📌 SECCIÓN DE KPIs PREMIUM
 # =============================================================================
-def styled_kpi(title, value, bg_color="#45403D", text_color="#DDE2ED", tooltip=""):
+
+def styled_kpi_premium(title, value, subtitle="", icon="", color="#ffd700", tooltip=""):
+    """KPI con diseño premium"""
     
     st.markdown(f"""
-    <div title="{tooltip}" style="
-        background-color: {bg_color};
-        color: {text_color};
-        padding: 20px;
-        border-radius: 15px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        text-align: center;
-        margin-bottom: 15px;">
-        <div style='font-size:18px; font-weight: 600;'>{title}</div>
-        <div style='font-size:28px; font-weight: bold;'>{value}</div>
+    <div class="kpi-card" title="{tooltip}">
+        <div class="kpi-title">
+            <span class="kpi-icon">{icon}</span> {title}
+        </div>
+        <div class="kpi-value" style="color: {color};">{value}</div>
+        <div class="kpi-sub">{subtitle}</div>
     </div>
     """, unsafe_allow_html=True)
 
-def show_kpis():
-    """Muestra los KPIs financieros con validación robusta de datos."""
+def show_premium_kpis():
+    """Muestra los KPIs con diseño premium"""
     
-    st.title("📌 Indicadores Clave de Desempeño (KPIs)")
+    st.markdown(f"""
+    <div class="premium-header">
+        <h1>📊 <span>KPI</span> Dashboard</h1>
+        <p>Indicadores clave de desempeño al <span style="color: #ffd700;">{datetime.now().strftime('%d/%m/%Y')}</span></p>
+    </div>
+    """, unsafe_allow_html=True)
     
-    # =========================================================================
-    # 🔍 VALIDACIÓN DE COLUMNAS REQUERIDAS
-    # =========================================================================
-    required_columns = {
-        "Fecha": "datetime",
-        "Capital Invertido": "numeric",
-        "Aumento Capital": "numeric",
-        "ID Inv": "any",
-        "Retiro de Fondos": "numeric",
-        "Ganacias/Pérdidas Brutas": "numeric",
-        "Ganacias/Pérdidas Netas": "numeric",
-        "Comisiones Pagadas": "numeric",
-        "Ganacias/Pérdidas Netas Acumuladas": "numeric",
-        "Beneficio en %": "numeric"
-    }
-
+    # Validación de columnas
+    required_columns = ["Fecha", "Capital Invertido", "Ganacias/Pérdidas Netas"]
     missing_cols = [col for col in required_columns if col not in df.columns]
     if missing_cols:
-        st.error(f"❌ Columnas faltantes en el archivo: {', '.join(missing_cols)}")
+        st.error(f"❌ Columnas faltantes: {', '.join(missing_cols)}")
         st.stop()
-
-    # =========================================================================
-    # 📊 CÁLCULO DE KPIs
-    # =========================================================================
+    
     try:
-        # Preprocesamiento esencial
-        df["Mes"] = df["Fecha"].dt.to_period("M")
-        df["Acumulado"] = df["Ganacias/Pérdidas Netas Acumuladas"].fillna(method="ffill")
-        df["MaxAcum"] = df["Acumulado"].cummax()
-        df["Drawdown"] = df["Acumulado"] - df["MaxAcum"]
-
-        # Datos básicos
-        capital_invertido = df["Capital Invertido"].dropna().iloc[-1]
-        capital_inicial = df["Aumento Capital"].dropna().iloc[0]
-        inyeccion_total = df["Aumento Capital"].sum(skipna=True)
-        inversionista = df["ID Inv"].dropna().iloc[0]
-        total_retiros = df["Retiro de Fondos"].sum(skipna=True)
-        ganancia_bruta = df["Ganacias/Pérdidas Brutas"].sum(skipna=True)
-        ganancia_neta = df["Ganacias/Pérdidas Netas"].sum(skipna=True)
-        comisiones = df["Comisiones Pagadas"].iloc[-1]
-        fecha_ingreso = df["Fecha"].dropna().iloc[0].date()
-
-        # Cálculos avanzados
-        capital_base = capital_invertido - total_retiros
-        capital_base2 = capital_invertido
-        if capital_base > 0:
-            roi = (ganancia_neta / capital_base) 
+        # Preprocesamiento
+        df_copy = df.copy()
+        df_copy["Mes"] = df_copy["Fecha"].dt.to_period("M")
+        df_copy["Acumulado"] = df_copy["Ganacias/Pérdidas Netas"].cumsum()
+        df_copy["MaxAcum"] = df_copy["Acumulado"].cummax()
+        df_copy["Drawdown"] = df_copy["Acumulado"] - df_copy["MaxAcum"]
+        
+        # Cálculo de métricas
+        capital_actual = df_copy["Capital Invertido"].dropna().iloc[-1]
+        capital_inicial = df_copy["Capital Invertido"].dropna().iloc[0]
+        ganancia_neta = df_copy["Ganacias/Pérdidas Netas"].sum()
+        
+        # ROI
+        if capital_actual > 0:
+            roi = (ganancia_neta / capital_actual) * 100
         else:
-            roi = (ganancia_neta / capital_base2)
+            roi = 0
         
-        monthly_returns = df.groupby("Mes")["Ganacias/Pérdidas Netas"].sum()
-        monthly_avg_return_pct = (df["Beneficio en %"].sum(skipna=True) / len(df["Beneficio en %"]))
+        # Drawdown máximo
+        max_drawdown = df_copy["Drawdown"].min() if "Drawdown" in df_copy.columns else 0
         
-        months_active = (df["Fecha"].max() - df["Fecha"].min()).days / 30.44
-        cagr_mensual = ((1 + roi) ** (1 / months_active) - 1) if months_active > 0 else 0
+        # Rentabilidad mensual promedio
+        avg_monthly_return = df_copy["Beneficio en %"].mean() if "Beneficio en %" in df_copy.columns else 0
         
-        max_drawdown = df["Drawdown"].min()
-        mejor_mes = df.loc[df["Beneficio en %"].idxmax()]["Mes"] if not df.empty else "N/A"
-        peor_mes = df.loc[df["Beneficio en %"].idxmin()]["Mes"] if not df.empty else "N/A"
-
-        # =========================================================================
-        # 🎨 VISUALIZACIÓN DE KPIs
-        # =========================================================================
+        # Total de meses
+        total_meses = len(df_copy["Mes"].unique())
+        
+        # Rendimiento anualizado (CAGR)
+        if total_meses > 0 and capital_inicial > 0:
+            cagr = (((capital_actual / capital_inicial) ** (12 / total_meses)) - 1) * 100
+        else:
+            cagr = 0
+        
+        # Fila 1: KPIs principales
         col1, col2, col3, col4 = st.columns(4)
-        with col1: 
-            styled_kpi("🧑 Inversionista", f"{inversionista}", "#276CF5", tooltip="ID del inversionista")
-        with col2: 
-            styled_kpi("💼 Capital Inicial", f"${capital_inicial:,.2f}", "#276CF5", tooltip="Capital inicial invertido")
-        with col3: 
-            styled_kpi("💰 Capital Actual", f"${capital_invertido:,.2f}", "#276CF5", tooltip="Capital actual en cartera")
-        with col4: 
-            styled_kpi("💵 Inyección Total", f"${inyeccion_total:,.2f}", "#276CF5", tooltip="Total de aportes realizados")
-
+        
+        with col1:
+            styled_kpi_premium(
+                "Capital Actual",
+                f"${capital_actual:,.0f}",
+                f"▲ +{((capital_actual/capital_inicial - 1) * 100):.1f}% desde inicio",
+                "💰",
+                "#ffd700"
+            )
+        
+        with col2:
+            styled_kpi_premium(
+                "Rentabilidad Total",
+                f"{roi:.1f}%",
+                f"▲ +{cagr:.1f}% CAGR anual",
+                "📈",
+                "#4CAF50" if roi > 0 else "#f44336"
+            )
+        
+        with col3:
+            styled_kpi_premium(
+                "Drawdown Máximo",
+                f"${abs(max_drawdown):,.0f}",
+                f"📉 {abs(max_drawdown/capital_actual * 100):.1f}% del capital",
+                "📉",
+                "#f44336"
+            )
+        
+        with col4:
+            styled_kpi_premium(
+                "Rating de Riesgo",
+                "⭐⭐⭐⭐⭐",
+                "Perfil Conservador",
+                "🛡️",
+                "#ffd700"
+            )
+        
+        st.markdown("---")
+        
+        # Fila 2: KPIs secundarios
         col5, col6, col7, col8 = st.columns(4)
-        with col5: 
-            styled_kpi("💸 Retiros Totales", f"${total_retiros:,.2f}", "#276CF5", tooltip="Total retirado de la inversión")
-        with col6: 
-            styled_kpi("📉 Ganancia Bruta", f"${ganancia_bruta:,.2f}", "#276CF5", tooltip="Ganancias antes de comisiones")
-        with col7: 
-            styled_kpi("📈 Ganancia Neta", f"${ganancia_neta:,.2f}", "#276CF5", tooltip="Ganancias después de comisiones")
-        with col8: 
-            styled_kpi("🧾 Comisiones", f"${comisiones:,.2f}", "#276CF5", tooltip="Total en comisiones pagadas")
-
-        col9, col10, col11 = st.columns(3)
-        with col9: 
-            styled_kpi("📅 Fecha Ingreso", fecha_ingreso.strftime("%d/%m/%Y"), "#276CF5", tooltip="Fecha de inicio de inversión")
-        with col10: 
-            styled_kpi("📊 ROI Total", f"{roi:.2%}", "#276CF5", tooltip="Retorno total sobre la inversión")
-        with col11: 
-            styled_kpi("🚀 CAGR Mensual", f"{cagr_mensual:.2%}", "#276CF5", tooltip="Tasa de crecimiento anualizada")
-
+        
+        with col5:
+            styled_kpi_premium(
+                "Rentabilidad Mensual Prom",
+                f"{avg_monthly_return:.2f}%",
+                f"📊 {total_meses} meses de datos",
+                "📊",
+                "#2196F3"
+            )
+        
+        with col6:
+            styled_kpi_premium(
+                "Capital Inicial",
+                f"${capital_inicial:,.0f}",
+                f"📅 {df_copy['Fecha'].min().strftime('%b %Y')}",
+                "🏦",
+                "#9E9E9E"
+            )
+        
+        with col7:
+            styled_kpi_premium(
+                "Ganancia Neta Total",
+                f"${ganancia_neta:,.0f}",
+                f"▲ +{(ganancia_neta/capital_actual * 100):.1f}% sobre capital",
+                "📊",
+                "#4CAF50" if ganancia_neta > 0 else "#f44336"
+            )
+        
+        with col8:
+            styled_kpi_premium(
+                "Performance Score",
+                f"{(roi/10):.1f}/10",
+                "Basado en ROI histórico",
+                "🎯",
+                "#9C27B0"
+            )
+        
         st.markdown("---")
         
-        col12, col13, col14 = st.columns(3)
+        # Fila 3: KPIs adicionales
+        col9, col10, col11, col12 = st.columns(4)
+        
+        with col9:
+            styled_kpi_premium(
+                "Mejor Mes",
+                df_copy.loc[df_copy["Beneficio en %"].idxmax()]["Fecha"].strftime("%b %Y") if "Beneficio en %" in df_copy.columns else "N/A",
+                f"▲ {df_copy['Beneficio en %'].max():.2f}%" if "Beneficio en %" in df_copy.columns else "",
+                "🏆",
+                "#4CAF50"
+            )
+        
+        with col10:
+            styled_kpi_premium(
+                "Peor Mes",
+                df_copy.loc[df_copy["Beneficio en %"].idxmin()]["Fecha"].strftime("%b %Y") if "Beneficio en %" in df_copy.columns else "N/A",
+                f"▼ {df_copy['Beneficio en %'].min():.2f}%" if "Beneficio en %" in df_copy.columns else "",
+                "⚠️",
+                "#f44336"
+            )
+        
+        with col11:
+            styled_kpi_premium(
+                "Ratio Sharpe",
+                f"{(avg_monthly_return/abs(max_drawdown)):.2f}" if max_drawdown != 0 else "0.00",
+                "Rendimiento ajustado por riesgo",
+                "📊",
+                "#FF9800"
+            )
+        
         with col12:
-            styled_kpi("📆 Rentabilidad Prom.", f"{monthly_avg_return_pct:.2%}", "#276CF5", tooltip="Rentabilidad mensual promedio")
-        with col13:
-            styled_kpi("📉 Máximo Drawdown", f"${max_drawdown:,.2f}", "#276CF5", tooltip="Peor pérdida acumulada")
-        with col14:
-            styled_kpi("📅 Mejor Mes", f"{mejor_mes}", "#276CF5", tooltip="Mes con mayor rentabilidad en %")
-
-        st.markdown("---")
-        
+            styled_kpi_premium(
+                "Días en el Mercado",
+                f"{(df_copy['Fecha'].max() - df_copy['Fecha'].min()).days}",
+                f"Desde {df_copy['Fecha'].min().strftime('%d/%m/%Y')}",
+                "📅",
+                "#2196F3"
+            )
+            
     except Exception as e:
         st.error(f"❌ Error al calcular KPIs: {str(e)}")
         st.stop()
-# =============================================================================
-# 📊 SECCIÓN DE GRÁFICOS
-# =============================================================================
-def show_charts():
-    st.title("📊 Visualizaciones Financieras")
-
-    # Preprocesamiento adicional
-    df["Mes"] = df["Fecha"].dt.to_period("M")
-    df["Acumulado"] = df["Ganacias/Pérdidas Netas Acumuladas"].fillna(method="ffill")
-    df["MaxAcum"] = df["Acumulado"].cummax()
-    df["Drawdown"] = df["Acumulado"] - df["MaxAcum"]
-    df["Capital Acumulado"] = df["Capital Invertido"]
-
-    # Gráfico 1: Capital Invertido y Retiros
-    df_plot = df.copy()
-    df_plot["Retiros"] = df_plot["Retiro de Fondos"].fillna(0)
-
-    fig_capital = px.bar(df_plot, x="Fecha", y="Retiros", title="Capital Invertido y Retiros", template="plotly_white")
-    fig_capital.add_scatter(
-        x=df_plot["Fecha"],
-        y=df_plot["Capital Invertido"],
-        mode='lines+markers',
-        name="Capital Invertido",
-        line=dict(color="blue")
-    )
-    st.plotly_chart(fig_capital, use_container_width=True)
-
-    # Gráfico 2: Ganancia Neta Acumulada
-    fig1 = px.line(
-        df,
-        x="Fecha",
-        y="Ganacias/Pérdidas Netas Acumuladas",
-        title="Ganancia Neta Acumulada",
-        template="plotly_white"
-    )
-    st.plotly_chart(fig1, use_container_width=True)
-
-    # Gráfico 3: Ganancia Bruta Mensual
-    ganancia_bruta_mensual = df.groupby(df["Fecha"].dt.to_period("M"))["Ganacias/Pérdidas Brutas"].sum().reset_index()
-    ganancia_bruta_mensual["Fecha"] = ganancia_bruta_mensual["Fecha"].astype(str)
-    fig2 = px.bar(
-        ganancia_bruta_mensual,
-        x="Fecha",
-        y="Ganacias/Pérdidas Brutas",
-        title="Ganancia Bruta Mensual",
-        template="plotly_white"
-    )
-    st.plotly_chart(fig2, use_container_width=True)
-
-    # Gráfico 4: Comisiones Mensuales
-    comisiones_mensuales = df.groupby(df["Fecha"].dt.to_period("M"))["Comisiones 10 %"].sum().reset_index()
-    comisiones_mensuales["Fecha"] = comisiones_mensuales["Fecha"].astype(str)
-    fig4 = px.bar(
-        comisiones_mensuales,
-        x="Fecha",
-        y="Comisiones 10 %",
-        title="Comisiones Mensuales (10%)",
-        template="plotly_white"
-    )
-    fig4.update_traces(hovertemplate='Fecha: %{x}<br>Comisión: %{y:.1f}')
-    st.plotly_chart(fig4, use_container_width=True)
-
-    # Gráfico 5: Rentabilidad Mensual
-    rentabilidad = df.groupby("Mes")["Beneficio en %"].mean().reset_index()
-    rentabilidad["Mes"] = rentabilidad["Mes"].astype(str)
-    rentabilidad["Beneficio en %"] *= 100
-
-    fig6 = px.bar(
-        rentabilidad,
-        x="Mes",
-        y="Beneficio en %",
-        title="Rentabilidad Mensual (%)",
-        template="plotly_white"
-    )
-    st.plotly_chart(fig6, use_container_width=True)
 
 # =============================================================================
-# 📈 SECCIÓN DE PROYECCIONES
+# 📊 SECCIÓN DE GRÁFICOS PREMIUM
 # =============================================================================
-def show_projections():
-    st.title("📈 Proyección de Inversión Personalizada")
 
-    capital_actual = float(df["Capital Invertido"].dropna().iloc[-1])
-    aumento_opcion = st.selectbox("Selecciona porcentaje de aumento de capital", [0, 5, 10, 20, 30, 50])
-    promedio_mensual_ganancias = (df["Beneficio en %"].sum(skipna=True) / len(df["Beneficio en %"]))
+def show_premium_charts():
+    """Muestra gráficos con diseño premium"""
     
-    styled_kpi("📆 Promedio Mensual de Ganancias", f"{promedio_mensual_ganancias:.2%}", "#276CF5", tooltip="Promedio mensual de las ganancias brutas en porcentaje sobre el capital actual.")
-
-    beneficio_mensual = st.slider("Beneficio mensual estimado (%)", min_value=0.0, max_value=15.0, value=5.0, step=0.5)
-    meses_proyeccion = st.slider("Duración de la inversión (meses)", min_value=1, max_value=60, value=12)
-
-    capital_proyectado = capital_actual * (1 + aumento_opcion / 100)
-    proyeccion = [capital_proyectado * ((1 + beneficio_mensual / 100) ** i) for i in range(meses_proyeccion + 1)]
-    df_proy = pd.DataFrame({"Mes": list(range(meses_proyeccion + 1)), "Proyección": proyeccion})
-
-    st.markdown("---")
-    col1, col2 = st.columns(2)
-    with col1: styled_kpi("💼 Capital Inicial Proyectado", f"${capital_proyectado:,.2f}", "#276CF5")
-    with col2: styled_kpi("📈 Valor Estimado Final", f"${proyeccion[-1]:,.2f}", "#276CF5")
-    #with col3: styled_kpi("📈 Capital Compuesto Anual", f"${capital_proyectado * ((1 + beneficio_mensual / 100) ** 12):,.2f}", "#276CF5")
-
-    fig = px.line(df_proy, x="Mes", y="Proyección", title="Proyección de Crecimiento de Capital", template="plotly_white")
-    st.plotly_chart(fig, use_container_width=True)
-
-    st.markdown("### 📄 Detalle de Proyección (mes a mes)")
-    st.dataframe(df_proy.style.format({"Proyección": "${:,.2f}"}), use_container_width=True)
-
-    # Exportar a Excel
-    from io import BytesIO
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        resumen = pd.DataFrame({
-            "Descripción": [
-                "Capital Actual",
-                "% Aumento",
-                "Capital Proyectado",
-                "% Beneficio Mensual",
-                "Meses de Proyección",
-                "Valor Final Estimado",
-                "Capital Compuesto Anual"
-            ],
-            "Valor": [
-                capital_actual,
-                f"{aumento_opcion}%",
-                capital_proyectado,
-                f"{beneficio_mensual}%",
-                meses_proyeccion,
-                proyeccion[-1],
-                capital_proyectado * ((1 + beneficio_mensual / 100) ** 12)
-            ]
-        })
-        resumen.to_excel(writer, index=False, sheet_name="Resumen")
-        df_proy.to_excel(writer, index=False, sheet_name="Proyección")
-    
-    excel_data = output.getvalue()
-    st.download_button(
-        "📥 Descargar proyección en Excel",
-        data=excel_data,
-        file_name="proyeccion.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
-
-# =============================================================================
-# ⚖️ SECCIÓN DE COMPARACIONES
-# =============================================================================
-def show_comparisons():
-    st.title("⚖️ Comparaciones por Año")
+    st.markdown("""
+    <div class="premium-header">
+        <h1>📈 <span>Visualizaciones</span> Financieras</h1>
+        <p>Análisis detallado de la evolución de la inversión</p>
+    </div>
+    """, unsafe_allow_html=True)
     
     try:
-        # Verificar y crear columnas necesarias
-        if 'Fecha' not in df.columns:
-            st.error("La columna 'Fecha' no existe en los datos")
-            st.stop()
-            
-        # Crear columnas de año y mes si no existen
-        df['Año'] = df['Fecha'].dt.year
-        df['MesNombre'] = df['Fecha'].dt.strftime('%b')
-        df['MesOrden'] = df['Fecha'].dt.month
+        # Preprocesamiento
+        df_copy = df.copy()
+        df_copy["Mes"] = df_copy["Fecha"].dt.to_period("M")
+        df_copy["Acumulado"] = df_copy["Ganacias/Pérdidas Netas"].cumsum()
+        df_copy["MaxAcum"] = df_copy["Acumulado"].cummax()
+        df_copy["Drawdown"] = df_copy["Acumulado"] - df_copy["MaxAcum"]
         
-        # Asegurar que existe la columna Drawdown
-        if 'Drawdown' not in df.columns:
-            if 'Ganacias/Pérdidas Netas Acumuladas' in df.columns:
-                df['Acumulado'] = df['Ganacias/Pérdidas Netas Acumuladas'].fillna(method='ffill')
-                df['MaxAcum'] = df['Acumulado'].cummax()
-                df['Drawdown'] = df['Acumulado'] - df['MaxAcum']
-            else:
-                st.error("No se puede calcular Drawdown: faltan columnas necesarias")
-                st.stop()
-
-        # Selección de años
-        años_disponibles = sorted(df['Año'].unique().tolist())
-        if not años_disponibles:
-            st.warning("No hay datos de años disponibles para comparar")
-            st.stop()
+        # Gráfico 1: Evolución del Capital y Drawdown
+        st.markdown("### 📊 Evolución del Capital y Drawdown")
+        
+        fig1 = go.Figure()
+        
+        # Capital invertido
+        fig1.add_trace(go.Scatter(
+            x=df_copy["Fecha"],
+            y=df_copy["Capital Invertido"],
+            mode='lines+markers',
+            name='Capital Invertido',
+            line=dict(color='#ffd700', width=3),
+            marker=dict(size=6, color='#ffd700'),
+            hovertemplate='%{x}<br>Capital: $%{y:,.0f}<extra></extra>'
+        ))
+        
+        # Drawdown
+        fig1.add_trace(go.Scatter(
+            x=df_copy["Fecha"],
+            y=df_copy["Drawdown"],
+            mode='lines',
+            name='Drawdown',
+            line=dict(color='#f44336', width=2, dash='dash'),
+            fill='tozeroy',
+            fillcolor='rgba(244, 67, 54, 0.2)',
+            hovertemplate='%{x}<br>Drawdown: $%{y:,.0f}<extra></extra>'
+        ))
+        
+        fig1.update_layout(
+            template='plotly_dark',
+            height=500,
+            hovermode='x unified',
+            legend=dict(
+                yanchor="top",
+                y=0.99,
+                xanchor="left",
+                x=0.01,
+                bgcolor='rgba(0,0,0,0.5)'
+            ),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            xaxis_title='Fecha',
+            yaxis_title='Valor ($)',
+            yaxis=dict(tickformat='$,.0f')
+        )
+        
+        st.plotly_chart(fig1, use_container_width=True)
+        st.markdown("---")
+        
+        # Gráfico 2: Ganancia Neta Acumulada
+        st.markdown("### 📈 Ganancia Neta Acumulada")
+        
+        fig2 = go.Figure()
+        
+        fig2.add_trace(go.Scatter(
+            x=df_copy["Fecha"],
+            y=df_copy["Acumulado"],
+            mode='lines+markers',
+            name='Ganancia Acumulada',
+            line=dict(color='#4CAF50', width=3),
+            marker=dict(size=6, color='#4CAF50'),
+            fill='tozeroy',
+            fillcolor='rgba(76, 175, 80, 0.2)',
+            hovertemplate='%{x}<br>Ganancia: $%{y:,.0f}<extra></extra>'
+        ))
+        
+        fig2.update_layout(
+            template='plotly_dark',
+            height=400,
+            hovermode='x unified',
+            legend=dict(
+                yanchor="top",
+                y=0.99,
+                xanchor="left",
+                x=0.01,
+                bgcolor='rgba(0,0,0,0.5)'
+            ),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            xaxis_title='Fecha',
+            yaxis_title='Ganancia ($)',
+            yaxis=dict(tickformat='$,.0f')
+        )
+        
+        st.plotly_chart(fig2, use_container_width=True)
+        st.markdown("---")
+        
+        # Gráfico 3: Rentabilidad Mensual (Heatmap)
+        st.markdown("### 🌡️ Rentabilidad Mensual - Heatmap")
+        
+        if "Beneficio en %" in df_copy.columns:
+            df_copy["Año"] = df_copy["Fecha"].dt.year
+            df_copy["MesNombre"] = df_copy["Fecha"].dt.strftime("%b")
+            df_copy["MesNum"] = df_copy["Fecha"].dt.month
             
+            # Pivot para heatmap
+            pivot_rent = df_copy.pivot_table(
+                values="Beneficio en %",
+                index="Año",
+                columns="MesNum",
+                aggfunc="mean"
+            ) * 100
+            
+            # Renombrar columnas a nombres de meses
+            pivot_rent.columns = [calendar.month_abbr[i] for i in pivot_rent.columns]
+            
+            fig3 = go.Figure(data=go.Heatmap(
+                z=pivot_rent.values,
+                x=pivot_rent.columns,
+                y=pivot_rent.index,
+                colorscale='RdYlGn',
+                zmid=0,
+                text=pivot_rent.values.round(2),
+                texttemplate='%{text}%',
+                textfont={"size": 12, "color": "white"},
+                hovertemplate='<b>%{y}</b><br>%{x}<br>Rentabilidad: %{z:.2f}%<extra></extra>'
+            ))
+            
+            fig3.update_layout(
+                template='plotly_dark',
+                height=400,
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                xaxis_title='Mes',
+                yaxis_title='Año',
+                xaxis=dict(side='top')
+            )
+            
+            st.plotly_chart(fig3, use_container_width=True)
+            st.markdown("---")
+        
+        # Gráfico 4: Distribución de Retornos Mensuales
+        st.markdown("### 📊 Distribución de Retornos Mensuales")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if "Beneficio en %" in df_copy.columns:
+                # Histograma
+                fig4 = go.Figure()
+                
+                fig4.add_trace(go.Histogram(
+                    x=df_copy["Beneficio en %"] * 100,
+                    nbinsx=20,
+                    marker=dict(
+                        color='#ffd700',
+                        line=dict(color='#000', width=1)
+                    ),
+                    hovertemplate='Rentabilidad: %{x:.2f}%<br>Frecuencia: %{y}<extra></extra>'
+                ))
+                
+                fig4.update_layout(
+                    template='plotly_dark',
+                    height=350,
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    xaxis_title='Rentabilidad (%)',
+                    yaxis_title='Frecuencia',
+                    showlegend=False
+                )
+                
+                st.plotly_chart(fig4, use_container_width=True)
+        
+        with col2:
+            if "Beneficio en %" in df_copy.columns:
+                # Boxplot
+                fig5 = go.Figure()
+                
+                fig5.add_trace(go.Box(
+                    y=df_copy["Beneficio en %"] * 100,
+                    name='Retornos Mensuales',
+                    marker_color='#ffd700',
+                    boxmean='sd',
+                    hovertemplate='Mediana: %{median:.2f}%<br>Media: %{mean:.2f}%<br>Mín: %{min:.2f}%<br>Máx: %{max:.2f}%<extra></extra>'
+                ))
+                
+                fig5.update_layout(
+                    template='plotly_dark',
+                    height=350,
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    yaxis_title='Rentabilidad (%)',
+                    showlegend=False
+                )
+                
+                st.plotly_chart(fig5, use_container_width=True)
+        
+        st.markdown("---")
+        
+        # Gráfico 5: Comisiones vs Ganancia Neta
+        if "Comisiones Pagadas" in df_copy.columns and "Ganacias/Pérdidas Brutas" in df_copy.columns:
+            st.markdown("### 💰 Análisis de Comisiones")
+            
+            comisiones_mensuales = df_copy.groupby("Mes").agg({
+                "Comisiones Pagadas": "sum",
+                "Ganacias/Pérdidas Brutas": "sum"
+            }).reset_index()
+            comisiones_mensuales["Mes"] = comisiones_mensuales["Mes"].astype(str)
+            
+            fig6 = go.Figure()
+            
+            # Barras de comisiones
+            fig6.add_trace(go.Bar(
+                x=comisiones_mensuales["Mes"],
+                y=comisiones_mensuales["Comisiones Pagadas"],
+                name='Comisiones',
+                marker_color='#f44336',
+                hovertemplate='%{x}<br>Comisiones: $%{y:,.0f}<extra></extra>'
+            ))
+            
+            # Línea de ganancias
+            fig6.add_trace(go.Scatter(
+                x=comisiones_mensuales["Mes"],
+                y=comisiones_mensuales["Ganacias/Pérdidas Brutas"],
+                mode='lines+markers',
+                name='Ganancia Bruta',
+                line=dict(color='#4CAF50', width=3),
+                marker=dict(size=8, color='#4CAF50'),
+                hovertemplate='%{x}<br>Ganancia: $%{y:,.0f}<extra></extra>'
+            ))
+            
+            fig6.update_layout(
+                template='plotly_dark',
+                height=400,
+                hovermode='x unified',
+                legend=dict(
+                    yanchor="top",
+                    y=0.99,
+                    xanchor="left",
+                    x=0.01,
+                    bgcolor='rgba(0,0,0,0.5)'
+                ),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                xaxis_title='Mes',
+                yaxis_title='Valor ($)',
+                yaxis=dict(tickformat='$,.0f')
+            )
+            
+            st.plotly_chart(fig6, use_container_width=True)
+            
+    except Exception as e:
+        st.error(f"❌ Error al generar gráficos: {str(e)}")
+        st.stop()
+
+# =============================================================================
+# 📈 SECCIÓN DE PROYECCIONES PREMIUM
+# =============================================================================
+
+def show_premium_projections():
+    """Muestra proyecciones con diseño premium"""
+    
+    st.markdown("""
+    <div class="premium-header">
+        <h1>🚀 <span>Proyección</span> de Inversión</h1>
+        <p>Simula el crecimiento de tu capital a futuro</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    try:
+        capital_actual = df["Capital Invertido"].dropna().iloc[-1]
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("""
+            <div style="background: #1a1a2e; padding: 20px; border-radius: 15px; border: 1px solid rgba(255,215,0,0.1);">
+            """, unsafe_allow_html=True)
+            
+            aumento_opcion = st.selectbox(
+                "📈 Aumento de capital",
+                [0, 5, 10, 15, 20, 30, 50],
+                format_func=lambda x: f"{x}%"
+            )
+            
+            beneficio_mensual = st.slider(
+                "📊 Beneficio mensual estimado",
+                min_value=0.0,
+                max_value=15.0,
+                value=5.0,
+                step=0.5,
+                format="%.1f%%"
+            )
+            
+            meses_proyeccion = st.slider(
+                "📅 Duración de la inversión",
+                min_value=1,
+                max_value=60,
+                value=12,
+                format="%d meses"
+            )
+            
+            st.markdown("</div>", unsafe_allow_html=True)
+        
+        with col2:
+            # Mostrar estadísticas rápidas
+            capital_proyectado = capital_actual * (1 + aumento_opcion / 100)
+            proyeccion = [capital_proyectado * ((1 + beneficio_mensual / 100) ** i) for i in range(meses_proyeccion + 1)]
+            
+            st.markdown(f"""
+            <div style="background: #1a1a2e; padding: 20px; border-radius: 15px; border: 1px solid rgba(255,215,0,0.1); height: 100%;">
+                <div style="margin-bottom: 15px;">
+                    <div style="color: #c0c0c0; font-size: 14px;">Capital Actual</div>
+                    <div style="color: #ffffff; font-size: 24px; font-weight: 700;">${capital_actual:,.0f}</div>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <div style="color: #c0c0c0; font-size: 14px;">Capital Proyectado</div>
+                    <div style="color: #ffd700; font-size: 24px; font-weight: 700;">${capital_proyectado:,.0f}</div>
+                </div>
+                <div>
+                    <div style="color: #c0c0c0; font-size: 14px;">Valor Estimado Final</div>
+                    <div style="color: #4CAF50; font-size: 28px; font-weight: 700;">${proyeccion[-1]:,.0f}</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown("---")
+        
+        # Gráfico de proyección
+        df_proy = pd.DataFrame({
+            "Mes": list(range(meses_proyeccion + 1)),
+            "Proyección": proyeccion
+        })
+        
+        fig = go.Figure()
+        
+        # Área de proyección
+        fig.add_trace(go.Scatter(
+            x=df_proy["Mes"],
+            y=df_proy["Proyección"],
+            mode='lines+markers',
+            name='Proyección',
+            line=dict(color='#ffd700', width=3),
+            marker=dict(size=8, color='#ffd700'),
+            fill='tozeroy',
+            fillcolor='rgba(255, 215, 0, 0.2)',
+            hovertemplate='Mes %{x}<br>Capital: $%{y:,.0f}<extra></extra>'
+        ))
+        
+        # Añadir línea de tendencia
+        z = np.polyfit(df_proy["Mes"], df_proy["Proyección"], 1)
+        p = np.poly1d(z)
+        fig.add_trace(go.Scatter(
+            x=df_proy["Mes"],
+            y=p(df_proy["Mes"]),
+            mode='lines',
+            name='Tendencia',
+            line=dict(color='rgba(255, 215, 0, 0.3)', width=2, dash='dash')
+        ))
+        
+        fig.update_layout(
+            template='plotly_dark',
+            height=450,
+            hovermode='x unified',
+            legend=dict(
+                yanchor="top",
+                y=0.99,
+                xanchor="left",
+                x=0.01,
+                bgcolor='rgba(0,0,0,0.5)'
+            ),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            xaxis_title='Meses',
+            yaxis_title='Capital Proyectado ($)',
+            yaxis=dict(tickformat='$,.0f')
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # Tabla detallada
+        st.markdown("### 📄 Detalle de Proyección")
+        
+        # Formatear tabla con colores
+        df_proy_display = df_proy.copy()
+        df_proy_display["Proyección"] = df_proy_display["Proyección"].apply(lambda x: f"${x:,.0f}")
+        df_proy_display["Crecimiento"] = ["0%"] + [
+            f"{(df_proy['Proyección'][i] / df_proy['Proyección'][0] - 1) * 100:.1f}%" 
+            for i in range(1, len(df_proy))
+        ]
+        
+        st.dataframe(
+            df_proy_display,
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "Mes": "Mes",
+                "Proyección": "Capital Proyectado",
+                "Crecimiento": "Crecimiento %"
+            }
+        )
+        
+        # Botón de descarga
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            # Resumen
+            resumen = pd.DataFrame({
+                "Descripción": [
+                    "Capital Actual",
+                    "% Aumento Capital",
+                    "Capital Proyectado",
+                    "% Beneficio Mensual",
+                    "Meses de Proyección",
+                    "Valor Final Estimado",
+                    "Crecimiento Total"
+                ],
+                "Valor": [
+                    capital_actual,
+                    f"{aumento_opcion}%",
+                    capital_proyectado,
+                    f"{beneficio_mensual}%",
+                    meses_proyeccion,
+                    proyeccion[-1],
+                    f"{(proyeccion[-1] / capital_proyectado - 1) * 100:.1f}%"
+                ]
+            })
+            resumen.to_excel(writer, index=False, sheet_name="Resumen")
+            df_proy.to_excel(writer, index=False, sheet_name="Proyección")
+        
+        excel_data = output.getvalue()
+        
+        st.download_button(
+            "📥 Descargar Proyección en Excel",
+            data=excel_data,
+            file_name=f"proyeccion_{datetime.now().strftime('%Y%m%d')}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            use_container_width=True
+        )
+        
+    except Exception as e:
+        st.error(f"❌ Error al generar proyecciones: {str(e)}")
+        st.stop()
+
+# =============================================================================
+# ⚖️ SECCIÓN DE COMPARACIONES PREMIUM
+# =============================================================================
+
+def show_premium_comparisons():
+    """Muestra comparaciones con diseño premium"""
+    
+    st.markdown("""
+    <div class="premium-header">
+        <h1>⚖️ <span>Comparaciones</span> Anuales</h1>
+        <p>Análisis comparativo de rendimiento por año</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    try:
+        # Crear columnas necesarias
+        df_copy = df.copy()
+        df_copy["Año"] = df_copy["Fecha"].dt.year
+        df_copy["MesNombre"] = df_copy["Fecha"].dt.strftime("%b")
+        df_copy["MesNum"] = df_copy["Fecha"].dt.month
+        df_copy["Acumulado"] = df_copy["Ganacias/Pérdidas Netas"].cumsum()
+        df_copy["MaxAcum"] = df_copy["Acumulado"].cummax()
+        df_copy["Drawdown"] = df_copy["Acumulado"] - df_copy["MaxAcum"]
+        
+        # Selección de años
+        años_disponibles = sorted(df_copy["Año"].unique().tolist())
         años_seleccionados = st.multiselect(
-            "Selecciona los años a comparar",
+            "📅 Selecciona los años a comparar",
             años_disponibles,
             default=años_disponibles[-2:] if len(años_disponibles) > 1 else años_disponibles
         )
         
         if not años_seleccionados:
-            st.warning("Por favor selecciona al menos un año")
+            st.warning("⚠️ Selecciona al menos un año para comparar")
             st.stop()
-
-        # Gráfico 1: Rentabilidad Promedio Mensual
-        st.markdown("### 📈 Rentabilidad Promedio Mensual (%)")
         
-        # Calcular rentabilidad mensual
-        if 'Beneficio en %' not in df.columns:
-            st.error("Columna 'Beneficio en %' no encontrada")
-            st.stop()
+        # Filtrar datos
+        df_filtrado = df_copy[df_copy["Año"].isin(años_seleccionados)]
+        
+        # Gráfico 1: Comparación de Rentabilidad Mensual
+        st.markdown("### 📈 Comparación de Rentabilidad Mensual")
+        
+        if "Beneficio en %" in df_filtrado.columns:
+            comparacion = df_filtrado.groupby(["Año", "MesNum", "MesNombre"]).agg({
+                "Beneficio en %": "mean"
+            }).reset_index().sort_values(["Año", "MesNum"])
             
-        comparacion_anual = df[df['Año'].isin(años_seleccionados)].groupby(
-            ['Año', 'MesNombre', 'MesOrden']).agg({
-                'Beneficio en %': 'mean'
-            }).reset_index().sort_values(['Año', 'MesOrden'])
+            comparacion["Beneficio en %"] *= 100
+            
+            fig1 = go.Figure()
+            
+            for año in años_seleccionados:
+                data_año = comparacion[comparacion["Año"] == año]
+                fig1.add_trace(go.Scatter(
+                    x=data_año["MesNombre"],
+                    y=data_año["Beneficio en %"],
+                    mode='lines+markers',
+                    name=f"{año}",
+                    line=dict(width=3),
+                    marker=dict(size=8),
+                    hovertemplate='%{x}<br>Rentabilidad: %{y:.2f}%<extra></extra>'
+                ))
+            
+            fig1.update_layout(
+                template='plotly_dark',
+                height=400,
+                hovermode='x unified',
+                legend=dict(
+                    yanchor="top",
+                    y=0.99,
+                    xanchor="left",
+                    x=0.01,
+                    bgcolor='rgba(0,0,0,0.5)'
+                ),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                xaxis_title='Mes',
+                yaxis_title='Rentabilidad (%)',
+                xaxis=dict(categoryorder='array', categoryarray=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'])
+            )
+            
+            st.plotly_chart(fig1, use_container_width=True)
+            st.markdown("---")
         
-        comparacion_anual["Beneficio en %"] *= 100  # Convertir a porcentaje
-
-        fig_rentabilidad = px.line(
-            comparacion_anual,
-            x="MesNombre",
-            y="Beneficio en %",
-            color="Año",
-            title="Rentabilidad Promedio Mensual por Año",
-            template="plotly_white",
-            category_orders={"MesNombre": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-                                         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]}
-        )
-        fig_rentabilidad.update_traces(
-            mode="lines+markers+text",
-            text=comparacion_anual["Beneficio en %"].round(1),
-            textposition="top center",
-            hovertemplate='Mes: %{x}<br>Rentabilidad: %{y:.1f}%'
-        )
-        fig_rentabilidad.update_layout(yaxis_title="Rentabilidad (%)")
-        st.plotly_chart(fig_rentabilidad, use_container_width=True)
-        st.markdown("---")
-
-        # Gráfico 2: Ganancia Neta Anual
-        st.markdown("### 📊 Ganancia Neta Anual")
-        ganancia_anual = df[df['Año'].isin(años_seleccionados)].groupby("Año").agg({
-            'Ganacias/Pérdidas Netas': 'sum'
+        # Gráfico 2: Comparación de Ganancia Anual
+        st.markdown("### 💰 Comparación de Ganancia Anual")
+        
+        ganancia_anual = df_filtrado.groupby("Año").agg({
+            "Ganacias/Pérdidas Netas": "sum"
         }).reset_index()
-
-        fig_ganancia = px.bar(
-            ganancia_anual,
-            x="Año",
-            y="Ganacias/Pérdidas Netas",
-            title="Ganancia Neta Anual",
-            template="plotly_white",
-            text_auto='.2s'
+        
+        fig2 = go.Figure()
+        
+        fig2.add_trace(go.Bar(
+            x=ganancia_anual["Año"],
+            y=ganancia_anual["Ganacias/Pérdidas Netas"],
+            marker_color=['#4CAF50' if x > 0 else '#f44336' for x in ganancia_anual["Ganacias/Pérdidas Netas"]],
+            text=[f"${x:,.0f}" for x in ganancia_anual["Ganacias/Pérdidas Netas"]],
+            textposition='outside',
+            hovertemplate='Año: %{x}<br>Ganancia: $%{y:,.0f}<extra></extra>'
+        ))
+        
+        fig2.update_layout(
+            template='plotly_dark',
+            height=400,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            xaxis_title='Año',
+            yaxis_title='Ganancia Neta ($)',
+            yaxis=dict(tickformat='$,.0f')
         )
-        fig_ganancia.update_traces(
-            marker_color='#4CAF50',
-            hovertemplate='Año: %{x}<br>Ganancia: %{y:,.2f} USD'
-        )
-        fig_ganancia.update_layout(yaxis_tickformat=",", yaxis_title="Ganancia Neta (USD)")
-        st.plotly_chart(fig_ganancia, use_container_width=True)
+        
+        st.plotly_chart(fig2, use_container_width=True)
         st.markdown("---")
-
-        # Gráfico 3: Drawdown Máximo Anual
-        st.markdown("### 📉 Drawdown Máximo Anual")
-        drawdown_anual = df[df['Año'].isin(años_seleccionados)].groupby("Año").agg({
-            'Drawdown': 'min'
+        
+        # Gráfico 3: Comparación de Drawdown
+        if "Drawdown" in df_filtrado.columns:
+            st.markdown("### 📉 Comparación de Drawdown Máximo")
+            
+            drawdown_anual = df_filtrado.groupby("Año").agg({
+                "Drawdown": "min"
+            }).reset_index()
+            
+            fig3 = go.Figure()
+            
+            fig3.add_trace(go.Bar(
+                x=drawdown_anual["Año"],
+                y=drawdown_anual["Drawdown"],
+                marker_color='#f44336',
+                text=[f"${x:,.0f}" for x in drawdown_anual["Drawdown"]],
+                textposition='outside',
+                hovertemplate='Año: %{x}<br>Drawdown: $%{y:,.0f}<extra></extra>'
+            ))
+            
+            fig3.update_layout(
+                template='plotly_dark',
+                height=400,
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                xaxis_title='Año',
+                yaxis_title='Drawdown ($)',
+                yaxis=dict(tickformat='$,.0f')
+            )
+            
+            st.plotly_chart(fig3, use_container_width=True)
+            st.markdown("---")
+        
+        # Tabla comparativa
+        st.markdown("### 📊 Tabla Comparativa Anual")
+        
+        # Crear tabla resumen
+        tabla_comparativa = df_filtrado.groupby("Año").agg({
+            "Capital Invertido": "last",
+            "Ganacias/Pérdidas Netas": "sum",
+            "Beneficio en %": "mean"
         }).reset_index()
-
-        fig_drawdown = px.bar(
-            drawdown_anual,
-            x="Año",
-            y="Drawdown",
-            title="Drawdown Máximo Anual",
-            template="plotly_white",
-            text_auto='.2s'
+        
+        tabla_comparativa["Beneficio en %"] = tabla_comparativa["Beneficio en %"] * 100
+        tabla_comparativa["ROI"] = (tabla_comparativa["Ganacias/Pérdidas Netas"] / tabla_comparativa["Capital Invertido"]) * 100
+        
+        # Formatear
+        tabla_comparativa_display = tabla_comparativa.copy()
+        tabla_comparativa_display["Capital Invertido"] = tabla_comparativa_display["Capital Invertido"].apply(lambda x: f"${x:,.0f}")
+        tabla_comparativa_display["Ganacias/Pérdidas Netas"] = tabla_comparativa_display["Ganacias/Pérdidas Netas"].apply(lambda x: f"${x:,.0f}")
+        tabla_comparativa_display["Beneficio en %"] = tabla_comparativa_display["Beneficio en %"].apply(lambda x: f"{x:.2f}%")
+        tabla_comparativa_display["ROI"] = tabla_comparativa_display["ROI"].apply(lambda x: f"{x:.2f}%")
+        
+        tabla_comparativa_display.columns = ["Año", "Capital Final", "Ganancia Neta", "Rentabilidad Prom.", "ROI Anual"]
+        
+        st.dataframe(
+            tabla_comparativa_display,
+            use_container_width=True,
+            hide_index=True
         )
-        fig_drawdown.update_traces(
-            marker_color='#F44336',
-            hovertemplate='Año: %{x}<br>Drawdown: %{y:,.2f} USD'
-        )
-        fig_drawdown.update_layout(yaxis_title="Drawdown (USD)")
-        st.plotly_chart(fig_drawdown, use_container_width=True)
-
+        
+        # Estadísticas adicionales
+        st.markdown("### 📈 Análisis de Rendimiento")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            mejor_año = tabla_comparativa.loc[tabla_comparativa["Ganacias/Pérdidas Netas"].idxmax()]
+            st.markdown(f"""
+            <div style="background: #1a1a2e; padding: 20px; border-radius: 15px; border: 1px solid rgba(76, 175, 80, 0.3);">
+                <div style="color: #c0c0c0; font-size: 14px;">🏆 Mejor Año</div>
+                <div style="color: #4CAF50; font-size: 24px; font-weight: 700;">{int(mejor_año['Año'])}</div>
+                <div style="color: #c0c0c0; font-size: 14px;">Ganancia: ${mejor_año['Ganacias/Pérdidas Netas']:,.0f}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            peor_año = tabla_comparativa.loc[tabla_comparativa["Ganacias/Pérdidas Netas"].idxmin()]
+            st.markdown(f"""
+            <div style="background: #1a1a2e; padding: 20px; border-radius: 15px; border: 1px solid rgba(244, 67, 54, 0.3);">
+                <div style="color: #c0c0c0; font-size: 14px;">⚠️ Peor Año</div>
+                <div style="color: #f44336; font-size: 24px; font-weight: 700;">{int(peor_año['Año'])}</div>
+                <div style="color: #c0c0c0; font-size: 14px;">Ganancia: ${peor_año['Ganacias/Pérdidas Netas']:,.0f}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col3:
+            promedio_anual = tabla_comparativa["Ganacias/Pérdidas Netas"].mean()
+            st.markdown(f"""
+            <div style="background: #1a1a2e; padding: 20px; border-radius: 15px; border: 1px solid rgba(255, 215, 0, 0.3);">
+                <div style="color: #c0c0c0; font-size: 14px;">📊 Ganancia Promedio Anual</div>
+                <div style="color: #ffd700; font-size: 24px; font-weight: 700;">${promedio_anual:,.0f}</div>
+                <div style="color: #c0c0c0; font-size: 14px;">Basado en {len(tabla_comparativa)} años</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
     except Exception as e:
-        st.error(f"Error al generar comparaciones: {str(e)}")
+        st.error(f"❌ Error al generar comparaciones: {str(e)}")
         st.stop()
 
 # =============================================================================
-# 🏁 MENÚ PRINCIPAL
+# 🏁 MENÚ PRINCIPAL PREMIUM
 # =============================================================================
-pagina = st.sidebar.radio(
-    "Selecciona la sección",
-    ["📌 KPIs", "📊 Gráficos", "📈 Proyecciones", "⚖️ Comparaciones"]
-)
 
+# Sidebar navigation premium
+with st.sidebar:
+    st.markdown("---")
+    st.markdown("### 📋 Navegación")
+    
+    pagina = st.radio(
+        "",
+        ["📌 KPIs", "📊 Gráficos", "📈 Proyecciones", "⚖️ Comparaciones"],
+        index=0,
+        format_func=lambda x: x
+    )
+    
+    st.markdown("---")
+    st.markdown("""
+    <div style="text-align: center; color: #555; font-size: 12px; padding: 10px 0;">
+        <div>FIFI Investments</div>
+        <div>v2.0 - Premium</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# Mostrar sección seleccionada
 if pagina == "📌 KPIs":
-    show_kpis()
+    show_premium_kpis()
 elif pagina == "📊 Gráficos":
-    show_charts()
+    show_premium_charts()
 elif pagina == "📈 Proyecciones":
-    show_projections()
+    show_premium_projections()
 elif pagina == "⚖️ Comparaciones":
-    show_comparisons()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    show_premium_comparisons()
