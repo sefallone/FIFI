@@ -12,7 +12,7 @@ from io import BytesIO
 import calendar
 
 # =============================================================================
-# 🎨 CONFIGURACIÓN DE PÁGINA Y ESTILOS
+# 🎨 CONFIGURACIÓN DE PÁGINA Y ESTILOS - VERSIÓN ELEGANTE
 # =============================================================================
 
 st.set_page_config(
@@ -22,36 +22,37 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# CSS personalizado para diseño premium con tooltips
+# CSS personalizado - Estilo elegante y refinado
 st.markdown("""
 <style>
-    /* Fondo general oscuro premium */
+    /* Fondo general - Beige/Blanco roto elegante */
     .stApp {
-        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+        background: linear-gradient(135deg, #f5f0eb 0%, #e8e0d8 100%);
     }
     
-    /* Sidebar premium */
+    /* Sidebar elegante */
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #0a0a0a 0%, #16213e 100%);
-        border-right: 1px solid rgba(255,215,0,0.1);
+        background: linear-gradient(180deg, #1a2634 0%, #2c3e50 100%);
+        border-right: 1px solid rgba(255,255,255,0.05);
+        padding-top: 20px;
     }
     
     [data-testid="stSidebar"] [data-testid="stMarkdown"] {
-        color: #c0c0c0;
+        color: #d4d4d4;
     }
     
-    /* Tarjetas de KPI premium */
+    /* Tarjetas de KPI - Elegantes y sutiles */
     .kpi-card {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-        border-radius: 20px;
-        padding: 25px;
-        margin: 10px 0;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        border: 1px solid rgba(255,215,0,0.1);
+        background: linear-gradient(135deg, #ffffff 0%, #f8f6f4 100%);
+        border-radius: 12px;
+        padding: 16px 20px 18px 20px;
+        margin: 6px 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        border: 1px solid rgba(200,190,180,0.15);
         transition: all 0.3s ease;
         position: relative;
         overflow: hidden;
-        cursor: help;
+        min-height: 85px;
     }
     
     .kpi-card::before {
@@ -60,239 +61,291 @@ st.markdown("""
         top: 0;
         left: 0;
         right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, #ffd700, #f7971e);
+        height: 2px;
+        background: linear-gradient(90deg, #2c6e8f, #4a8db7);
+        opacity: 0.6;
     }
     
     .kpi-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 40px rgba(0,0,0,0.8);
-        border-color: rgba(255,215,0,0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(44, 110, 143, 0.08);
+        border-color: rgba(44, 110, 143, 0.2);
     }
     
     .kpi-title {
-        color: #c0c0c0;
-        font-size: 14px;
+        color: #6b7a8a;
+        font-size: 11px;
         font-weight: 500;
-        letter-spacing: 1px;
+        letter-spacing: 0.8px;
         text-transform: uppercase;
-        margin-bottom: 10px;
+        margin-bottom: 6px;
         display: flex;
         align-items: center;
         justify-content: space-between;
     }
     
     .kpi-title .help-icon {
-        color: #ffd700;
-        font-size: 16px;
+        color: #8a9aa8;
+        font-size: 13px;
         cursor: help;
-        margin-left: 10px;
-        opacity: 0.7;
+        margin-left: 8px;
+        opacity: 0.6;
         transition: opacity 0.3s ease;
     }
     
     .kpi-title .help-icon:hover {
         opacity: 1;
+        color: #2c6e8f;
     }
     
     .kpi-value {
-        color: #ffffff;
-        font-size: 32px;
-        font-weight: 700;
-        margin: 10px 0 5px 0;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        color: #1a2634;
+        font-size: 22px;
+        font-weight: 600;
+        margin: 4px 0 3px 0;
+        letter-spacing: -0.3px;
     }
     
     .kpi-sub {
-        color: #ffd700;
-        font-size: 13px;
+        color: #8a9aa8;
+        font-size: 11px;
         font-weight: 400;
-        margin-top: 8px;
+        margin-top: 4px;
+        letter-spacing: 0.3px;
     }
     
     .kpi-icon {
-        font-size: 24px;
-        margin-right: 10px;
+        font-size: 16px;
+        margin-right: 6px;
+        opacity: 0.7;
     }
     
-    /* Tooltip personalizado */
-    .kpi-tooltip {
-        position: relative;
-        display: inline-block;
-    }
-    
-    .kpi-tooltip .tooltip-text {
-        visibility: hidden;
-        width: 280px;
-        background: #1a1a2e;
-        color: #ffffff;
-        text-align: left;
-        border-radius: 10px;
-        padding: 15px;
-        border: 1px solid rgba(255,215,0,0.2);
-        position: absolute;
-        z-index: 1000;
-        bottom: 125%;
-        left: 50%;
-        margin-left: -140px;
-        opacity: 0;
-        transition: opacity 0.3s;
-        font-size: 13px;
-        font-weight: 400;
-        line-height: 1.5;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-    }
-    
-    .kpi-tooltip .tooltip-text::after {
-        content: "";
-        position: absolute;
-        top: 100%;
-        left: 50%;
-        margin-left: -5px;
-        border-width: 5px;
-        border-style: solid;
-        border-color: #1a1a2e transparent transparent transparent;
-    }
-    
-    .kpi-tooltip:hover .tooltip-text {
-        visibility: visible;
-        opacity: 1;
-    }
-    
-    /* Header premium */
+    /* Header elegante */
     .premium-header {
-        background: linear-gradient(90deg, #1a1a2e 0%, #16213e 50%, #1a1a2e 100%);
-        padding: 25px 30px;
-        border-radius: 15px;
-        border: 1px solid rgba(255,215,0,0.1);
-        margin-bottom: 30px;
+        background: linear-gradient(135deg, #ffffff 0%, #f8f6f4 100%);
+        padding: 20px 30px;
+        border-radius: 12px;
+        border: 1px solid rgba(200,190,180,0.15);
+        margin-bottom: 25px;
         text-align: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
     }
     
     .premium-header h1 {
-        color: #ffffff;
+        color: #1a2634;
         font-weight: 300;
-        font-size: 36px;
+        font-size: 28px;
+        letter-spacing: -0.5px;
     }
     
     .premium-header h1 span {
-        color: #ffd700;
-        font-weight: 700;
+        color: #2c6e8f;
+        font-weight: 600;
     }
     
     .premium-header p {
-        color: #c0c0c0;
-        font-size: 16px;
-        margin-top: 10px;
+        color: #8a9aa8;
+        font-size: 14px;
+        margin-top: 6px;
+        font-weight: 300;
     }
     
-    /* Botones premium */
+    .premium-header .sub-info {
+        font-size: 12px;
+        color: #a0aeb8;
+        margin-top: 4px;
+    }
+    
+    /* Botones elegantes */
     .stButton > button {
-        background: linear-gradient(135deg, #ffd700 0%, #f7971e 100%);
-        color: #000000;
-        font-weight: 600;
-        border: none;
-        border-radius: 10px;
-        padding: 12px 30px;
+        background: transparent;
+        color: #d4d4d4;
+        font-weight: 400;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 8px;
+        padding: 10px 18px;
         transition: all 0.3s ease;
-        text-transform: uppercase;
-        letter-spacing: 1px;
+        font-size: 14px;
+        letter-spacing: 0.3px;
+        width: 100%;
+        text-align: left;
     }
     
     .stButton > button:hover {
-        transform: scale(1.05);
-        box-shadow: 0 5px 20px rgba(255,215,0,0.3);
+        background: rgba(255,255,255,0.05);
+        border-color: rgba(255,255,255,0.15);
+        transform: translateX(4px);
+        color: #ffffff;
     }
     
-    /* Inputs premium */
+    .stButton > button:active {
+        background: rgba(255,255,255,0.08);
+    }
+    
+    /* Botón de cerrar sesión */
+    .logout-btn > button {
+        color: #e8a090;
+        border-color: rgba(232, 160, 144, 0.15);
+    }
+    
+    .logout-btn > button:hover {
+        background: rgba(232, 160, 144, 0.08);
+        border-color: rgba(232, 160, 144, 0.25);
+        color: #e8a090;
+    }
+    
+    /* Inputs elegantes */
     [data-testid="stTextInput"] input {
-        background: #1a1a2e;
-        border: 1px solid rgba(255,215,0,0.2);
-        border-radius: 10px;
-        color: #ffffff;
-        padding: 12px;
+        background: #f8f6f4;
+        border: 1px solid rgba(200,190,180,0.2);
+        border-radius: 8px;
+        color: #1a2634;
+        padding: 10px 14px;
+        font-size: 14px;
     }
     
     [data-testid="stTextInput"] input:focus {
-        border-color: #ffd700;
-        box-shadow: 0 0 15px rgba(255,215,0,0.1);
+        border-color: #2c6e8f;
+        box-shadow: 0 0 0 3px rgba(44, 110, 143, 0.08);
     }
     
-    /* Selectbox premium */
+    /* Selectbox elegante */
     [data-testid="stSelectbox"] {
-        background: #1a1a2e;
-        border-radius: 10px;
+        background: #f8f6f4;
+        border-radius: 8px;
     }
     
-    /* Tablas premium */
+    /* Tablas elegantes */
     [data-testid="stDataFrame"] {
         background: transparent;
     }
     
     .dataframe {
-        background: #1a1a2e !important;
-        border-radius: 15px !important;
-        border: 1px solid rgba(255,215,0,0.1) !important;
-        color: #ffffff !important;
+        background: #ffffff !important;
+        border-radius: 12px !important;
+        border: 1px solid rgba(200,190,180,0.1) !important;
+        color: #1a2634 !important;
+        font-size: 13px !important;
     }
     
-    /* Scrollbar personalizada */
+    /* Scrollbar elegante */
     ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
+        width: 6px;
+        height: 6px;
     }
     ::-webkit-scrollbar-track {
-        background: #0a0a0a;
+        background: #f0ece8;
         border-radius: 10px;
     }
     ::-webkit-scrollbar-thumb {
-        background: linear-gradient(135deg, #ffd700, #f7971e);
+        background: linear-gradient(135deg, #2c6e8f, #4a8db7);
         border-radius: 10px;
     }
     ::-webkit-scrollbar-thumb:hover {
-        background: #ffd700;
+        background: #2c6e8f;
     }
     
-    /* Login container */
+    /* Login elegante */
     .login-container {
-        max-width: 450px;
-        margin: 100px auto;
+        max-width: 420px;
+        margin: 80px auto;
         padding: 40px;
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-        border-radius: 20px;
-        border: 1px solid rgba(255,215,0,0.1);
-        box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid rgba(200,190,180,0.15);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.06);
     }
     
     .login-title {
         text-align: center;
-        color: #ffffff;
-        font-size: 28px;
+        color: #1a2634;
+        font-size: 24px;
         font-weight: 300;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
     }
     
     .login-title span {
-        color: #ffd700;
-        font-weight: 700;
+        color: #2c6e8f;
+        font-weight: 600;
     }
     
     .login-subtitle {
         text-align: center;
-        color: #c0c0c0;
-        font-size: 14px;
-        margin-bottom: 30px;
+        color: #8a9aa8;
+        font-size: 13px;
+        margin-bottom: 25px;
+        font-weight: 300;
     }
     
-    /* Badge premium */
+    /* Badge elegante */
     .badge {
-        background: linear-gradient(135deg, #ffd700, #f7971e);
-        color: #000000;
-        padding: 5px 15px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
+        background: rgba(44, 110, 143, 0.08);
+        color: #2c6e8f;
+        padding: 3px 12px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 500;
         display: inline-block;
+        border: 1px solid rgba(44, 110, 143, 0.1);
+    }
+    
+    /* Avatar en sidebar */
+    .avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #2c6e8f, #4a8db7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        font-weight: 500;
+        color: #ffffff;
+        margin: 0 auto 10px auto;
+    }
+    
+    /* Logo en sidebar */
+    .sidebar-logo {
+        text-align: center;
+        padding: 10px 0 20px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        margin-bottom: 20px;
+    }
+    
+    .sidebar-logo img {
+        max-width: 120px;
+        height: auto;
+        opacity: 0.9;
+    }
+    
+    .sidebar-logo .logo-text {
+        color: #d4d4d4;
+        font-size: 16px;
+        font-weight: 300;
+        margin-top: 6px;
+        letter-spacing: 2px;
+    }
+    
+    .sidebar-logo .logo-text span {
+        color: #4a8db7;
+        font-weight: 400;
+    }
+    
+    /* Separador elegante */
+    .sidebar-divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+        margin: 15px 0;
+    }
+    
+    /* Navegación en sidebar */
+    .nav-section-title {
+        color: #8a9aa8;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        padding: 10px 0 8px 0;
+        opacity: 0.5;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -311,12 +364,12 @@ def check_password_hybrid():
     if st.session_state.get("authenticated"):
         return True
     
-    # Mostrar login premium
+    # Mostrar login elegante
     st.markdown("""
-    <div style="text-align: center; padding: 30px 0;">
-        <h1 style="color: #ffd700; font-size: 52px; font-weight: 700; margin-bottom: 5px;">🏛️ Fondo de Inversión Fallone Investment</h1>
-        <p style="color: #c0c0c0; font-size: 20px; font-weight: 300;">Private Investment Access</p>
-        <div style="width: 60px; height: 3px; background: linear-gradient(90deg, #ffd700, #f7971e); margin: 15px auto;"></div>
+    <div style="text-align: center; padding: 30px 0 10px 0;">
+        <h1 style="color: #2c6e8f; font-size: 42px; font-weight: 300; letter-spacing: -0.5px;">🏛️ <span style="font-weight: 600;">FIFI</span></h1>
+        <p style="color: #8a9aa8; font-size: 16px; font-weight: 300;">Investment Dashboard</p>
+        <div style="width: 40px; height: 2px; background: linear-gradient(90deg, #2c6e8f, #4a8db7); margin: 12px auto;"></div>
     </div>
     """, unsafe_allow_html=True)
     
@@ -326,15 +379,16 @@ def check_password_hybrid():
         with col2:
             with st.form("login_form"):
                 st.markdown("""
-                <div style="background: #1a1a2e; padding: 30px; border-radius: 20px; border: 1px solid rgba(255,215,0,0.1);">
+                <div style="background: #ffffff; padding: 30px; border-radius: 14px; border: 1px solid rgba(200,190,180,0.12); box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
                 """, unsafe_allow_html=True)
                 
-                username = st.text_input("👤 Usuario", placeholder="Ingresa tu usuario")
-                password = st.text_input("🔑 Contraseña", type="password", placeholder="Ingresa tu contraseña")
+                username = st.text_input("👤 Usuario", placeholder="Ingresa tu usuario", label_visibility="collapsed")
+                st.markdown("<br>", unsafe_allow_html=True)
+                password = st.text_input("🔑 Contraseña", type="password", placeholder="Ingresa tu contraseña", label_visibility="collapsed")
                 
                 st.markdown("</div>", unsafe_allow_html=True)
                 
-                submitted = st.form_submit_button("🔓 Acceder al Dashboard", use_container_width=True)
+                submitted = st.form_submit_button("Acceder", use_container_width=True)
                 
                 if submitted:
                     if username and password:
@@ -367,7 +421,6 @@ def check_password_hybrid():
                             st.session_state["authenticated"] = True
                             st.session_state["username"] = username
                             
-                            # Determinar si es URL o archivo local
                             if archivo_usuario.startswith(("http://", "https://")):
                                 st.session_state["archivo_usuario"] = archivo_usuario
                             else:
@@ -375,20 +428,19 @@ def check_password_hybrid():
                             
                             st.rerun()
                         else:
-                            st.error("❌ Credenciales incorrectas. Por favor, verifica tus datos.")
+                            st.error("❌ Credenciales incorrectas")
                     else:
-                        st.warning("⚠️ Por favor, completa ambos campos.")
+                        st.warning("⚠️ Completa ambos campos")
     
-    # Mostrar footer
+    # Footer
     st.markdown("""
-    <div style="position: fixed; bottom: 20px; width: 100%; text-align: center; color: #555; font-size: 12px;">
-        FIFI Investments © 2026 - Todos los derechos reservados
+    <div style="position: fixed; bottom: 20px; width: 100%; text-align: center; color: #c0b8b0; font-size: 11px; letter-spacing: 0.5px;">
+        FIFI Investments © 2026
     </div>
     """, unsafe_allow_html=True)
     
     return False
 
-# Verificar autenticación
 if not check_password_hybrid():
     st.stop()
 
@@ -396,50 +448,87 @@ if not check_password_hybrid():
 # 🚀 CONFIGURACIÓN POST-LOGIN
 # =============================================================================
 
-# Barra lateral con información del usuario
+# Barra lateral elegante
 with st.sidebar:
-    st.markdown(f"""
-    <div style="text-align: center; padding: 20px 0;">
-        <div style="background: linear-gradient(135deg, #ffd700, #f7971e); width: 60px; height: 60px; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 700; color: #000;">
-            {st.session_state['username'][0].upper()}
-        </div>
-        <h3 style="color: #ffffff; margin-top: 10px;">{st.session_state['username']}</h3>
-        <span class="badge">🟢 Activo</span>
-    </div>
+    # Logo
+    st.markdown("""
+    <div class="sidebar-logo">
     """, unsafe_allow_html=True)
     
-    st.markdown("---")
-    
-    if st.button("🚪 Cerrar sesión", use_container_width=True):
-        for key in list(st.session_state.keys()):
-            del st.session_state[key]
-        st.rerun()
-    
-    st.markdown("---")
-    st.markdown("### ⚙️ Configuración")
-    st.caption("Última actualización: " + datetime.now().strftime("%d/%m/%Y %H:%M"))
-
-# Logo
-def load_logo():
     try:
         logo_path = os.path.join("logo.jpg")
         if os.path.exists(logo_path):
             with open(logo_path, "rb") as f:
                 logo_b64 = base64.b64encode(f.read()).decode()
             st.markdown(f"""
-                <div style='text-align: center; padding: 10px 0 20px 0;'>
-                    <img src='data:image/jpeg;base64,{logo_b64}' style='width:180px;'/>
-                </div>
-                """, unsafe_allow_html=True)
+                <img src='data:image/jpeg;base64,{logo_b64}' style='max-width:130px;'/>
+            """, unsafe_allow_html=True)
         else:
-            st.warning("Logo no encontrado")
+            st.markdown("""
+            <div style="color: #d4d4d4; font-size: 28px; font-weight: 300;">🏛️</div>
+            """, unsafe_allow_html=True)
+    except:
+        st.markdown("""
+        <div style="color: #d4d4d4; font-size: 28px; font-weight: 300;">🏛️</div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div class="logo-text"><span>FIFI</span> Investments</div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Información del usuario
+    st.markdown(f"""
+    <div style="text-align: center; padding: 15px 0 10px 0;">
+        <div class="avatar">{st.session_state['username'][0].upper()}</div>
+        <div style="color: #ffffff; font-size: 15px; font-weight: 400;">{st.session_state['username']}</div>
+        <div style="margin-top: 4px;"><span class="badge">● Activo</span></div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
+    
+    # Navegación con botones elegantes
+    st.markdown('<div class="nav-section-title">Navegación</div>', unsafe_allow_html=True)
+    
+    # Botones de navegación - usando st.button con estilos específicos
+    if st.button("📊 KPIs", key="nav_kpis", use_container_width=True):
+        st.session_state["pagina"] = "KPIs"
+        st.rerun()
+    
+    if st.button("📈 Gráficos", key="nav_charts", use_container_width=True):
+        st.session_state["pagina"] = "Gráficos"
+        st.rerun()
+    
+    if st.button("🚀 Proyecciones", key="nav_projections", use_container_width=True):
+        st.session_state["pagina"] = "Proyecciones"
+        st.rerun()
+    
+    if st.button("⚖️ Comparaciones", key="nav_comparisons", use_container_width=True):
+        st.session_state["pagina"] = "Comparaciones"
+        st.rerun()
+    
+    st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
+    
+    # Cerrar sesión
+    st.markdown('<div class="logout-btn">', unsafe_allow_html=True)
+    if st.button("🚪 Cerrar sesión", key="logout", use_container_width=True):
+        for key in list(st.session_state.keys()):
+            del st.session_state[key]
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Info del archivo
+    st.markdown('<div style="margin-top: 20px;">', unsafe_allow_html=True)
+    try:
+        st.caption(f"📁 {os.path.basename(archivo_usuario)}")
+        st.caption(f"📅 {len(df)} registros")
     except:
         pass
-
-load_logo()
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # =============================================================================
-# 📁 CARGA DE DATOS MEJORADA
+# 📁 CARGA DE DATOS
 # =============================================================================
 
 @st.cache_data(ttl=3600)
@@ -458,7 +547,6 @@ def load_user_data(file_path):
                     raise FileNotFoundError(f"No se encontró el archivo: {file_path}")
             df = pd.read_excel(file_path, sheet_name="Histórico")
         
-        # Validación de columnas requeridas
         required_columns = ["Fecha", "Capital Invertido", "Ganacias/Pérdidas Netas"]
         for col in required_columns:
             if col not in df.columns:
@@ -468,7 +556,6 @@ def load_user_data(file_path):
         df["Fecha"] = pd.to_datetime(df["Fecha"], errors="coerce")
         df["Mes"] = df["Fecha"].dt.to_period("M")
         
-        # Asegurar que las columnas numéricas sean float
         numeric_columns = [
             "Capital Invertido", "Aumento Capital", "Retiro de Fondos",
             "Ganacias/Pérdidas Brutas", "Ganacias/Pérdidas Brutas Acumuladas",
@@ -487,7 +574,6 @@ def load_user_data(file_path):
         st.error(f"❌ Error al cargar datos: {str(e)}")
         st.stop()
 
-# Cargar datos con manejo de errores
 try:
     archivo_usuario = st.session_state.get("archivo_usuario", "")
     if not archivo_usuario:
@@ -496,23 +582,17 @@ try:
     
     df = load_user_data(archivo_usuario)
     
-    with st.sidebar:
-        st.success(f"📊 Datos cargados correctamente")
-        st.caption(f"📁 {os.path.basename(archivo_usuario)}")
-        st.caption(f"📅 {len(df)} registros")
-    
 except Exception as e:
     st.error(f"❌ Error al cargar datos del usuario: {str(e)}")
     st.stop()
 
 # =============================================================================
-# 📌 SECCIÓN DE KPIs PREMIUM (CORREGIDA - CON TOOLTIPS)
+# 📌 SECCIÓN DE KPIs - VERSIÓN ELEGANTE
 # =============================================================================
 
-def styled_kpi_premium(title, value, subtitle="", icon="", color="#ffd700", tooltip=""):
-    """KPI con diseño premium y tooltip explicativo"""
+def styled_kpi_elegant(title, value, subtitle="", icon="", color="#1a2634", tooltip=""):
+    """KPI con diseño elegante y refinado"""
     
-    # HTML con tooltip personalizado
     st.markdown(f"""
     <div class="kpi-card">
         <div class="kpi-title">
@@ -526,18 +606,18 @@ def styled_kpi_premium(title, value, subtitle="", icon="", color="#ffd700", tool
     </div>
     """, unsafe_allow_html=True)
 
-def show_premium_kpis():
-    """Muestra los KPIs con diseño premium - VERSIÓN CORREGIDA CON TOOLTIPS"""
+def show_elegant_kpis():
+    """Muestra los KPIs con diseño elegante"""
     
     st.markdown(f"""
     <div class="premium-header">
         <h1>📊 <span>KPI</span> Dashboard</h1>
-        <p>Indicadores clave de desempeño al <span style="color: #ffd700;">{datetime.now().strftime('%d/%m/%Y')}</span></p>
-        <p style="font-size: 13px; color: #888; margin-top: 5px;">ⓘ Pasa el mouse sobre el icono de cada KPI para ver su significado</p>
+        <p>Indicadores clave de desempeño</p>
+        <div class="sub-info">Actualizado al {datetime.now().strftime('%d/%m/%Y')}</div>
     </div>
     """, unsafe_allow_html=True)
     
-    # Validación de columnas
+    # Validación
     required_columns = ["Fecha", "Capital Invertido", "Ganacias/Pérdidas Netas"]
     missing_cols = [col for col in required_columns if col not in df.columns]
     if missing_cols:
@@ -549,79 +629,74 @@ def show_premium_kpis():
         df_copy = df.copy()
         df_copy["Mes"] = df_copy["Fecha"].dt.to_period("M")
         
-        # Calcular acumulados si no existen
         if "Ganacias/Pérdidas Netas Acumuladas" not in df_copy.columns:
             df_copy["Ganacias/Pérdidas Netas Acumuladas"] = df_copy["Ganacias/Pérdidas Netas"].cumsum()
         
-        # CORREGIDO: Usar ffill() en lugar de fillna(method='ffill')
         df_copy["Acumulado"] = df_copy["Ganacias/Pérdidas Netas Acumuladas"].ffill()
         df_copy["MaxAcum"] = df_copy["Acumulado"].cummax()
         df_copy["Drawdown"] = df_copy["Acumulado"] - df_copy["MaxAcum"]
         
-        # Obtener datos básicos
+        # Datos básicos
         capital_actual = df_copy["Capital Invertido"].dropna().iloc[-1]
         
-        # ===== CAPITAL INICIAL CORREGIDO =====
-        # El capital inicial es el primer valor de "Aumento Capital" que no está en blanco
+        # CAPITAL INICIAL - Primer valor de "Aumento Capital"
         if "Aumento Capital" in df_copy.columns:
-            # Filtrar valores no nulos y mayores a 0
             aumentos_validos = df_copy["Aumento Capital"].dropna()
             aumentos_validos = aumentos_validos[aumentos_validos > 0]
             if len(aumentos_validos) > 0:
                 capital_inicial = aumentos_validos.iloc[0]
             else:
-                # Si no hay Aumento Capital, usar el primer Capital Invertido
                 capital_inicial = df_copy["Capital Invertido"].dropna().iloc[0]
         else:
             capital_inicial = df_copy["Capital Invertido"].dropna().iloc[0]
         
-        # ===== CÁLCULOS =====
+        # APORTES AL FONDO (NUEVO KPI)
+        if "Aumento Capital" in df_copy.columns:
+            total_aumentos = df_copy["Aumento Capital"].sum()
+            aportes_fondo = total_aumentos - capital_inicial
+        else:
+            aportes_fondo = 0
         
-        # 1. GANANCIA NETA TOTAL
+        # Cálculos
         ganancia_neta_total = df_copy["Ganacias/Pérdidas Netas"].sum()
-        
-        # 2. RETIROS TOTALES
         total_retiros = df_copy["Retiro de Fondos"].sum() if "Retiro de Fondos" in df_copy.columns else 0
         
-        # 3. ROI (Retorno sobre Inversión)
         if capital_actual > 0:
             roi = (ganancia_neta_total / capital_actual) * 100
         else:
             roi = 0
         
-        # 4. RENTABILIDAD MENSUAL PROMEDIO
         if "Beneficio en %" in df_copy.columns:
             monthly_returns = df_copy.groupby("Mes")["Beneficio en %"].mean()
             avg_monthly_return = monthly_returns.mean() * 100
         else:
             avg_monthly_return = 0
         
-        # 5. DRAWDOWN MÁXIMO
         max_drawdown = df_copy["Drawdown"].min() if "Drawdown" in df_copy.columns else 0
         
-        # 6. RATING DE RIESGO
+        # Rating de Riesgo
         if max_drawdown != 0 and capital_actual > 0:
             risk_ratio = abs(max_drawdown / capital_actual)
             if risk_ratio < 0.05:
                 rating = "⭐⭐⭐⭐⭐"
-                risk_text = "Perfil Muy Conservador"
+                risk_text = "Muy Conservador"
             elif risk_ratio < 0.10:
                 rating = "⭐⭐⭐⭐"
-                risk_text = "Perfil Conservador"
+                risk_text = "Conservador"
             elif risk_ratio < 0.20:
                 rating = "⭐⭐⭐"
-                risk_text = "Perfil Moderado"
+                risk_text = "Moderado"
             elif risk_ratio < 0.30:
                 rating = "⭐⭐"
-                risk_text = "Perfil Agresivo"
+                risk_text = "Agresivo"
             else:
                 rating = "⭐"
-                risk_text = "Perfil Muy Agresivo"
+                risk_text = "Muy Agresivo"
         else:
             rating = "⭐⭐⭐⭐⭐"
-            risk_text = "Perfil Muy Conservador"
+            risk_text = "Muy Conservador"
         
-        # 7. MEJOR Y PEOR MES
+        # Mejor y Peor Mes
         if "Beneficio en %" in df_copy.columns:
             mejor_mes_idx = df_copy["Beneficio en %"].idxmax()
             peor_mes_idx = df_copy["Beneficio en %"].idxmin()
@@ -635,10 +710,8 @@ def show_premium_kpis():
             peor_mes = "N/A"
             peor_mes_valor = 0
         
-        # 8. TOTAL DE MESES
         total_meses = len(df_copy["Mes"].unique())
         
-        # 9. CAGR (Tasa de Crecimiento Anual Compuesta)
         if total_meses > 0 and capital_inicial > 0 and capital_actual > 0:
             cagr = (((capital_actual / capital_inicial) ** (12 / total_meses)) - 1) * 100
         else:
@@ -648,43 +721,43 @@ def show_premium_kpis():
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            styled_kpi_premium(
+            styled_kpi_elegant(
                 "Capital Actual",
                 f"${capital_actual:,.0f}",
-                f"▲ +{((capital_actual/capital_inicial - 1) * 100):.1f}% desde inicio",
+                f"▲ +{((capital_actual/capital_inicial - 1) * 100):.1f}%",
                 "💰",
-                "#ffd700",
-                "Valor total del capital invertido al día de hoy, incluyendo ganancias acumuladas y nuevos aportes."
+                "#1a2634",
+                "Valor total del capital invertido al día de hoy."
             )
         
         with col2:
-            styled_kpi_premium(
-                "Rentabilidad Total (ROI)",
+            styled_kpi_elegant(
+                "Rentabilidad Total",
                 f"{roi:.1f}%",
-                f"📈 CAGR: {cagr:.1f}% anual",
+                f"CAGR {cagr:.1f}% anual",
                 "📈",
-                "#4CAF50" if roi > 0 else "#f44336",
-                "Retorno sobre la inversión total. Mide el porcentaje de ganancia neta sobre el capital actual."
+                "#2c6e8f" if roi > 0 else "#c0392b",
+                "Retorno sobre la inversión total (ROI)."
             )
         
         with col3:
-            styled_kpi_premium(
+            styled_kpi_elegant(
                 "Drawdown Máximo",
                 f"${abs(max_drawdown):,.0f}",
-                f"📉 {abs(max_drawdown/capital_actual * 100):.1f}% del capital",
+                f"{abs(max_drawdown/capital_actual * 100):.1f}% del capital",
                 "📉",
-                "#f44336",
-                "Peor pérdida acumulada desde un punto máximo. Indica el mayor riesgo asumido en la inversión."
+                "#c0392b",
+                "Peor pérdida acumulada desde un punto máximo."
             )
         
         with col4:
-            styled_kpi_premium(
+            styled_kpi_elegant(
                 "Rating de Riesgo",
                 rating,
                 risk_text,
                 "🛡️",
-                "#ffd700",
-                "Evaluación del nivel de riesgo basado en el drawdown máximo. 5⭐ = Muy Conservador, 1⭐ = Muy Agresivo."
+                "#2c6e8f",
+                "Nivel de riesgo basado en el drawdown máximo."
             )
         
         st.markdown("---")
@@ -693,43 +766,43 @@ def show_premium_kpis():
         col5, col6, col7, col8 = st.columns(4)
         
         with col5:
-            styled_kpi_premium(
+            styled_kpi_elegant(
                 "Rentabilidad Mensual Prom",
                 f"{avg_monthly_return:.2f}%",
-                f"📊 Basado en {total_meses} meses",
+                f"{total_meses} meses",
                 "📊",
-                "#2196F3",
-                "Promedio de los rendimientos mensuales en porcentaje. Mide la rentabilidad típica mes a mes."
+                "#4a8db7",
+                "Promedio de los rendimientos mensuales."
             )
         
         with col6:
-            styled_kpi_premium(
+            styled_kpi_elegant(
                 "Capital Inicial",
                 f"${capital_inicial:,.0f}",
-                f"📅 {df_copy['Fecha'].min().strftime('%b %Y')}",
+                f"{df_copy['Fecha'].min().strftime('%b %Y')}",
                 "🏦",
-                "#9E9E9E",
-                "Primer aporte de capital registrado en la columna 'Aumento Capital'. Es la inversión inicial del inversionista."
+                "#8a9aa8",
+                "Primer aporte de capital registrado."
             )
         
         with col7:
-            styled_kpi_premium(
-                "Ganancia Neta Total",
-                f"${ganancia_neta_total:,.0f}",
-                f"▲ +{(ganancia_neta_total/capital_actual * 100):.1f}% sobre capital",
-                "📊",
-                "#4CAF50" if ganancia_neta_total > 0 else "#f44336",
-                "Suma de todas las ganancias o pérdidas netas (después de comisiones) durante todo el período."
+            styled_kpi_elegant(
+                "Aportes al Fondo",
+                f"${aportes_fondo:,.0f}",
+                "Nuevos aportes realizados",
+                "💳",
+                "#27ae60",
+                "Suma de todos los aumentos de capital adicionales."
             )
         
         with col8:
-            styled_kpi_premium(
+            styled_kpi_elegant(
                 "Retiros Totales",
                 f"${total_retiros:,.0f}",
-                f"💸 {total_retiros/capital_actual * 100:.1f}% del capital retirado",
+                f"{total_retiros/capital_actual * 100:.1f}% del capital",
                 "💸",
-                "#FF9800",
-                "Total de dinero retirado por el inversionista del fondo durante todo el período de inversión."
+                "#e67e22",
+                "Total de dinero retirado del fondo."
             )
         
         st.markdown("---")
@@ -738,50 +811,49 @@ def show_premium_kpis():
         col9, col10, col11, col12 = st.columns(4)
         
         with col9:
-            styled_kpi_premium(
+            styled_kpi_elegant(
                 "Mejor Mes",
                 mejor_mes,
                 f"▲ {mejor_mes_valor:.2f}%",
                 "🏆",
-                "#4CAF50",
-                "Mes con la mayor rentabilidad porcentual. Muestra el mejor desempeño mensual de la inversión."
+                "#27ae60",
+                "Mes con la mayor rentabilidad porcentual."
             )
         
         with col10:
-            styled_kpi_premium(
+            styled_kpi_elegant(
                 "Peor Mes",
                 peor_mes,
                 f"▼ {peor_mes_valor:.2f}%",
                 "⚠️",
-                "#f44336",
-                "Mes con la peor rentabilidad porcentual. Muestra el peor desempeño mensual de la inversión."
+                "#c0392b",
+                "Mes con la peor rentabilidad porcentual."
             )
         
         with col11:
-            # Índice de Sharpe simplificado
             if max_drawdown != 0 and capital_actual > 0 and avg_monthly_return > 0:
                 sharpe_ratio = avg_monthly_return / abs(max_drawdown/capital_actual * 100)
                 sharpe_display = f"{sharpe_ratio:.2f}"
             else:
                 sharpe_display = "N/A"
             
-            styled_kpi_premium(
+            styled_kpi_elegant(
                 "Ratio Sharpe",
                 sharpe_display,
-                "Rendimiento ajustado por riesgo",
-                "📊",
-                "#FF9800",
-                "Mide la rentabilidad obtenida por unidad de riesgo asumido. Valores >1 indican buen rendimiento ajustado por riesgo."
+                "Rendimiento / Riesgo",
+                "📐",
+                "#8a9aa8",
+                "Mide la rentabilidad por unidad de riesgo."
             )
         
         with col12:
-            styled_kpi_premium(
+            styled_kpi_elegant(
                 "Días en el Mercado",
                 f"{(df_copy['Fecha'].max() - df_copy['Fecha'].min()).days}",
                 f"Desde {df_copy['Fecha'].min().strftime('%d/%m/%Y')}",
                 "📅",
-                "#2196F3",
-                "Número total de días desde el inicio de la inversión hasta la fecha actual. Indica la antigüedad de la inversión."
+                "#4a8db7",
+                "Días desde el inicio de la inversión."
             )
             
     except Exception as e:
@@ -789,11 +861,11 @@ def show_premium_kpis():
         st.stop()
 
 # =============================================================================
-# 📊 SECCIÓN DE GRÁFICOS PREMIUM
+# 📊 SECCIÓN DE GRÁFICOS (MANTENIDA)
 # =============================================================================
 
 def show_premium_charts():
-    """Muestra gráficos con diseño premium"""
+    """Muestra gráficos con diseño elegante"""
     
     st.markdown("""
     <div class="premium-header">
@@ -803,60 +875,46 @@ def show_premium_charts():
     """, unsafe_allow_html=True)
     
     try:
-        # Preprocesamiento
         df_copy = df.copy()
         df_copy["Mes"] = df_copy["Fecha"].dt.to_period("M")
         
-        # Calcular acumulados si no existen
         if "Ganacias/Pérdidas Netas Acumuladas" not in df_copy.columns:
             df_copy["Ganacias/Pérdidas Netas Acumuladas"] = df_copy["Ganacias/Pérdidas Netas"].cumsum()
         
-        # CORREGIDO: Usar ffill() en lugar de fillna(method='ffill')
         df_copy["Acumulado"] = df_copy["Ganacias/Pérdidas Netas Acumuladas"].ffill()
         df_copy["MaxAcum"] = df_copy["Acumulado"].cummax()
         df_copy["Drawdown"] = df_copy["Acumulado"] - df_copy["MaxAcum"]
         
-        # Gráfico 1: Evolución del Capital y Drawdown
-        st.markdown("### 📊 Evolución del Capital y Drawdown")
+        # Gráfico 1: Evolución del Capital
+        st.markdown("### 📊 Evolución del Capital")
         
         fig1 = go.Figure()
         
-        # Capital invertido
         fig1.add_trace(go.Scatter(
             x=df_copy["Fecha"],
             y=df_copy["Capital Invertido"],
             mode='lines+markers',
             name='Capital Invertido',
-            line=dict(color='#ffd700', width=3),
-            marker=dict(size=6, color='#ffd700'),
+            line=dict(color='#2c6e8f', width=3),
+            marker=dict(size=6, color='#2c6e8f'),
             hovertemplate='%{x}<br>Capital: $%{y:,.0f}<extra></extra>'
         ))
         
-        # Drawdown
-        fig1.add_trace(go.Scatter(
-            x=df_copy["Fecha"],
-            y=df_copy["Drawdown"],
-            mode='lines',
-            name='Drawdown',
-            line=dict(color='#f44336', width=2, dash='dash'),
-            fill='tozeroy',
-            fillcolor='rgba(244, 67, 54, 0.2)',
-            hovertemplate='%{x}<br>Drawdown: $%{y:,.0f}<extra></extra>'
-        ))
-        
         fig1.update_layout(
-            template='plotly_dark',
-            height=500,
+            template='plotly_white',
+            height=450,
             hovermode='x unified',
             legend=dict(
                 yanchor="top",
                 y=0.99,
                 xanchor="left",
                 x=0.01,
-                bgcolor='rgba(0,0,0,0.5)'
+                bgcolor='rgba(255,255,255,0.9)',
+                bordercolor='rgba(200,190,180,0.2)',
+                borderwidth=1
             ),
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(255,255,255,0)',
+            plot_bgcolor='rgba(255,255,255,0)',
             xaxis_title='Fecha',
             yaxis_title='Valor ($)',
             yaxis=dict(tickformat='$,.0f')
@@ -875,15 +933,15 @@ def show_premium_charts():
             y=df_copy["Acumulado"],
             mode='lines+markers',
             name='Ganancia Acumulada',
-            line=dict(color='#4CAF50', width=3),
-            marker=dict(size=6, color='#4CAF50'),
+            line=dict(color='#27ae60', width=3),
+            marker=dict(size=6, color='#27ae60'),
             fill='tozeroy',
-            fillcolor='rgba(76, 175, 80, 0.2)',
+            fillcolor='rgba(39, 174, 96, 0.1)',
             hovertemplate='%{x}<br>Ganancia: $%{y:,.0f}<extra></extra>'
         ))
         
         fig2.update_layout(
-            template='plotly_dark',
+            template='plotly_white',
             height=400,
             hovermode='x unified',
             legend=dict(
@@ -891,10 +949,12 @@ def show_premium_charts():
                 y=0.99,
                 xanchor="left",
                 x=0.01,
-                bgcolor='rgba(0,0,0,0.5)'
+                bgcolor='rgba(255,255,255,0.9)',
+                bordercolor='rgba(200,190,180,0.2)',
+                borderwidth=1
             ),
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(255,255,255,0)',
+            plot_bgcolor='rgba(255,255,255,0)',
             xaxis_title='Fecha',
             yaxis_title='Ganancia ($)',
             yaxis=dict(tickformat='$,.0f')
@@ -903,7 +963,7 @@ def show_premium_charts():
         st.plotly_chart(fig2, use_container_width=True)
         st.markdown("---")
         
-        # Gráfico 3: Rentabilidad Mensual (Heatmap)
+        # Gráfico 3: Rentabilidad Mensual
         st.markdown("### 🌡️ Rentabilidad Mensual - Heatmap")
         
         if "Beneficio en %" in df_copy.columns:
@@ -911,7 +971,6 @@ def show_premium_charts():
             df_copy["MesNombre"] = df_copy["Fecha"].dt.strftime("%b")
             df_copy["MesNum"] = df_copy["Fecha"].dt.month
             
-            # Pivot para heatmap
             pivot_rent = df_copy.pivot_table(
                 values="Beneficio en %",
                 index="Año",
@@ -919,154 +978,42 @@ def show_premium_charts():
                 aggfunc="mean"
             ) * 100
             
-            # Renombrar columnas a nombres de meses
             pivot_rent.columns = [calendar.month_abbr[i] for i in pivot_rent.columns]
             
             fig3 = go.Figure(data=go.Heatmap(
                 z=pivot_rent.values,
                 x=pivot_rent.columns,
                 y=pivot_rent.index,
-                colorscale='RdYlGn',
+                colorscale='RdBu_r',
                 zmid=0,
                 text=pivot_rent.values.round(2),
                 texttemplate='%{text}%',
-                textfont={"size": 12, "color": "white"},
+                textfont={"size": 11, "color": "white"},
                 hovertemplate='<b>%{y}</b><br>%{x}<br>Rentabilidad: %{z:.2f}%<extra></extra>'
             ))
             
             fig3.update_layout(
-                template='plotly_dark',
-                height=400,
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
+                template='plotly_white',
+                height=350,
+                paper_bgcolor='rgba(255,255,255,0)',
+                plot_bgcolor='rgba(255,255,255,0)',
                 xaxis_title='Mes',
                 yaxis_title='Año',
                 xaxis=dict(side='top')
             )
             
             st.plotly_chart(fig3, use_container_width=True)
-            st.markdown("---")
-        
-        # Gráfico 4: Distribución de Retornos Mensuales
-        st.markdown("### 📊 Distribución de Retornos Mensuales")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            if "Beneficio en %" in df_copy.columns:
-                # Histograma
-                fig4 = go.Figure()
-                
-                fig4.add_trace(go.Histogram(
-                    x=df_copy["Beneficio en %"] * 100,
-                    nbinsx=20,
-                    marker=dict(
-                        color='#ffd700',
-                        line=dict(color='#000', width=1)
-                    ),
-                    hovertemplate='Rentabilidad: %{x:.2f}%<br>Frecuencia: %{y}<extra></extra>'
-                ))
-                
-                fig4.update_layout(
-                    template='plotly_dark',
-                    height=350,
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    xaxis_title='Rentabilidad (%)',
-                    yaxis_title='Frecuencia',
-                    showlegend=False
-                )
-                
-                st.plotly_chart(fig4, use_container_width=True)
-        
-        with col2:
-            if "Beneficio en %" in df_copy.columns:
-                # Boxplot
-                fig5 = go.Figure()
-                
-                fig5.add_trace(go.Box(
-                    y=df_copy["Beneficio en %"] * 100,
-                    name='Retornos Mensuales',
-                    marker_color='#ffd700',
-                    boxmean='sd',
-                    hovertemplate='Mediana: %{median:.2f}%<br>Media: %{mean:.2f}%<br>Mín: %{min:.2f}%<br>Máx: %{max:.2f}%<extra></extra>'
-                ))
-                
-                fig5.update_layout(
-                    template='plotly_dark',
-                    height=350,
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    yaxis_title='Rentabilidad (%)',
-                    showlegend=False
-                )
-                
-                st.plotly_chart(fig5, use_container_width=True)
-        
-        st.markdown("---")
-        
-        # Gráfico 5: Comisiones vs Ganancia Neta
-        if "Comisiones Pagadas" in df_copy.columns and "Ganacias/Pérdidas Brutas" in df_copy.columns:
-            st.markdown("### 💰 Análisis de Comisiones")
-            
-            comisiones_mensuales = df_copy.groupby("Mes").agg({
-                "Comisiones Pagadas": "sum",
-                "Ganacias/Pérdidas Brutas": "sum"
-            }).reset_index()
-            comisiones_mensuales["Mes"] = comisiones_mensuales["Mes"].astype(str)
-            
-            fig6 = go.Figure()
-            
-            # Barras de comisiones
-            fig6.add_trace(go.Bar(
-                x=comisiones_mensuales["Mes"],
-                y=comisiones_mensuales["Comisiones Pagadas"],
-                name='Comisiones',
-                marker_color='#f44336',
-                hovertemplate='%{x}<br>Comisiones: $%{y:,.0f}<extra></extra>'
-            ))
-            
-            # Línea de ganancias
-            fig6.add_trace(go.Scatter(
-                x=comisiones_mensuales["Mes"],
-                y=comisiones_mensuales["Ganacias/Pérdidas Brutas"],
-                mode='lines+markers',
-                name='Ganancia Bruta',
-                line=dict(color='#4CAF50', width=3),
-                marker=dict(size=8, color='#4CAF50'),
-                hovertemplate='%{x}<br>Ganancia: $%{y:,.0f}<extra></extra>'
-            ))
-            
-            fig6.update_layout(
-                template='plotly_dark',
-                height=400,
-                hovermode='x unified',
-                legend=dict(
-                    yanchor="top",
-                    y=0.99,
-                    xanchor="left",
-                    x=0.01,
-                    bgcolor='rgba(0,0,0,0.5)'
-                ),
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                xaxis_title='Mes',
-                yaxis_title='Valor ($)',
-                yaxis=dict(tickformat='$,.0f')
-            )
-            
-            st.plotly_chart(fig6, use_container_width=True)
             
     except Exception as e:
         st.error(f"❌ Error al generar gráficos: {str(e)}")
         st.stop()
 
 # =============================================================================
-# 📈 SECCIÓN DE PROYECCIONES PREMIUM
+# 📈 SECCIÓN DE PROYECCIONES (MANTENIDA)
 # =============================================================================
 
 def show_premium_projections():
-    """Muestra proyecciones con diseño premium"""
+    """Muestra proyecciones con diseño elegante"""
     
     st.markdown("""
     <div class="premium-header">
@@ -1082,17 +1029,17 @@ def show_premium_projections():
         
         with col1:
             st.markdown("""
-            <div style="background: #1a1a2e; padding: 20px; border-radius: 15px; border: 1px solid rgba(255,215,0,0.1);">
+            <div style="background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid rgba(200,190,180,0.1);">
             """, unsafe_allow_html=True)
             
             aumento_opcion = st.selectbox(
-                "📈 Aumento de capital",
+                "Aumento de capital",
                 [0, 5, 10, 15, 20, 30, 50],
                 format_func=lambda x: f"{x}%"
             )
             
             beneficio_mensual = st.slider(
-                "📊 Beneficio mensual estimado",
+                "Beneficio mensual estimado",
                 min_value=0.0,
                 max_value=15.0,
                 value=5.0,
@@ -1101,7 +1048,7 @@ def show_premium_projections():
             )
             
             meses_proyeccion = st.slider(
-                "📅 Duración de la inversión",
+                "Duración de la inversión",
                 min_value=1,
                 max_value=60,
                 value=12,
@@ -1111,30 +1058,28 @@ def show_premium_projections():
             st.markdown("</div>", unsafe_allow_html=True)
         
         with col2:
-            # Mostrar estadísticas rápidas
             capital_proyectado = capital_actual * (1 + aumento_opcion / 100)
             proyeccion = [capital_proyectado * ((1 + beneficio_mensual / 100) ** i) for i in range(meses_proyeccion + 1)]
             
             st.markdown(f"""
-            <div style="background: #1a1a2e; padding: 20px; border-radius: 15px; border: 1px solid rgba(255,215,0,0.1); height: 100%;">
-                <div style="margin-bottom: 15px;">
-                    <div style="color: #c0c0c0; font-size: 14px;">Capital Actual</div>
-                    <div style="color: #ffffff; font-size: 24px; font-weight: 700;">${capital_actual:,.0f}</div>
+            <div style="background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid rgba(200,190,180,0.1); height: 100%;">
+                <div style="margin-bottom: 12px;">
+                    <div style="color: #8a9aa8; font-size: 12px;">Capital Actual</div>
+                    <div style="color: #1a2634; font-size: 22px; font-weight: 600;">${capital_actual:,.0f}</div>
                 </div>
-                <div style="margin-bottom: 15px;">
-                    <div style="color: #c0c0c0; font-size: 14px;">Capital Proyectado</div>
-                    <div style="color: #ffd700; font-size: 24px; font-weight: 700;">${capital_proyectado:,.0f}</div>
+                <div style="margin-bottom: 12px;">
+                    <div style="color: #8a9aa8; font-size: 12px;">Capital Proyectado</div>
+                    <div style="color: #2c6e8f; font-size: 22px; font-weight: 600;">${capital_proyectado:,.0f}</div>
                 </div>
                 <div>
-                    <div style="color: #c0c0c0; font-size: 14px;">Valor Estimado Final</div>
-                    <div style="color: #4CAF50; font-size: 28px; font-weight: 700;">${proyeccion[-1]:,.0f}</div>
+                    <div style="color: #8a9aa8; font-size: 12px;">Valor Estimado Final</div>
+                    <div style="color: #27ae60; font-size: 26px; font-weight: 600;">${proyeccion[-1]:,.0f}</div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
         
         st.markdown("---")
         
-        # Gráfico de proyección
         df_proy = pd.DataFrame({
             "Mes": list(range(meses_proyeccion + 1)),
             "Proyección": proyeccion
@@ -1142,20 +1087,18 @@ def show_premium_projections():
         
         fig = go.Figure()
         
-        # Área de proyección
         fig.add_trace(go.Scatter(
             x=df_proy["Mes"],
             y=df_proy["Proyección"],
             mode='lines+markers',
             name='Proyección',
-            line=dict(color='#ffd700', width=3),
-            marker=dict(size=8, color='#ffd700'),
+            line=dict(color='#2c6e8f', width=3),
+            marker=dict(size=8, color='#2c6e8f'),
             fill='tozeroy',
-            fillcolor='rgba(255, 215, 0, 0.2)',
+            fillcolor='rgba(44, 110, 143, 0.08)',
             hovertemplate='Mes %{x}<br>Capital: $%{y:,.0f}<extra></extra>'
         ))
         
-        # Añadir línea de tendencia
         z = np.polyfit(df_proy["Mes"], df_proy["Proyección"], 1)
         p = np.poly1d(z)
         fig.add_trace(go.Scatter(
@@ -1163,49 +1106,30 @@ def show_premium_projections():
             y=p(df_proy["Mes"]),
             mode='lines',
             name='Tendencia',
-            line=dict(color='rgba(255, 215, 0, 0.3)', width=2, dash='dash')
+            line=dict(color='rgba(44, 110, 143, 0.3)', width=2, dash='dash')
         ))
         
         fig.update_layout(
-            template='plotly_dark',
-            height=450,
+            template='plotly_white',
+            height=400,
             hovermode='x unified',
             legend=dict(
                 yanchor="top",
                 y=0.99,
                 xanchor="left",
                 x=0.01,
-                bgcolor='rgba(0,0,0,0.5)'
+                bgcolor='rgba(255,255,255,0.9)',
+                bordercolor='rgba(200,190,180,0.2)',
+                borderwidth=1
             ),
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(255,255,255,0)',
+            plot_bgcolor='rgba(255,255,255,0)',
             xaxis_title='Meses',
             yaxis_title='Capital Proyectado ($)',
             yaxis=dict(tickformat='$,.0f')
         )
         
         st.plotly_chart(fig, use_container_width=True)
-        
-        # Tabla detallada
-        st.markdown("### 📄 Detalle de Proyección")
-        
-        df_proy_display = df_proy.copy()
-        df_proy_display["Proyección"] = df_proy_display["Proyección"].apply(lambda x: f"${x:,.0f}")
-        df_proy_display["Crecimiento"] = ["0%"] + [
-            f"{(df_proy['Proyección'][i] / df_proy['Proyección'][0] - 1) * 100:.1f}%" 
-            for i in range(1, len(df_proy))
-        ]
-        
-        st.dataframe(
-            df_proy_display,
-            use_container_width=True,
-            hide_index=True,
-            column_config={
-                "Mes": "Mes",
-                "Proyección": "Capital Proyectado",
-                "Crecimiento": "Crecimiento %"
-            }
-        )
         
         # Botón de descarga
         output = BytesIO()
@@ -1236,7 +1160,7 @@ def show_premium_projections():
         excel_data = output.getvalue()
         
         st.download_button(
-            "📥 Descargar Proyección en Excel",
+            "📥 Descargar Proyección",
             data=excel_data,
             file_name=f"proyeccion_{datetime.now().strftime('%Y%m%d')}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -1248,11 +1172,11 @@ def show_premium_projections():
         st.stop()
 
 # =============================================================================
-# ⚖️ SECCIÓN DE COMPARACIONES PREMIUM
+# ⚖️ SECCIÓN DE COMPARACIONES (MANTENIDA)
 # =============================================================================
 
 def show_premium_comparisons():
-    """Muestra comparaciones con diseño premium"""
+    """Muestra comparaciones con diseño elegante"""
     
     st.markdown("""
     <div class="premium-header">
@@ -1262,37 +1186,31 @@ def show_premium_comparisons():
     """, unsafe_allow_html=True)
     
     try:
-        # Crear columnas necesarias
         df_copy = df.copy()
         df_copy["Año"] = df_copy["Fecha"].dt.year
         df_copy["MesNombre"] = df_copy["Fecha"].dt.strftime("%b")
         df_copy["MesNum"] = df_copy["Fecha"].dt.month
         
-        # Calcular acumulados si no existen
         if "Ganacias/Pérdidas Netas Acumuladas" not in df_copy.columns:
             df_copy["Ganacias/Pérdidas Netas Acumuladas"] = df_copy["Ganacias/Pérdidas Netas"].cumsum()
         
-        # CORREGIDO: Usar ffill() en lugar de fillna(method='ffill')
         df_copy["Acumulado"] = df_copy["Ganacias/Pérdidas Netas Acumuladas"].ffill()
         df_copy["MaxAcum"] = df_copy["Acumulado"].cummax()
         df_copy["Drawdown"] = df_copy["Acumulado"] - df_copy["MaxAcum"]
         
-        # Selección de años
         años_disponibles = sorted(df_copy["Año"].unique().tolist())
         años_seleccionados = st.multiselect(
-            "📅 Selecciona los años a comparar",
+            "Selecciona los años a comparar",
             años_disponibles,
             default=años_disponibles[-2:] if len(años_disponibles) > 1 else años_disponibles
         )
         
         if not años_seleccionados:
-            st.warning("⚠️ Selecciona al menos un año para comparar")
+            st.warning("Selecciona al menos un año para comparar")
             st.stop()
         
-        # Filtrar datos
         df_filtrado = df_copy[df_copy["Año"].isin(años_seleccionados)]
         
-        # Gráfico 1: Comparación de Rentabilidad Mensual
         st.markdown("### 📈 Comparación de Rentabilidad Mensual")
         
         if "Beneficio en %" in df_filtrado.columns:
@@ -1304,20 +1222,22 @@ def show_premium_comparisons():
             
             fig1 = go.Figure()
             
-            for año in años_seleccionados:
+            colores = ['#2c6e8f', '#4a8db7', '#6ba3c9', '#8ab8d9', '#aacce6']
+            
+            for i, año in enumerate(años_seleccionados):
                 data_año = comparacion[comparacion["Año"] == año]
                 fig1.add_trace(go.Scatter(
                     x=data_año["MesNombre"],
                     y=data_año["Beneficio en %"],
                     mode='lines+markers',
                     name=f"{año}",
-                    line=dict(width=3),
-                    marker=dict(size=8),
+                    line=dict(width=2.5, color=colores[i % len(colores)]),
+                    marker=dict(size=7, color=colores[i % len(colores)]),
                     hovertemplate='%{x}<br>Rentabilidad: %{y:.2f}%<extra></extra>'
                 ))
             
             fig1.update_layout(
-                template='plotly_dark',
+                template='plotly_white',
                 height=400,
                 hovermode='x unified',
                 legend=dict(
@@ -1325,184 +1245,37 @@ def show_premium_comparisons():
                     y=0.99,
                     xanchor="left",
                     x=0.01,
-                    bgcolor='rgba(0,0,0,0.5)'
+                    bgcolor='rgba(255,255,255,0.9)',
+                    bordercolor='rgba(200,190,180,0.2)',
+                    borderwidth=1
                 ),
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
+                paper_bgcolor='rgba(255,255,255,0)',
+                plot_bgcolor='rgba(255,255,255,0)',
                 xaxis_title='Mes',
                 yaxis_title='Rentabilidad (%)',
                 xaxis=dict(categoryorder='array', categoryarray=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'])
             )
             
             st.plotly_chart(fig1, use_container_width=True)
-            st.markdown("---")
-        
-        # Gráfico 2: Comparación de Ganancia Anual
-        st.markdown("### 💰 Comparación de Ganancia Anual")
-        
-        ganancia_anual = df_filtrado.groupby("Año").agg({
-            "Ganacias/Pérdidas Netas": "sum"
-        }).reset_index()
-        
-        fig2 = go.Figure()
-        
-        fig2.add_trace(go.Bar(
-            x=ganancia_anual["Año"],
-            y=ganancia_anual["Ganacias/Pérdidas Netas"],
-            marker_color=['#4CAF50' if x > 0 else '#f44336' for x in ganancia_anual["Ganacias/Pérdidas Netas"]],
-            text=[f"${x:,.0f}" for x in ganancia_anual["Ganacias/Pérdidas Netas"]],
-            textposition='outside',
-            hovertemplate='Año: %{x}<br>Ganancia: $%{y:,.0f}<extra></extra>'
-        ))
-        
-        fig2.update_layout(
-            template='plotly_dark',
-            height=400,
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            xaxis_title='Año',
-            yaxis_title='Ganancia Neta ($)',
-            yaxis=dict(tickformat='$,.0f')
-        )
-        
-        st.plotly_chart(fig2, use_container_width=True)
-        st.markdown("---")
-        
-        # Gráfico 3: Comparación de Drawdown
-        if "Drawdown" in df_filtrado.columns:
-            st.markdown("### 📉 Comparación de Drawdown Máximo")
-            
-            drawdown_anual = df_filtrado.groupby("Año").agg({
-                "Drawdown": "min"
-            }).reset_index()
-            
-            fig3 = go.Figure()
-            
-            fig3.add_trace(go.Bar(
-                x=drawdown_anual["Año"],
-                y=drawdown_anual["Drawdown"],
-                marker_color='#f44336',
-                text=[f"${x:,.0f}" for x in drawdown_anual["Drawdown"]],
-                textposition='outside',
-                hovertemplate='Año: %{x}<br>Drawdown: $%{y:,.0f}<extra></extra>'
-            ))
-            
-            fig3.update_layout(
-                template='plotly_dark',
-                height=400,
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                xaxis_title='Año',
-                yaxis_title='Drawdown ($)',
-                yaxis=dict(tickformat='$,.0f')
-            )
-            
-            st.plotly_chart(fig3, use_container_width=True)
-            st.markdown("---")
-        
-        # Tabla comparativa
-        st.markdown("### 📊 Tabla Comparativa Anual")
-        
-        tabla_comparativa = df_filtrado.groupby("Año").agg({
-            "Capital Invertido": "last",
-            "Ganacias/Pérdidas Netas": "sum",
-            "Beneficio en %": "mean",
-            "Retiro de Fondos": "sum" if "Retiro de Fondos" in df_filtrado.columns else lambda x: 0
-        }).reset_index()
-        
-        tabla_comparativa["Beneficio en %"] = tabla_comparativa["Beneficio en %"] * 100
-        tabla_comparativa["ROI"] = (tabla_comparativa["Ganacias/Pérdidas Netas"] / tabla_comparativa["Capital Invertido"]) * 100
-        
-        tabla_comparativa_display = tabla_comparativa.copy()
-        tabla_comparativa_display["Capital Invertido"] = tabla_comparativa_display["Capital Invertido"].apply(lambda x: f"${x:,.0f}")
-        tabla_comparativa_display["Ganacias/Pérdidas Netas"] = tabla_comparativa_display["Ganacias/Pérdidas Netas"].apply(lambda x: f"${x:,.0f}")
-        tabla_comparativa_display["Beneficio en %"] = tabla_comparativa_display["Beneficio en %"].apply(lambda x: f"{x:.2f}%")
-        tabla_comparativa_display["ROI"] = tabla_comparativa_display["ROI"].apply(lambda x: f"{x:.2f}%")
-        
-        if "Retiro de Fondos" in tabla_comparativa_display.columns:
-            tabla_comparativa_display["Retiro de Fondos"] = tabla_comparativa_display["Retiro de Fondos"].apply(lambda x: f"${x:,.0f}")
-        
-        column_names = ["Año", "Capital Final", "Ganancia Neta", "Rentabilidad Prom.", "ROI Anual"]
-        if "Retiro de Fondos" in tabla_comparativa_display.columns:
-            column_names.append("Retiros")
-        
-        tabla_comparativa_display.columns = column_names
-        
-        st.dataframe(
-            tabla_comparativa_display,
-            use_container_width=True,
-            hide_index=True
-        )
-        
-        # Estadísticas adicionales
-        st.markdown("### 📈 Análisis de Rendimiento")
-        
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            mejor_año = tabla_comparativa.loc[tabla_comparativa["Ganacias/Pérdidas Netas"].idxmax()]
-            st.markdown(f"""
-            <div style="background: #1a1a2e; padding: 20px; border-radius: 15px; border: 1px solid rgba(76, 175, 80, 0.3);">
-                <div style="color: #c0c0c0; font-size: 14px;">🏆 Mejor Año</div>
-                <div style="color: #4CAF50; font-size: 24px; font-weight: 700;">{int(mejor_año['Año'])}</div>
-                <div style="color: #c0c0c0; font-size: 14px;">Ganancia: ${mejor_año['Ganacias/Pérdidas Netas']:,.0f}</div>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            peor_año = tabla_comparativa.loc[tabla_comparativa["Ganacias/Pérdidas Netas"].idxmin()]
-            st.markdown(f"""
-            <div style="background: #1a1a2e; padding: 20px; border-radius: 15px; border: 1px solid rgba(244, 67, 54, 0.3);">
-                <div style="color: #c0c0c0; font-size: 14px;">⚠️ Peor Año</div>
-                <div style="color: #f44336; font-size: 24px; font-weight: 700;">{int(peor_año['Año'])}</div>
-                <div style="color: #c0c0c0; font-size: 14px;">Ganancia: ${peor_año['Ganacias/Pérdidas Netas']:,.0f}</div>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col3:
-            promedio_anual = tabla_comparativa["Ganacias/Pérdidas Netas"].mean()
-            st.markdown(f"""
-            <div style="background: #1a1a2e; padding: 20px; border-radius: 15px; border: 1px solid rgba(255, 215, 0, 0.3);">
-                <div style="color: #c0c0c0; font-size: 14px;">📊 Ganancia Promedio Anual</div>
-                <div style="color: #ffd700; font-size: 24px; font-weight: 700;">${promedio_anual:,.0f}</div>
-                <div style="color: #c0c0c0; font-size: 14px;">Basado en {len(tabla_comparativa)} años</div>
-            </div>
-            """, unsafe_allow_html=True)
             
     except Exception as e:
         st.error(f"❌ Error al generar comparaciones: {str(e)}")
         st.stop()
 
 # =============================================================================
-# 🏁 MENÚ PRINCIPAL PREMIUM
+# 🏁 MENÚ PRINCIPAL
 # =============================================================================
 
-# Sidebar navigation premium
-with st.sidebar:
-    st.markdown("---")
-    st.markdown("### 📋 Navegación")
-    
-    pagina = st.radio(
-        "",
-        ["📌 KPIs", "📊 Gráficos", "📈 Proyecciones", "⚖️ Comparaciones"],
-        index=0,
-        format_func=lambda x: x
-    )
-    
-    st.markdown("---")
-    st.markdown("""
-    <div style="text-align: center; color: #555; font-size: 12px; padding: 10px 0;">
-        <div>FIFI Investments</div>
-        <div>v2.0 - Premium</div>
-    </div>
-    """, unsafe_allow_html=True)
+# Definir página por defecto
+if "pagina" not in st.session_state:
+    st.session_state["pagina"] = "KPIs"
 
 # Mostrar sección seleccionada
-if pagina == "📌 KPIs":
-    show_premium_kpis()
-elif pagina == "📊 Gráficos":
+if st.session_state["pagina"] == "KPIs":
+    show_elegant_kpis()
+elif st.session_state["pagina"] == "Gráficos":
     show_premium_charts()
-elif pagina == "📈 Proyecciones":
+elif st.session_state["pagina"] == "Proyecciones":
     show_premium_projections()
-elif pagina == "⚖️ Comparaciones":
+elif st.session_state["pagina"] == "Comparaciones":
     show_premium_comparisons()
