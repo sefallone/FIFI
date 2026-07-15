@@ -22,7 +22,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# CSS personalizado para diseño premium
+# CSS personalizado para diseño premium con tooltips
 st.markdown("""
 <style>
     /* Fondo general oscuro premium */
@@ -51,6 +51,7 @@ st.markdown("""
         transition: all 0.3s ease;
         position: relative;
         overflow: hidden;
+        cursor: help;
     }
     
     .kpi-card::before {
@@ -76,6 +77,22 @@ st.markdown("""
         letter-spacing: 1px;
         text-transform: uppercase;
         margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .kpi-title .help-icon {
+        color: #ffd700;
+        font-size: 16px;
+        cursor: help;
+        margin-left: 10px;
+        opacity: 0.7;
+        transition: opacity 0.3s ease;
+    }
+    
+    .kpi-title .help-icon:hover {
+        opacity: 1;
     }
     
     .kpi-value {
@@ -96,6 +113,50 @@ st.markdown("""
     .kpi-icon {
         font-size: 24px;
         margin-right: 10px;
+    }
+    
+    /* Tooltip personalizado */
+    .kpi-tooltip {
+        position: relative;
+        display: inline-block;
+    }
+    
+    .kpi-tooltip .tooltip-text {
+        visibility: hidden;
+        width: 280px;
+        background: #1a1a2e;
+        color: #ffffff;
+        text-align: left;
+        border-radius: 10px;
+        padding: 15px;
+        border: 1px solid rgba(255,215,0,0.2);
+        position: absolute;
+        z-index: 1000;
+        bottom: 125%;
+        left: 50%;
+        margin-left: -140px;
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-size: 13px;
+        font-weight: 400;
+        line-height: 1.5;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    }
+    
+    .kpi-tooltip .tooltip-text::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: #1a1a2e transparent transparent transparent;
+    }
+    
+    .kpi-tooltip:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
     }
     
     /* Header premium */
@@ -253,8 +314,8 @@ def check_password_hybrid():
     # Mostrar login premium
     st.markdown("""
     <div style="text-align: center; padding: 30px 0;">
-        <h1 style="color: #ffd700; font-size: 52px; font-weight: 700; margin-bottom: 5px;">🏛️ FIFI</h1>
-        <p style="color: #c0c0c0; font-size: 20px; font-weight: 300;">Investment Dashboard</p>
+        <h1 style="color: #ffd700; font-size: 52px; font-weight: 700; margin-bottom: 5px;">🏛️ Fondo de Inversión Fallone Investment</h1>
+        <p style="color: #c0c0c0; font-size: 20px; font-weight: 300;">Private Investment Access</p>
         <div style="width: 60px; height: 3px; background: linear-gradient(90deg, #ffd700, #f7971e); margin: 15px auto;"></div>
     </div>
     """, unsafe_allow_html=True)
@@ -445,16 +506,20 @@ except Exception as e:
     st.stop()
 
 # =============================================================================
-# 📌 SECCIÓN DE KPIs PREMIUM (CORREGIDA - SIN fillna con method)
+# 📌 SECCIÓN DE KPIs PREMIUM (CORREGIDA - CON TOOLTIPS)
 # =============================================================================
 
 def styled_kpi_premium(title, value, subtitle="", icon="", color="#ffd700", tooltip=""):
-    """KPI con diseño premium"""
+    """KPI con diseño premium y tooltip explicativo"""
     
+    # HTML con tooltip personalizado
     st.markdown(f"""
-    <div class="kpi-card" title="{tooltip}">
+    <div class="kpi-card">
         <div class="kpi-title">
-            <span class="kpi-icon">{icon}</span> {title}
+            <span>
+                <span class="kpi-icon">{icon}</span> {title}
+            </span>
+            <span class="help-icon" title="{tooltip}">ⓘ</span>
         </div>
         <div class="kpi-value" style="color: {color};">{value}</div>
         <div class="kpi-sub">{subtitle}</div>
@@ -462,12 +527,13 @@ def styled_kpi_premium(title, value, subtitle="", icon="", color="#ffd700", tool
     """, unsafe_allow_html=True)
 
 def show_premium_kpis():
-    """Muestra los KPIs con diseño premium - VERSIÓN CORREGIDA"""
+    """Muestra los KPIs con diseño premium - VERSIÓN CORREGIDA CON TOOLTIPS"""
     
     st.markdown(f"""
     <div class="premium-header">
         <h1>📊 <span>KPI</span> Dashboard</h1>
         <p>Indicadores clave de desempeño al <span style="color: #ffd700;">{datetime.now().strftime('%d/%m/%Y')}</span></p>
+        <p style="font-size: 13px; color: #888; margin-top: 5px;">ⓘ Pasa el mouse sobre el icono de cada KPI para ver su significado</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -494,14 +560,27 @@ def show_premium_kpis():
         
         # Obtener datos básicos
         capital_actual = df_copy["Capital Invertido"].dropna().iloc[-1]
-        capital_inicial = df_copy["Capital Invertido"].dropna().iloc[0]
+        
+        # ===== CAPITAL INICIAL CORREGIDO =====
+        # El capital inicial es el primer valor de "Aumento Capital" que no está en blanco
+        if "Aumento Capital" in df_copy.columns:
+            # Filtrar valores no nulos y mayores a 0
+            aumentos_validos = df_copy["Aumento Capital"].dropna()
+            aumentos_validos = aumentos_validos[aumentos_validos > 0]
+            if len(aumentos_validos) > 0:
+                capital_inicial = aumentos_validos.iloc[0]
+            else:
+                # Si no hay Aumento Capital, usar el primer Capital Invertido
+                capital_inicial = df_copy["Capital Invertido"].dropna().iloc[0]
+        else:
+            capital_inicial = df_copy["Capital Invertido"].dropna().iloc[0]
         
         # ===== CÁLCULOS =====
         
         # 1. GANANCIA NETA TOTAL
         ganancia_neta_total = df_copy["Ganacias/Pérdidas Netas"].sum()
         
-        # 2. RETIROS TOTALES (NUEVO KPI)
+        # 2. RETIROS TOTALES
         total_retiros = df_copy["Retiro de Fondos"].sum() if "Retiro de Fondos" in df_copy.columns else 0
         
         # 3. ROI (Retorno sobre Inversión)
@@ -510,11 +589,9 @@ def show_premium_kpis():
         else:
             roi = 0
         
-        # 4. RENTABILIDAD MENSUAL PROMEDIO (CORREGIDO)
+        # 4. RENTABILIDAD MENSUAL PROMEDIO
         if "Beneficio en %" in df_copy.columns:
-            # Agrupar por mes y calcular el beneficio promedio de cada mes
             monthly_returns = df_copy.groupby("Mes")["Beneficio en %"].mean()
-            # Promedio de los retornos mensuales
             avg_monthly_return = monthly_returns.mean() * 100
         else:
             avg_monthly_return = 0
@@ -576,7 +653,8 @@ def show_premium_kpis():
                 f"${capital_actual:,.0f}",
                 f"▲ +{((capital_actual/capital_inicial - 1) * 100):.1f}% desde inicio",
                 "💰",
-                "#ffd700"
+                "#ffd700",
+                "Valor total del capital invertido al día de hoy, incluyendo ganancias acumuladas y nuevos aportes."
             )
         
         with col2:
@@ -585,7 +663,8 @@ def show_premium_kpis():
                 f"{roi:.1f}%",
                 f"📈 CAGR: {cagr:.1f}% anual",
                 "📈",
-                "#4CAF50" if roi > 0 else "#f44336"
+                "#4CAF50" if roi > 0 else "#f44336",
+                "Retorno sobre la inversión total. Mide el porcentaje de ganancia neta sobre el capital actual."
             )
         
         with col3:
@@ -594,7 +673,8 @@ def show_premium_kpis():
                 f"${abs(max_drawdown):,.0f}",
                 f"📉 {abs(max_drawdown/capital_actual * 100):.1f}% del capital",
                 "📉",
-                "#f44336"
+                "#f44336",
+                "Peor pérdida acumulada desde un punto máximo. Indica el mayor riesgo asumido en la inversión."
             )
         
         with col4:
@@ -603,7 +683,8 @@ def show_premium_kpis():
                 rating,
                 risk_text,
                 "🛡️",
-                "#ffd700"
+                "#ffd700",
+                "Evaluación del nivel de riesgo basado en el drawdown máximo. 5⭐ = Muy Conservador, 1⭐ = Muy Agresivo."
             )
         
         st.markdown("---")
@@ -617,7 +698,8 @@ def show_premium_kpis():
                 f"{avg_monthly_return:.2f}%",
                 f"📊 Basado en {total_meses} meses",
                 "📊",
-                "#2196F3"
+                "#2196F3",
+                "Promedio de los rendimientos mensuales en porcentaje. Mide la rentabilidad típica mes a mes."
             )
         
         with col6:
@@ -626,7 +708,8 @@ def show_premium_kpis():
                 f"${capital_inicial:,.0f}",
                 f"📅 {df_copy['Fecha'].min().strftime('%b %Y')}",
                 "🏦",
-                "#9E9E9E"
+                "#9E9E9E",
+                "Primer aporte de capital registrado en la columna 'Aumento Capital'. Es la inversión inicial del inversionista."
             )
         
         with col7:
@@ -635,7 +718,8 @@ def show_premium_kpis():
                 f"${ganancia_neta_total:,.0f}",
                 f"▲ +{(ganancia_neta_total/capital_actual * 100):.1f}% sobre capital",
                 "📊",
-                "#4CAF50" if ganancia_neta_total > 0 else "#f44336"
+                "#4CAF50" if ganancia_neta_total > 0 else "#f44336",
+                "Suma de todas las ganancias o pérdidas netas (después de comisiones) durante todo el período."
             )
         
         with col8:
@@ -644,7 +728,8 @@ def show_premium_kpis():
                 f"${total_retiros:,.0f}",
                 f"💸 {total_retiros/capital_actual * 100:.1f}% del capital retirado",
                 "💸",
-                "#FF9800"
+                "#FF9800",
+                "Total de dinero retirado por el inversionista del fondo durante todo el período de inversión."
             )
         
         st.markdown("---")
@@ -658,7 +743,8 @@ def show_premium_kpis():
                 mejor_mes,
                 f"▲ {mejor_mes_valor:.2f}%",
                 "🏆",
-                "#4CAF50"
+                "#4CAF50",
+                "Mes con la mayor rentabilidad porcentual. Muestra el mejor desempeño mensual de la inversión."
             )
         
         with col10:
@@ -667,13 +753,14 @@ def show_premium_kpis():
                 peor_mes,
                 f"▼ {peor_mes_valor:.2f}%",
                 "⚠️",
-                "#f44336"
+                "#f44336",
+                "Mes con la peor rentabilidad porcentual. Muestra el peor desempeño mensual de la inversión."
             )
         
         with col11:
             # Índice de Sharpe simplificado
-            if max_drawdown != 0 and capital_actual > 0:
-                sharpe_ratio = avg_monthly_return / abs(max_drawdown/capital_actual * 100) if avg_monthly_return > 0 else 0
+            if max_drawdown != 0 and capital_actual > 0 and avg_monthly_return > 0:
+                sharpe_ratio = avg_monthly_return / abs(max_drawdown/capital_actual * 100)
                 sharpe_display = f"{sharpe_ratio:.2f}"
             else:
                 sharpe_display = "N/A"
@@ -683,7 +770,8 @@ def show_premium_kpis():
                 sharpe_display,
                 "Rendimiento ajustado por riesgo",
                 "📊",
-                "#FF9800"
+                "#FF9800",
+                "Mide la rentabilidad obtenida por unidad de riesgo asumido. Valores >1 indican buen rendimiento ajustado por riesgo."
             )
         
         with col12:
@@ -692,7 +780,8 @@ def show_premium_kpis():
                 f"{(df_copy['Fecha'].max() - df_copy['Fecha'].min()).days}",
                 f"Desde {df_copy['Fecha'].min().strftime('%d/%m/%Y')}",
                 "📅",
-                "#2196F3"
+                "#2196F3",
+                "Número total de días desde el inicio de la inversión hasta la fecha actual. Indica la antigüedad de la inversión."
             )
             
     except Exception as e:
