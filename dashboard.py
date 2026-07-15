@@ -12,7 +12,7 @@ from io import BytesIO
 import calendar
 
 # =============================================================================
-# 🎨 CONFIGURACIÓN DE PÁGINA Y ESTILOS - VERSIÓN ELEGANTE
+# 🎨 CONFIGURACIÓN DE PÁGINA Y ESTILOS - VERSIÓN LEGIBLE
 # =============================================================================
 
 st.set_page_config(
@@ -22,37 +22,41 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# CSS personalizado - Estilo elegante y refinado
+# CSS personalizado - Estilo elegante y LEGIBLE
 st.markdown("""
 <style>
-    /* Fondo general - Beige/Blanco roto elegante */
+    /* Fondo principal - Blanco puro para máxima legibilidad */
     .stApp {
-        background: linear-gradient(135deg, #f5f0eb 0%, #e8e0d8 100%);
+        background: #ffffff;
     }
     
-    /* Sidebar elegante */
+    /* Sidebar elegante - Azul profundo */
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #1a2634 0%, #2c3e50 100%);
+        background: linear-gradient(180deg, #0f1a2e 0%, #1a2a3f 100%);
         border-right: 1px solid rgba(255,255,255,0.05);
         padding-top: 20px;
     }
     
     [data-testid="stSidebar"] [data-testid="stMarkdown"] {
-        color: #d4d4d4;
+        color: #e8e8e8;
     }
     
-    /* Tarjetas de KPI - Elegantes y sutiles */
+    [data-testid="stSidebar"] .stCaption {
+        color: #a0b0c0;
+    }
+    
+    /* Tarjetas de KPI - Blancas con sombra sutil */
     .kpi-card {
-        background: linear-gradient(135deg, #ffffff 0%, #f8f6f4 100%);
-        border-radius: 12px;
-        padding: 16px 20px 18px 20px;
-        margin: 6px 0;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        border: 1px solid rgba(200,190,180,0.15);
+        background: #ffffff;
+        border-radius: 10px;
+        padding: 14px 18px 16px 18px;
+        margin: 5px 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        border: 1px solid #eef0f2;
         transition: all 0.3s ease;
         position: relative;
         overflow: hidden;
-        min-height: 85px;
+        min-height: 78px;
     }
     
     .kpi-card::before {
@@ -61,35 +65,35 @@ st.markdown("""
         top: 0;
         left: 0;
         right: 0;
-        height: 2px;
+        height: 2.5px;
         background: linear-gradient(90deg, #2c6e8f, #4a8db7);
-        opacity: 0.6;
+        opacity: 0.7;
     }
     
     .kpi-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(44, 110, 143, 0.08);
-        border-color: rgba(44, 110, 143, 0.2);
+        box-shadow: 0 8px 25px rgba(44, 110, 143, 0.10);
+        border-color: rgba(44, 110, 143, 0.15);
     }
     
     .kpi-title {
         color: #6b7a8a;
-        font-size: 11px;
-        font-weight: 500;
+        font-size: 10.5px;
+        font-weight: 600;
         letter-spacing: 0.8px;
         text-transform: uppercase;
-        margin-bottom: 6px;
+        margin-bottom: 4px;
         display: flex;
         align-items: center;
         justify-content: space-between;
     }
     
     .kpi-title .help-icon {
-        color: #8a9aa8;
-        font-size: 13px;
+        color: #a0b0c0;
+        font-size: 12px;
         cursor: help;
-        margin-left: 8px;
-        opacity: 0.6;
+        margin-left: 6px;
+        opacity: 0.5;
         transition: opacity 0.3s ease;
     }
     
@@ -101,41 +105,39 @@ st.markdown("""
     .kpi-value {
         color: #1a2634;
         font-size: 22px;
-        font-weight: 600;
-        margin: 4px 0 3px 0;
-        letter-spacing: -0.3px;
+        font-weight: 700;
+        margin: 2px 0 2px 0;
+        letter-spacing: -0.2px;
     }
     
     .kpi-sub {
         color: #8a9aa8;
         font-size: 11px;
         font-weight: 400;
-        margin-top: 4px;
-        letter-spacing: 0.3px;
+        margin-top: 2px;
     }
     
     .kpi-icon {
-        font-size: 16px;
-        margin-right: 6px;
-        opacity: 0.7;
+        font-size: 15px;
+        margin-right: 5px;
     }
     
     /* Header elegante */
     .premium-header {
-        background: linear-gradient(135deg, #ffffff 0%, #f8f6f4 100%);
-        padding: 20px 30px;
-        border-radius: 12px;
-        border: 1px solid rgba(200,190,180,0.15);
-        margin-bottom: 25px;
+        background: #f8f9fa;
+        padding: 18px 28px;
+        border-radius: 10px;
+        border: 1px solid #eef0f2;
+        margin-bottom: 22px;
         text-align: center;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
     }
     
     .premium-header h1 {
         color: #1a2634;
         font-weight: 300;
-        font-size: 28px;
-        letter-spacing: -0.5px;
+        font-size: 26px;
+        letter-spacing: -0.3px;
+        margin: 0;
     }
     
     .premium-header h1 span {
@@ -144,60 +146,68 @@ st.markdown("""
     }
     
     .premium-header p {
-        color: #8a9aa8;
+        color: #6b7a8a;
         font-size: 14px;
-        margin-top: 6px;
-        font-weight: 300;
+        margin-top: 4px;
+        font-weight: 400;
     }
     
     .premium-header .sub-info {
         font-size: 12px;
-        color: #a0aeb8;
-        margin-top: 4px;
+        color: #8a9aa8;
+        margin-top: 2px;
     }
     
-    /* Botones elegantes */
+    /* Botones elegantes en sidebar */
     .stButton > button {
         background: transparent;
-        color: #d4d4d4;
+        color: #c8d0d8;
         font-weight: 400;
-        border: 1px solid rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.06);
         border-radius: 8px;
-        padding: 10px 18px;
+        padding: 9px 16px;
         transition: all 0.3s ease;
-        font-size: 14px;
+        font-size: 13px;
         letter-spacing: 0.3px;
         width: 100%;
         text-align: left;
+        font-family: 'Inter', sans-serif;
     }
     
     .stButton > button:hover {
-        background: rgba(255,255,255,0.05);
-        border-color: rgba(255,255,255,0.15);
-        transform: translateX(4px);
+        background: rgba(255,255,255,0.06);
+        border-color: rgba(255,255,255,0.12);
+        transform: translateX(3px);
         color: #ffffff;
     }
     
     .stButton > button:active {
-        background: rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.10);
+    }
+    
+    /* Botón activo en sidebar */
+    .stButton > button[data-testid="baseButton-secondary"] {
+        background: rgba(255,255,255,0.06);
+        border-color: rgba(255,255,255,0.12);
+        color: #ffffff;
     }
     
     /* Botón de cerrar sesión */
     .logout-btn > button {
-        color: #e8a090;
-        border-color: rgba(232, 160, 144, 0.15);
+        color: #d4a0a0;
+        border-color: rgba(212, 160, 160, 0.08);
     }
     
     .logout-btn > button:hover {
-        background: rgba(232, 160, 144, 0.08);
-        border-color: rgba(232, 160, 144, 0.25);
-        color: #e8a090;
+        background: rgba(212, 160, 160, 0.06);
+        border-color: rgba(212, 160, 160, 0.15);
+        color: #d4a0a0;
     }
     
     /* Inputs elegantes */
     [data-testid="stTextInput"] input {
-        background: #f8f6f4;
-        border: 1px solid rgba(200,190,180,0.2);
+        background: #f8f9fa;
+        border: 1px solid #e8eaec;
         border-radius: 8px;
         color: #1a2634;
         padding: 10px 14px;
@@ -211,8 +221,12 @@ st.markdown("""
     
     /* Selectbox elegante */
     [data-testid="stSelectbox"] {
-        background: #f8f6f4;
+        background: #f8f9fa;
         border-radius: 8px;
+    }
+    
+    [data-testid="stSelectbox"] select {
+        color: #1a2634;
     }
     
     /* Tablas elegantes */
@@ -222,8 +236,8 @@ st.markdown("""
     
     .dataframe {
         background: #ffffff !important;
-        border-radius: 12px !important;
-        border: 1px solid rgba(200,190,180,0.1) !important;
+        border-radius: 10px !important;
+        border: 1px solid #eef0f2 !important;
         color: #1a2634 !important;
         font-size: 13px !important;
     }
@@ -234,7 +248,7 @@ st.markdown("""
         height: 6px;
     }
     ::-webkit-scrollbar-track {
-        background: #f0ece8;
+        background: #f0f0f0;
         border-radius: 10px;
     }
     ::-webkit-scrollbar-thumb {
@@ -245,23 +259,23 @@ st.markdown("""
         background: #2c6e8f;
     }
     
-    /* Login elegante */
+    /* Login elegante y legible */
     .login-container {
         max-width: 420px;
-        margin: 80px auto;
-        padding: 40px;
+        margin: 60px auto;
+        padding: 35px 40px 40px 40px;
         background: #ffffff;
-        border-radius: 16px;
-        border: 1px solid rgba(200,190,180,0.15);
+        border-radius: 14px;
+        border: 1px solid #eef0f2;
         box-shadow: 0 20px 60px rgba(0,0,0,0.06);
     }
     
     .login-title {
         text-align: center;
         color: #1a2634;
-        font-size: 24px;
+        font-size: 26px;
         font-weight: 300;
-        margin-bottom: 8px;
+        margin-bottom: 4px;
     }
     
     .login-title span {
@@ -271,81 +285,102 @@ st.markdown("""
     
     .login-subtitle {
         text-align: center;
-        color: #8a9aa8;
+        color: #6b7a8a;
         font-size: 13px;
         margin-bottom: 25px;
-        font-weight: 300;
+        font-weight: 400;
     }
     
     /* Badge elegante */
     .badge {
         background: rgba(44, 110, 143, 0.08);
         color: #2c6e8f;
-        padding: 3px 12px;
+        padding: 2px 12px;
         border-radius: 12px;
-        font-size: 11px;
+        font-size: 10.5px;
         font-weight: 500;
         display: inline-block;
-        border: 1px solid rgba(44, 110, 143, 0.1);
+        border: 1px solid rgba(44, 110, 143, 0.08);
     }
     
     /* Avatar en sidebar */
     .avatar {
-        width: 48px;
-        height: 48px;
+        width: 44px;
+        height: 44px;
         border-radius: 50%;
         background: linear-gradient(135deg, #2c6e8f, #4a8db7);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 20px;
-        font-weight: 500;
+        font-size: 18px;
+        font-weight: 600;
         color: #ffffff;
-        margin: 0 auto 10px auto;
+        margin: 0 auto 8px auto;
     }
     
     /* Logo en sidebar */
     .sidebar-logo {
         text-align: center;
-        padding: 10px 0 20px 0;
-        border-bottom: 1px solid rgba(255,255,255,0.05);
-        margin-bottom: 20px;
+        padding: 8px 0 16px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        margin-bottom: 16px;
     }
     
     .sidebar-logo img {
-        max-width: 120px;
+        max-width: 110px;
         height: auto;
         opacity: 0.9;
     }
     
     .sidebar-logo .logo-text {
-        color: #d4d4d4;
-        font-size: 16px;
+        color: #c8d0d8;
+        font-size: 15px;
         font-weight: 300;
-        margin-top: 6px;
+        margin-top: 4px;
         letter-spacing: 2px;
     }
     
     .sidebar-logo .logo-text span {
-        color: #4a8db7;
+        color: #5a9abb;
         font-weight: 400;
     }
     
     /* Separador elegante */
     .sidebar-divider {
         height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
-        margin: 15px 0;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+        margin: 12px 0;
     }
     
     /* Navegación en sidebar */
     .nav-section-title {
-        color: #8a9aa8;
-        font-size: 10px;
+        color: #6a7a8a;
+        font-size: 9px;
         text-transform: uppercase;
         letter-spacing: 1.5px;
-        padding: 10px 0 8px 0;
+        padding: 8px 0 6px 0;
         opacity: 0.5;
+    }
+    
+    /* Estilo para sliders */
+    [data-testid="stSlider"] {
+        color: #1a2634;
+    }
+    
+    [data-testid="stSlider"] .stSlider {
+        color: #2c6e8f;
+    }
+    
+    /* Mensajes de error/warning */
+    .stAlert {
+        border-radius: 8px;
+        border: 1px solid #eef0f2;
+    }
+    
+    /* Tablas en proyecciones */
+    .stDataFrame {
+        border-radius: 10px;
+        overflow: hidden;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -366,10 +401,14 @@ def check_password_hybrid():
     
     # Mostrar login elegante
     st.markdown("""
-    <div style="text-align: center; padding: 30px 0 10px 0;">
-        <h1 style="color: #2c6e8f; font-size: 42px; font-weight: 300; letter-spacing: -0.5px;">🏛️ <span style="font-weight: 600;">FIFI</span></h1>
-        <p style="color: #8a9aa8; font-size: 16px; font-weight: 300;">Investment Dashboard</p>
-        <div style="width: 40px; height: 2px; background: linear-gradient(90deg, #2c6e8f, #4a8db7); margin: 12px auto;"></div>
+    <div style="text-align: center; padding: 20px 0 5px 0;">
+        <h1 style="color: #1a2634; font-size: 40px; font-weight: 300; letter-spacing: -0.5px; margin: 0;">
+            🏛️ <span style="font-weight: 600; color: #2c6e8f;">FIFI</span>
+        </h1>
+        <p style="color: #6b7a8a; font-size: 15px; font-weight: 400; margin: 4px 0 0 0;">
+            Investment Dashboard
+        </p>
+        <div style="width: 40px; height: 2px; background: linear-gradient(90deg, #2c6e8f, #4a8db7); margin: 10px auto;"></div>
     </div>
     """, unsafe_allow_html=True)
     
@@ -379,12 +418,12 @@ def check_password_hybrid():
         with col2:
             with st.form("login_form"):
                 st.markdown("""
-                <div style="background: #ffffff; padding: 30px; border-radius: 14px; border: 1px solid rgba(200,190,180,0.12); box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+                <div style="background: #ffffff; padding: 28px 30px 32px 30px; border-radius: 12px; border: 1px solid #eef0f2; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
                 """, unsafe_allow_html=True)
                 
-                username = st.text_input("👤 Usuario", placeholder="Ingresa tu usuario", label_visibility="collapsed")
+                username = st.text_input("Usuario", placeholder="Ingresa tu usuario", label_visibility="collapsed")
                 st.markdown("<br>", unsafe_allow_html=True)
-                password = st.text_input("🔑 Contraseña", type="password", placeholder="Ingresa tu contraseña", label_visibility="collapsed")
+                password = st.text_input("Contraseña", type="password", placeholder="Ingresa tu contraseña", label_visibility="collapsed")
                 
                 st.markdown("</div>", unsafe_allow_html=True)
                 
@@ -461,15 +500,15 @@ with st.sidebar:
             with open(logo_path, "rb") as f:
                 logo_b64 = base64.b64encode(f.read()).decode()
             st.markdown(f"""
-                <img src='data:image/jpeg;base64,{logo_b64}' style='max-width:130px;'/>
+                <img src='data:image/jpeg;base64,{logo_b64}' style='max-width:120px;'/>
             """, unsafe_allow_html=True)
         else:
             st.markdown("""
-            <div style="color: #d4d4d4; font-size: 28px; font-weight: 300;">🏛️</div>
+            <div style="color: #c8d0d8; font-size: 28px; font-weight: 300;">🏛️</div>
             """, unsafe_allow_html=True)
     except:
         st.markdown("""
-        <div style="color: #d4d4d4; font-size: 28px; font-weight: 300;">🏛️</div>
+        <div style="color: #c8d0d8; font-size: 28px; font-weight: 300;">🏛️</div>
         """, unsafe_allow_html=True)
     
     st.markdown("""
@@ -479,10 +518,10 @@ with st.sidebar:
     
     # Información del usuario
     st.markdown(f"""
-    <div style="text-align: center; padding: 15px 0 10px 0;">
+    <div style="text-align: center; padding: 12px 0 8px 0;">
         <div class="avatar">{st.session_state['username'][0].upper()}</div>
-        <div style="color: #ffffff; font-size: 15px; font-weight: 400;">{st.session_state['username']}</div>
-        <div style="margin-top: 4px;"><span class="badge">● Activo</span></div>
+        <div style="color: #ffffff; font-size: 14px; font-weight: 400;">{st.session_state['username']}</div>
+        <div style="margin-top: 3px;"><span class="badge">● Activo</span></div>
     </div>
     """, unsafe_allow_html=True)
     
@@ -491,7 +530,11 @@ with st.sidebar:
     # Navegación con botones elegantes
     st.markdown('<div class="nav-section-title">Navegación</div>', unsafe_allow_html=True)
     
-    # Botones de navegación - usando st.button con estilos específicos
+    # Estado de la página actual
+    if "pagina" not in st.session_state:
+        st.session_state["pagina"] = "KPIs"
+    
+    # Botones de navegación
     if st.button("📊 KPIs", key="nav_kpis", use_container_width=True):
         st.session_state["pagina"] = "KPIs"
         st.rerun()
@@ -519,13 +562,13 @@ with st.sidebar:
     st.markdown('</div>', unsafe_allow_html=True)
     
     # Info del archivo
-    st.markdown('<div style="margin-top: 20px;">', unsafe_allow_html=True)
     try:
+        st.markdown('<div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.03);">', unsafe_allow_html=True)
         st.caption(f"📁 {os.path.basename(archivo_usuario)}")
         st.caption(f"📅 {len(df)} registros")
+        st.markdown('</div>', unsafe_allow_html=True)
     except:
         pass
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # =============================================================================
 # 📁 CARGA DE DATOS
@@ -587,11 +630,11 @@ except Exception as e:
     st.stop()
 
 # =============================================================================
-# 📌 SECCIÓN DE KPIs - VERSIÓN ELEGANTE
+# 📌 SECCIÓN DE KPIs - VERSIÓN LEGIBLE
 # =============================================================================
 
 def styled_kpi_elegant(title, value, subtitle="", icon="", color="#1a2634", tooltip=""):
-    """KPI con diseño elegante y refinado"""
+    """KPI con diseño elegante y legible"""
     
     st.markdown(f"""
     <div class="kpi-card">
@@ -607,7 +650,7 @@ def styled_kpi_elegant(title, value, subtitle="", icon="", color="#1a2634", tool
     """, unsafe_allow_html=True)
 
 def show_elegant_kpis():
-    """Muestra los KPIs con diseño elegante"""
+    """Muestra los KPIs con diseño elegante y legible"""
     
     st.markdown(f"""
     <div class="premium-header">
@@ -781,7 +824,7 @@ def show_elegant_kpis():
                 f"${capital_inicial:,.0f}",
                 f"{df_copy['Fecha'].min().strftime('%b %Y')}",
                 "🏦",
-                "#8a9aa8",
+                "#6b7a8a",
                 "Primer aporte de capital registrado."
             )
         
@@ -842,7 +885,7 @@ def show_elegant_kpis():
                 sharpe_display,
                 "Rendimiento / Riesgo",
                 "📐",
-                "#8a9aa8",
+                "#6b7a8a",
                 "Mide la rentabilidad por unidad de riesgo."
             )
         
@@ -861,11 +904,11 @@ def show_elegant_kpis():
         st.stop()
 
 # =============================================================================
-# 📊 SECCIÓN DE GRÁFICOS (MANTENIDA)
+# 📊 SECCIÓN DE GRÁFICOS - VERSIÓN LEGIBLE
 # =============================================================================
 
 def show_premium_charts():
-    """Muestra gráficos con diseño elegante"""
+    """Muestra gráficos con diseño elegante y legible"""
     
     st.markdown("""
     <div class="premium-header">
@@ -909,15 +952,16 @@ def show_premium_charts():
                 y=0.99,
                 xanchor="left",
                 x=0.01,
-                bgcolor='rgba(255,255,255,0.9)',
-                bordercolor='rgba(200,190,180,0.2)',
+                bgcolor='rgba(255,255,255,0.95)',
+                bordercolor='#eef0f2',
                 borderwidth=1
             ),
             paper_bgcolor='rgba(255,255,255,0)',
             plot_bgcolor='rgba(255,255,255,0)',
             xaxis_title='Fecha',
             yaxis_title='Valor ($)',
-            yaxis=dict(tickformat='$,.0f')
+            yaxis=dict(tickformat='$,.0f', gridcolor='#f0f2f4'),
+            xaxis=dict(gridcolor='#f0f2f4')
         )
         
         st.plotly_chart(fig1, use_container_width=True)
@@ -936,7 +980,7 @@ def show_premium_charts():
             line=dict(color='#27ae60', width=3),
             marker=dict(size=6, color='#27ae60'),
             fill='tozeroy',
-            fillcolor='rgba(39, 174, 96, 0.1)',
+            fillcolor='rgba(39, 174, 96, 0.08)',
             hovertemplate='%{x}<br>Ganancia: $%{y:,.0f}<extra></extra>'
         ))
         
@@ -949,22 +993,23 @@ def show_premium_charts():
                 y=0.99,
                 xanchor="left",
                 x=0.01,
-                bgcolor='rgba(255,255,255,0.9)',
-                bordercolor='rgba(200,190,180,0.2)',
+                bgcolor='rgba(255,255,255,0.95)',
+                bordercolor='#eef0f2',
                 borderwidth=1
             ),
             paper_bgcolor='rgba(255,255,255,0)',
             plot_bgcolor='rgba(255,255,255,0)',
             xaxis_title='Fecha',
             yaxis_title='Ganancia ($)',
-            yaxis=dict(tickformat='$,.0f')
+            yaxis=dict(tickformat='$,.0f', gridcolor='#f0f2f4'),
+            xaxis=dict(gridcolor='#f0f2f4')
         )
         
         st.plotly_chart(fig2, use_container_width=True)
         st.markdown("---")
         
-        # Gráfico 3: Rentabilidad Mensual
-        st.markdown("### 🌡️ Rentabilidad Mensual - Heatmap")
+        # Gráfico 3: Rentabilidad Mensual - Heatmap
+        st.markdown("### 🌡️ Rentabilidad Mensual")
         
         if "Beneficio en %" in df_copy.columns:
             df_copy["Año"] = df_copy["Fecha"].dt.year
@@ -988,7 +1033,7 @@ def show_premium_charts():
                 zmid=0,
                 text=pivot_rent.values.round(2),
                 texttemplate='%{text}%',
-                textfont={"size": 11, "color": "white"},
+                textfont={"size": 11, "color": "#1a2634"},
                 hovertemplate='<b>%{y}</b><br>%{x}<br>Rentabilidad: %{z:.2f}%<extra></extra>'
             ))
             
@@ -1009,7 +1054,7 @@ def show_premium_charts():
         st.stop()
 
 # =============================================================================
-# 📈 SECCIÓN DE PROYECCIONES (MANTENIDA)
+# 📈 SECCIÓN DE PROYECCIONES
 # =============================================================================
 
 def show_premium_projections():
@@ -1029,7 +1074,7 @@ def show_premium_projections():
         
         with col1:
             st.markdown("""
-            <div style="background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid rgba(200,190,180,0.1);">
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; border: 1px solid #eef0f2;">
             """, unsafe_allow_html=True)
             
             aumento_opcion = st.selectbox(
@@ -1062,17 +1107,17 @@ def show_premium_projections():
             proyeccion = [capital_proyectado * ((1 + beneficio_mensual / 100) ** i) for i in range(meses_proyeccion + 1)]
             
             st.markdown(f"""
-            <div style="background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid rgba(200,190,180,0.1); height: 100%;">
-                <div style="margin-bottom: 12px;">
-                    <div style="color: #8a9aa8; font-size: 12px;">Capital Actual</div>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; border: 1px solid #eef0f2; height: 100%;">
+                <div style="margin-bottom: 10px;">
+                    <div style="color: #6b7a8a; font-size: 12px;">Capital Actual</div>
                     <div style="color: #1a2634; font-size: 22px; font-weight: 600;">${capital_actual:,.0f}</div>
                 </div>
-                <div style="margin-bottom: 12px;">
-                    <div style="color: #8a9aa8; font-size: 12px;">Capital Proyectado</div>
+                <div style="margin-bottom: 10px;">
+                    <div style="color: #6b7a8a; font-size: 12px;">Capital Proyectado</div>
                     <div style="color: #2c6e8f; font-size: 22px; font-weight: 600;">${capital_proyectado:,.0f}</div>
                 </div>
                 <div>
-                    <div style="color: #8a9aa8; font-size: 12px;">Valor Estimado Final</div>
+                    <div style="color: #6b7a8a; font-size: 12px;">Valor Estimado Final</div>
                     <div style="color: #27ae60; font-size: 26px; font-weight: 600;">${proyeccion[-1]:,.0f}</div>
                 </div>
             </div>
@@ -1095,7 +1140,7 @@ def show_premium_projections():
             line=dict(color='#2c6e8f', width=3),
             marker=dict(size=8, color='#2c6e8f'),
             fill='tozeroy',
-            fillcolor='rgba(44, 110, 143, 0.08)',
+            fillcolor='rgba(44, 110, 143, 0.06)',
             hovertemplate='Mes %{x}<br>Capital: $%{y:,.0f}<extra></extra>'
         ))
         
@@ -1106,7 +1151,7 @@ def show_premium_projections():
             y=p(df_proy["Mes"]),
             mode='lines',
             name='Tendencia',
-            line=dict(color='rgba(44, 110, 143, 0.3)', width=2, dash='dash')
+            line=dict(color='rgba(44, 110, 143, 0.25)', width=2, dash='dash')
         ))
         
         fig.update_layout(
@@ -1118,15 +1163,16 @@ def show_premium_projections():
                 y=0.99,
                 xanchor="left",
                 x=0.01,
-                bgcolor='rgba(255,255,255,0.9)',
-                bordercolor='rgba(200,190,180,0.2)',
+                bgcolor='rgba(255,255,255,0.95)',
+                bordercolor='#eef0f2',
                 borderwidth=1
             ),
             paper_bgcolor='rgba(255,255,255,0)',
             plot_bgcolor='rgba(255,255,255,0)',
             xaxis_title='Meses',
             yaxis_title='Capital Proyectado ($)',
-            yaxis=dict(tickformat='$,.0f')
+            yaxis=dict(tickformat='$,.0f', gridcolor='#f0f2f4'),
+            xaxis=dict(gridcolor='#f0f2f4')
         )
         
         st.plotly_chart(fig, use_container_width=True)
@@ -1172,7 +1218,7 @@ def show_premium_projections():
         st.stop()
 
 # =============================================================================
-# ⚖️ SECCIÓN DE COMPARACIONES (MANTENIDA)
+# ⚖️ SECCIÓN DE COMPARACIONES
 # =============================================================================
 
 def show_premium_comparisons():
@@ -1245,8 +1291,8 @@ def show_premium_comparisons():
                     y=0.99,
                     xanchor="left",
                     x=0.01,
-                    bgcolor='rgba(255,255,255,0.9)',
-                    bordercolor='rgba(200,190,180,0.2)',
+                    bgcolor='rgba(255,255,255,0.95)',
+                    bordercolor='#eef0f2',
                     borderwidth=1
                 ),
                 paper_bgcolor='rgba(255,255,255,0)',
@@ -1265,10 +1311,6 @@ def show_premium_comparisons():
 # =============================================================================
 # 🏁 MENÚ PRINCIPAL
 # =============================================================================
-
-# Definir página por defecto
-if "pagina" not in st.session_state:
-    st.session_state["pagina"] = "KPIs"
 
 # Mostrar sección seleccionada
 if st.session_state["pagina"] == "KPIs":
