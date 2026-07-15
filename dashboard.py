@@ -3,11 +3,10 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-from datetime import datetime, timedelta
+from datetime import datetime
 from PIL import Image
 import base64
 import os
-import io
 import requests
 from io import BytesIO
 import calendar
@@ -238,11 +237,15 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # =============================================================================
-# 🔐 SISTEMA DE AUTENTICACIÓN CON VARIABLES DE ENTORNO
+# 🔐 SISTEMA DE AUTENTICACIÓN HÍBRIDO
 # =============================================================================
 
-def check_password_render():
-    """Autenticación usando variables de entorno de Render.com"""
+def check_password_hybrid():
+    """
+    Autenticación híbrida:
+    - En desarrollo local: usa secrets.toml
+    - En producción (Render): usa variables de entorno
+    """
     
     if st.session_state.get("authenticated"):
         return True
@@ -265,8 +268,8 @@ def check_password_render():
                 <div style="background: #1a1a2e; padding: 30px; border-radius: 20px; border: 1px solid rgba(255,215,0,0.1);">
                 """, unsafe_allow_html=True)
                 
-                username = st.text_input("👤 Usuario", placeholder="Ingresa tu usuario", key="login_user")
-                password = st.text_input("🔑 Contraseña", type="password", placeholder="Ingresa tu contraseña", key="login_pass")
+                username = st.text_input("👤 Usuario", placeholder="Ingresa tu usuario")
+                password = st.text_input("🔑 Contraseña", type="password", placeholder="Ingresa tu contraseña")
                 
                 st.markdown("</div>", unsafe_allow_html=True)
                 
@@ -274,17 +277,34 @@ def check_password_render():
                 
                 if submitted:
                     if username and password:
-                        # Verificar contra variables de entorno de Render
-                        env_user_var = f"USER_{username.upper()}"
-                        env_password = os.getenv(env_user_var)
+                        authenticated = False
+                        archivo_usuario = None
                         
-                        if env_password and env_password == password:
+                        # 1. PRIMERO: Intentar con secrets.toml (desarrollo local)
+                        try:
+                            credenciales_validas = st.secrets["inversionistas"]
+                            archivos_usuarios = st.secrets["archivos_usuarios"]
+                            
+                            if username in credenciales_validas and credenciales_validas[username] == password:
+                                authenticated = True
+                                archivo_usuario = archivos_usuarios.get(username, f"{username}.xlsx")
+                        except:
+                            pass
+                        
+                        # 2. SEGUNDO: Si falló, intentar con variables de entorno (Render)
+                        if not authenticated:
+                            env_user_var = f"USER_{username.upper()}"
+                            env_password = os.getenv(env_user_var)
+                            
+                            if env_password and env_password == password:
+                                authenticated = True
+                                env_file_var = f"FILE_{username.upper()}"
+                                archivo_usuario = os.getenv(env_file_var, f"{username}.xlsx")
+                        
+                        # 3. Si autenticó correctamente
+                        if authenticated and archivo_usuario:
                             st.session_state["authenticated"] = True
                             st.session_state["username"] = username
-                            
-                            # Obtener archivo del usuario
-                            env_file_var = f"FILE_{username.upper()}"
-                            archivo_usuario = os.getenv(env_file_var, f"{username}.xlsx")
                             
                             # Determinar si es URL o archivo local
                             if archivo_usuario.startswith(("http://", "https://")):
@@ -308,7 +328,7 @@ def check_password_render():
     return False
 
 # Verificar autenticación
-if not check_password_render():
+if not check_password_hybrid():
     st.stop()
 
 # =============================================================================
@@ -366,13 +386,10 @@ def load_user_data(file_path):
     """Carga los datos del usuario con manejo robusto de errores."""
     try:
         if file_path.startswith(("http://", "https://")):
-            # Para archivos remotos (URLs de Google Drive, Dropbox, etc.)
             response = requests.get(file_path)
             df = pd.read_excel(BytesIO(response.content), sheet_name="Histórico")
         else:
-            # Para archivos locales
             if not os.path.exists(file_path):
-                # Intentar buscar en data/ si no existe
                 alt_path = os.path.join("data", os.path.basename(file_path))
                 if os.path.exists(alt_path):
                     file_path = alt_path
@@ -390,12 +407,18 @@ def load_user_data(file_path):
         df["Fecha"] = pd.to_datetime(df["Fecha"], errors="coerce")
         df["Mes"] = df["Fecha"].dt.to_period("M")
         
-        # Calcular columnas adicionales si no existen
-        if "Ganacias/Pérdidas Netas Acumuladas" not in df.columns:
-            df["Ganacias/Pérdidas Netas Acumuladas"] = df["Ganacias/Pérdidas Netas"].cumsum()
+        # Asegurar que las columnas numéricas sean float
+        numeric_columns = [
+            "Capital Invertido", "Aumento Capital", "Retiro de Fondos",
+            "Ganacias/Pérdidas Brutas", "Ganacias/Pérdidas Brutas Acumuladas",
+            "Comisiones 10 %", "Comisiones Pagadas",
+            "Ganacias/Pérdidas Netas", "Ganacias/Pérdidas Netas Acumuladas",
+            "Ganacias/Pérdidas Promedio Diario", "Beneficio en %"
+        ]
         
-        if "Beneficio en %" not in df.columns and "Capital Invertido" in df.columns:
-            df["Beneficio en %"] = (df["Ganacias/Pérdidas Netas"] / df["Capital Invertido"]) * 100
+        for col in numeric_columns:
+            if col in df.columns:
+                df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
         
         return df.sort_values("Fecha")
         
@@ -422,7 +445,7 @@ except Exception as e:
     st.stop()
 
 # =============================================================================
-# 📌 SECCIÓN DE KPIs PREMIUM
+# 📌 SECCIÓN DE KPIs PREMIUM (CORREGIDA)
 # =============================================================================
 
 def styled_kpi_premium(title, value, subtitle="", icon="", color="#ffd700", tooltip=""):
@@ -439,7 +462,7 @@ def styled_kpi_premium(title, value, subtitle="", icon="", color="#ffd700", tool
     """, unsafe_allow_html=True)
 
 def show_premium_kpis():
-    """Muestra los KPIs con diseño premium"""
+    """Muestra los KPIs con diseño premium - VERSIÓN CORREGIDA"""
     
     st.markdown(f"""
     <div class="premium-header">
@@ -459,37 +482,93 @@ def show_premium_kpis():
         # Preprocesamiento
         df_copy = df.copy()
         df_copy["Mes"] = df_copy["Fecha"].dt.to_period("M")
-        df_copy["Acumulado"] = df_copy["Ganacias/Pérdidas Netas"].cumsum()
+        
+        # Calcular acumulados si no existen
+        if "Ganacias/Pérdidas Netas Acumuladas" not in df_copy.columns:
+            df_copy["Ganacias/Pérdidas Netas Acumuladas"] = df_copy["Ganacias/Pérdidas Netas"].cumsum()
+        
+        df_copy["Acumulado"] = df_copy["Ganacias/Pérdidas Netas Acumuladas"].fillna(method="ffill")
         df_copy["MaxAcum"] = df_copy["Acumulado"].cummax()
         df_copy["Drawdown"] = df_copy["Acumulado"] - df_copy["MaxAcum"]
         
-        # Cálculo de métricas
+        # Obtener datos básicos
         capital_actual = df_copy["Capital Invertido"].dropna().iloc[-1]
         capital_inicial = df_copy["Capital Invertido"].dropna().iloc[0]
-        ganancia_neta = df_copy["Ganacias/Pérdidas Netas"].sum()
         
-        # ROI
+        # ===== CÁLCULOS CORREGIDOS =====
+        
+        # 1. GANANCIA NETA TOTAL
+        ganancia_neta_total = df_copy["Ganacias/Pérdidas Netas"].sum()
+        
+        # 2. RETIROS TOTALES (NUEVO KPI)
+        total_retiros = df_copy["Retiro de Fondos"].sum() if "Retiro de Fondos" in df_copy.columns else 0
+        
+        # 3. ROI (Retorno sobre Inversión)
+        # ROI = (Ganancia Neta Total / Capital Invertido) * 100
         if capital_actual > 0:
-            roi = (ganancia_neta / capital_actual) * 100
+            roi = (ganancia_neta_total / capital_actual) * 100
         else:
             roi = 0
         
-        # Drawdown máximo
+        # 4. RENTABILIDAD MENSUAL PROMEDIO (CORREGIDO)
+        # Se calcula como el promedio de los Beneficios en % de cada mes
+        if "Beneficio en %" in df_copy.columns:
+            # Agrupar por mes y calcular el beneficio promedio de cada mes
+            monthly_returns = df_copy.groupby("Mes")["Beneficio en %"].mean()
+            # Promedio de los retornos mensuales
+            avg_monthly_return = monthly_returns.mean() * 100  # Convertir a porcentaje
+        else:
+            avg_monthly_return = 0
+        
+        # 5. DRAWDOWN MÁXIMO
         max_drawdown = df_copy["Drawdown"].min() if "Drawdown" in df_copy.columns else 0
         
-        # Rentabilidad mensual promedio
-        avg_monthly_return = df_copy["Beneficio en %"].mean() if "Beneficio en %" in df_copy.columns else 0
+        # 6. RATING DE RIESGO (basado en drawdown y consistencia)
+        if max_drawdown != 0:
+            risk_ratio = abs(max_drawdown / capital_actual)
+            if risk_ratio < 0.05:
+                rating = "⭐⭐⭐⭐⭐"
+                risk_text = "Perfil Muy Conservador"
+            elif risk_ratio < 0.10:
+                rating = "⭐⭐⭐⭐"
+                risk_text = "Perfil Conservador"
+            elif risk_ratio < 0.20:
+                rating = "⭐⭐⭐"
+                risk_text = "Perfil Moderado"
+            elif risk_ratio < 0.30:
+                rating = "⭐⭐"
+                risk_text = "Perfil Agresivo"
+            else:
+                rating = "⭐"
+                risk_text = "Perfil Muy Agresivo"
+        else:
+            rating = "⭐⭐⭐⭐⭐"
+            risk_text = "Perfil Muy Conservador"
         
-        # Total de meses
+        # 7. MEJOR Y PEOR MES
+        if "Beneficio en %" in df_copy.columns:
+            mejor_mes_idx = df_copy["Beneficio en %"].idxmax()
+            peor_mes_idx = df_copy["Beneficio en %"].idxmin()
+            mejor_mes = df_copy.loc[mejor_mes_idx, "Fecha"].strftime("%b %Y") if not pd.isna(mejor_mes_idx) else "N/A"
+            mejor_mes_valor = df_copy.loc[mejor_mes_idx, "Beneficio en %"] * 100 if not pd.isna(mejor_mes_idx) else 0
+            peor_mes = df_copy.loc[peor_mes_idx, "Fecha"].strftime("%b %Y") if not pd.isna(peor_mes_idx) else "N/A"
+            peor_mes_valor = df_copy.loc[peor_mes_idx, "Beneficio en %"] * 100 if not pd.isna(peor_mes_idx) else 0
+        else:
+            mejor_mes = "N/A"
+            mejor_mes_valor = 0
+            peor_mes = "N/A"
+            peor_mes_valor = 0
+        
+        # 8. TOTAL DE MESES
         total_meses = len(df_copy["Mes"].unique())
         
-        # Rendimiento anualizado (CAGR)
-        if total_meses > 0 and capital_inicial > 0:
+        # 9. CAGR (Tasa de Crecimiento Anual Compuesta)
+        if total_meses > 0 and capital_inicial > 0 and capital_actual > 0:
             cagr = (((capital_actual / capital_inicial) ** (12 / total_meses)) - 1) * 100
         else:
             cagr = 0
         
-        # Fila 1: KPIs principales
+        # ===== FILA 1: KPIs PRINCIPALES =====
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
@@ -503,9 +582,9 @@ def show_premium_kpis():
         
         with col2:
             styled_kpi_premium(
-                "Rentabilidad Total",
+                "Rentabilidad Total (ROI)",
                 f"{roi:.1f}%",
-                f"▲ +{cagr:.1f}% CAGR anual",
+                f"📈 CAGR: {cagr:.1f}% anual",
                 "📈",
                 "#4CAF50" if roi > 0 else "#f44336"
             )
@@ -522,22 +601,23 @@ def show_premium_kpis():
         with col4:
             styled_kpi_premium(
                 "Rating de Riesgo",
-                "⭐⭐⭐⭐⭐",
-                "Perfil Conservador",
+                rating,
+                risk_text,
                 "🛡️",
                 "#ffd700"
             )
         
         st.markdown("---")
         
-        # Fila 2: KPIs secundarios
+        # ===== FILA 2: KPIs SECUNDARIOS =====
         col5, col6, col7, col8 = st.columns(4)
         
         with col5:
+            # RENTABILIDAD MENSUAL PROMEDIO (CORREGIDO)
             styled_kpi_premium(
                 "Rentabilidad Mensual Prom",
                 f"{avg_monthly_return:.2f}%",
-                f"📊 {total_meses} meses de datos",
+                f"📊 Basado en {total_meses} meses",
                 "📊",
                 "#2196F3"
             )
@@ -554,31 +634,32 @@ def show_premium_kpis():
         with col7:
             styled_kpi_premium(
                 "Ganancia Neta Total",
-                f"${ganancia_neta:,.0f}",
-                f"▲ +{(ganancia_neta/capital_actual * 100):.1f}% sobre capital",
+                f"${ganancia_neta_total:,.0f}",
+                f"▲ +{(ganancia_neta_total/capital_actual * 100):.1f}% sobre capital",
                 "📊",
-                "#4CAF50" if ganancia_neta > 0 else "#f44336"
+                "#4CAF50" if ganancia_neta_total > 0 else "#f44336"
             )
         
         with col8:
+            # RETIROS TOTALES (NUEVO KPI)
             styled_kpi_premium(
-                "Performance Score",
-                f"{(roi/10):.1f}/10",
-                "Basado en ROI histórico",
-                "🎯",
-                "#9C27B0"
+                "Retiros Totales",
+                f"${total_retiros:,.0f}",
+                f"💸 {total_retiros/capital_actual * 100:.1f}% del capital retirado",
+                "💸",
+                "#FF9800"
             )
         
         st.markdown("---")
         
-        # Fila 3: KPIs adicionales
+        # ===== FILA 3: KPIs ADICIONALES =====
         col9, col10, col11, col12 = st.columns(4)
         
         with col9:
             styled_kpi_premium(
                 "Mejor Mes",
-                df_copy.loc[df_copy["Beneficio en %"].idxmax()]["Fecha"].strftime("%b %Y") if "Beneficio en %" in df_copy.columns else "N/A",
-                f"▲ {df_copy['Beneficio en %'].max():.2f}%" if "Beneficio en %" in df_copy.columns else "",
+                mejor_mes,
+                f"▲ {mejor_mes_valor:.2f}%",
                 "🏆",
                 "#4CAF50"
             )
@@ -586,16 +667,23 @@ def show_premium_kpis():
         with col10:
             styled_kpi_premium(
                 "Peor Mes",
-                df_copy.loc[df_copy["Beneficio en %"].idxmin()]["Fecha"].strftime("%b %Y") if "Beneficio en %" in df_copy.columns else "N/A",
-                f"▼ {df_copy['Beneficio en %'].min():.2f}%" if "Beneficio en %" in df_copy.columns else "",
+                peor_mes,
+                f"▼ {peor_mes_valor:.2f}%",
                 "⚠️",
                 "#f44336"
             )
         
         with col11:
+            # Índice de Sharpe simplificado (Rentabilidad / Riesgo)
+            if max_drawdown != 0:
+                sharpe_ratio = avg_monthly_return / abs(max_drawdown/capital_actual * 100) if avg_monthly_return > 0 else 0
+                sharpe_display = f"{sharpe_ratio:.2f}"
+            else:
+                sharpe_display = "N/A"
+            
             styled_kpi_premium(
                 "Ratio Sharpe",
-                f"{(avg_monthly_return/abs(max_drawdown)):.2f}" if max_drawdown != 0 else "0.00",
+                sharpe_display,
                 "Rendimiento ajustado por riesgo",
                 "📊",
                 "#FF9800"
@@ -632,7 +720,12 @@ def show_premium_charts():
         # Preprocesamiento
         df_copy = df.copy()
         df_copy["Mes"] = df_copy["Fecha"].dt.to_period("M")
-        df_copy["Acumulado"] = df_copy["Ganacias/Pérdidas Netas"].cumsum()
+        
+        # Calcular acumulados si no existen
+        if "Ganacias/Pérdidas Netas Acumuladas" not in df_copy.columns:
+            df_copy["Ganacias/Pérdidas Netas Acumuladas"] = df_copy["Ganacias/Pérdidas Netas"].cumsum()
+        
+        df_copy["Acumulado"] = df_copy["Ganacias/Pérdidas Netas Acumuladas"].fillna(method="ffill")
         df_copy["MaxAcum"] = df_copy["Acumulado"].cummax()
         df_copy["Drawdown"] = df_copy["Acumulado"] - df_copy["MaxAcum"]
         
@@ -1009,7 +1102,6 @@ def show_premium_projections():
         # Tabla detallada
         st.markdown("### 📄 Detalle de Proyección")
         
-        # Formatear tabla con colores
         df_proy_display = df_proy.copy()
         df_proy_display["Proyección"] = df_proy_display["Proyección"].apply(lambda x: f"${x:,.0f}")
         df_proy_display["Crecimiento"] = ["0%"] + [
@@ -1031,7 +1123,6 @@ def show_premium_projections():
         # Botón de descarga
         output = BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            # Resumen
             resumen = pd.DataFrame({
                 "Descripción": [
                     "Capital Actual",
@@ -1089,7 +1180,12 @@ def show_premium_comparisons():
         df_copy["Año"] = df_copy["Fecha"].dt.year
         df_copy["MesNombre"] = df_copy["Fecha"].dt.strftime("%b")
         df_copy["MesNum"] = df_copy["Fecha"].dt.month
-        df_copy["Acumulado"] = df_copy["Ganacias/Pérdidas Netas"].cumsum()
+        
+        # Calcular acumulados si no existen
+        if "Ganacias/Pérdidas Netas Acumuladas" not in df_copy.columns:
+            df_copy["Ganacias/Pérdidas Netas Acumuladas"] = df_copy["Ganacias/Pérdidas Netas"].cumsum()
+        
+        df_copy["Acumulado"] = df_copy["Ganacias/Pérdidas Netas Acumuladas"].fillna(method="ffill")
         df_copy["MaxAcum"] = df_copy["Acumulado"].cummax()
         df_copy["Drawdown"] = df_copy["Acumulado"] - df_copy["MaxAcum"]
         
@@ -1219,24 +1315,30 @@ def show_premium_comparisons():
         # Tabla comparativa
         st.markdown("### 📊 Tabla Comparativa Anual")
         
-        # Crear tabla resumen
         tabla_comparativa = df_filtrado.groupby("Año").agg({
             "Capital Invertido": "last",
             "Ganacias/Pérdidas Netas": "sum",
-            "Beneficio en %": "mean"
+            "Beneficio en %": "mean",
+            "Retiro de Fondos": "sum" if "Retiro de Fondos" in df_filtrado.columns else lambda x: 0
         }).reset_index()
         
         tabla_comparativa["Beneficio en %"] = tabla_comparativa["Beneficio en %"] * 100
         tabla_comparativa["ROI"] = (tabla_comparativa["Ganacias/Pérdidas Netas"] / tabla_comparativa["Capital Invertido"]) * 100
         
-        # Formatear
         tabla_comparativa_display = tabla_comparativa.copy()
         tabla_comparativa_display["Capital Invertido"] = tabla_comparativa_display["Capital Invertido"].apply(lambda x: f"${x:,.0f}")
         tabla_comparativa_display["Ganacias/Pérdidas Netas"] = tabla_comparativa_display["Ganacias/Pérdidas Netas"].apply(lambda x: f"${x:,.0f}")
         tabla_comparativa_display["Beneficio en %"] = tabla_comparativa_display["Beneficio en %"].apply(lambda x: f"{x:.2f}%")
         tabla_comparativa_display["ROI"] = tabla_comparativa_display["ROI"].apply(lambda x: f"{x:.2f}%")
         
-        tabla_comparativa_display.columns = ["Año", "Capital Final", "Ganancia Neta", "Rentabilidad Prom.", "ROI Anual"]
+        if "Retiro de Fondos" in tabla_comparativa_display.columns:
+            tabla_comparativa_display["Retiro de Fondos"] = tabla_comparativa_display["Retiro de Fondos"].apply(lambda x: f"${x:,.0f}")
+        
+        column_names = ["Año", "Capital Final", "Ganancia Neta", "Rentabilidad Prom.", "ROI Anual"]
+        if "Retiro de Fondos" in tabla_comparativa_display.columns:
+            column_names.append("Retiros")
+        
+        tabla_comparativa_display.columns = column_names
         
         st.dataframe(
             tabla_comparativa_display,
