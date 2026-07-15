@@ -445,7 +445,7 @@ except Exception as e:
     st.stop()
 
 # =============================================================================
-# 📌 SECCIÓN DE KPIs PREMIUM (CORREGIDA)
+# 📌 SECCIÓN DE KPIs PREMIUM (CORREGIDA - SIN fillna con method)
 # =============================================================================
 
 def styled_kpi_premium(title, value, subtitle="", icon="", color="#ffd700", tooltip=""):
@@ -487,7 +487,8 @@ def show_premium_kpis():
         if "Ganacias/Pérdidas Netas Acumuladas" not in df_copy.columns:
             df_copy["Ganacias/Pérdidas Netas Acumuladas"] = df_copy["Ganacias/Pérdidas Netas"].cumsum()
         
-        df_copy["Acumulado"] = df_copy["Ganacias/Pérdidas Netas Acumuladas"].fillna(method="ffill")
+        # CORREGIDO: Usar ffill() en lugar de fillna(method='ffill')
+        df_copy["Acumulado"] = df_copy["Ganacias/Pérdidas Netas Acumuladas"].ffill()
         df_copy["MaxAcum"] = df_copy["Acumulado"].cummax()
         df_copy["Drawdown"] = df_copy["Acumulado"] - df_copy["MaxAcum"]
         
@@ -495,7 +496,7 @@ def show_premium_kpis():
         capital_actual = df_copy["Capital Invertido"].dropna().iloc[-1]
         capital_inicial = df_copy["Capital Invertido"].dropna().iloc[0]
         
-        # ===== CÁLCULOS CORREGIDOS =====
+        # ===== CÁLCULOS =====
         
         # 1. GANANCIA NETA TOTAL
         ganancia_neta_total = df_copy["Ganacias/Pérdidas Netas"].sum()
@@ -504,27 +505,25 @@ def show_premium_kpis():
         total_retiros = df_copy["Retiro de Fondos"].sum() if "Retiro de Fondos" in df_copy.columns else 0
         
         # 3. ROI (Retorno sobre Inversión)
-        # ROI = (Ganancia Neta Total / Capital Invertido) * 100
         if capital_actual > 0:
             roi = (ganancia_neta_total / capital_actual) * 100
         else:
             roi = 0
         
         # 4. RENTABILIDAD MENSUAL PROMEDIO (CORREGIDO)
-        # Se calcula como el promedio de los Beneficios en % de cada mes
         if "Beneficio en %" in df_copy.columns:
             # Agrupar por mes y calcular el beneficio promedio de cada mes
             monthly_returns = df_copy.groupby("Mes")["Beneficio en %"].mean()
             # Promedio de los retornos mensuales
-            avg_monthly_return = monthly_returns.mean() * 100  # Convertir a porcentaje
+            avg_monthly_return = monthly_returns.mean() * 100
         else:
             avg_monthly_return = 0
         
         # 5. DRAWDOWN MÁXIMO
         max_drawdown = df_copy["Drawdown"].min() if "Drawdown" in df_copy.columns else 0
         
-        # 6. RATING DE RIESGO (basado en drawdown y consistencia)
-        if max_drawdown != 0:
+        # 6. RATING DE RIESGO
+        if max_drawdown != 0 and capital_actual > 0:
             risk_ratio = abs(max_drawdown / capital_actual)
             if risk_ratio < 0.05:
                 rating = "⭐⭐⭐⭐⭐"
@@ -613,7 +612,6 @@ def show_premium_kpis():
         col5, col6, col7, col8 = st.columns(4)
         
         with col5:
-            # RENTABILIDAD MENSUAL PROMEDIO (CORREGIDO)
             styled_kpi_premium(
                 "Rentabilidad Mensual Prom",
                 f"{avg_monthly_return:.2f}%",
@@ -641,7 +639,6 @@ def show_premium_kpis():
             )
         
         with col8:
-            # RETIROS TOTALES (NUEVO KPI)
             styled_kpi_premium(
                 "Retiros Totales",
                 f"${total_retiros:,.0f}",
@@ -674,8 +671,8 @@ def show_premium_kpis():
             )
         
         with col11:
-            # Índice de Sharpe simplificado (Rentabilidad / Riesgo)
-            if max_drawdown != 0:
+            # Índice de Sharpe simplificado
+            if max_drawdown != 0 and capital_actual > 0:
                 sharpe_ratio = avg_monthly_return / abs(max_drawdown/capital_actual * 100) if avg_monthly_return > 0 else 0
                 sharpe_display = f"{sharpe_ratio:.2f}"
             else:
@@ -725,7 +722,8 @@ def show_premium_charts():
         if "Ganacias/Pérdidas Netas Acumuladas" not in df_copy.columns:
             df_copy["Ganacias/Pérdidas Netas Acumuladas"] = df_copy["Ganacias/Pérdidas Netas"].cumsum()
         
-        df_copy["Acumulado"] = df_copy["Ganacias/Pérdidas Netas Acumuladas"].fillna(method="ffill")
+        # CORREGIDO: Usar ffill() en lugar de fillna(method='ffill')
+        df_copy["Acumulado"] = df_copy["Ganacias/Pérdidas Netas Acumuladas"].ffill()
         df_copy["MaxAcum"] = df_copy["Acumulado"].cummax()
         df_copy["Drawdown"] = df_copy["Acumulado"] - df_copy["MaxAcum"]
         
@@ -1185,7 +1183,8 @@ def show_premium_comparisons():
         if "Ganacias/Pérdidas Netas Acumuladas" not in df_copy.columns:
             df_copy["Ganacias/Pérdidas Netas Acumuladas"] = df_copy["Ganacias/Pérdidas Netas"].cumsum()
         
-        df_copy["Acumulado"] = df_copy["Ganacias/Pérdidas Netas Acumuladas"].fillna(method="ffill")
+        # CORREGIDO: Usar ffill() en lugar de fillna(method='ffill')
+        df_copy["Acumulado"] = df_copy["Ganacias/Pérdidas Netas Acumuladas"].ffill()
         df_copy["MaxAcum"] = df_copy["Acumulado"].cummax()
         df_copy["Drawdown"] = df_copy["Acumulado"] - df_copy["MaxAcum"]
         
