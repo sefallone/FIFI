@@ -12,7 +12,7 @@ from io import BytesIO
 import calendar
 
 # =============================================================================
-# 🎨 CONFIGURACIÓN DE PÁGINA Y ESTILOS - VERSIÓN OSCURA ELEGANTE
+# 🎨 CONFIGURACIÓN DE PÁGINA Y ESTILOS - VERSIÓN OSCURA COMPLETA
 # =============================================================================
 
 st.set_page_config(
@@ -22,15 +22,15 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# CSS personalizado - Estilo oscuro elegante tipo Bloomberg/Inversión
+# CSS personalizado - Estilo oscuro completo
 st.markdown("""
 <style>
-    /* Fondo principal - Negro profundo */
+    /* Fondo principal */
     .stApp {
         background: #0a0e14;
     }
     
-    /* Sidebar elegante */
+    /* Sidebar */
     [data-testid="stSidebar"] {
         background: linear-gradient(180deg, #0d1117 0%, #161b22 100%);
         border-right: 1px solid rgba(255,255,255,0.04);
@@ -41,11 +41,7 @@ st.markdown("""
         color: #c9d1d9;
     }
     
-    [data-testid="stSidebar"] .stCaption {
-        color: #8b949e;
-    }
-    
-    /* Tarjetas de KPI - Oscuras con bordes sutiles */
+    /* Tarjetas de KPI */
     .kpi-card {
         background: #161b22;
         border-radius: 10px;
@@ -121,7 +117,7 @@ st.markdown("""
         margin-right: 5px;
     }
     
-    /* Header elegante oscuro */
+    /* Header */
     .premium-header {
         background: #161b22;
         padding: 18px 28px;
@@ -158,7 +154,7 @@ st.markdown("""
         opacity: 0.7;
     }
     
-    /* Botones elegantes en sidebar */
+    /* Botones en sidebar */
     .stButton > button {
         background: transparent;
         color: #8b949e;
@@ -180,18 +176,6 @@ st.markdown("""
         color: #f0f6fc;
     }
     
-    .stButton > button:active {
-        background: rgba(255,255,255,0.06);
-    }
-    
-    /* Botón activo en sidebar */
-    .stButton > button[data-testid="baseButton-secondary"] {
-        background: rgba(74, 141, 183, 0.1);
-        border-color: rgba(74, 141, 183, 0.2);
-        color: #f0f6fc;
-    }
-    
-    /* Botón de cerrar sesión */
     .logout-btn > button {
         color: #e8a090;
         border-color: rgba(232, 160, 144, 0.06);
@@ -203,7 +187,7 @@ st.markdown("""
         color: #e8a090;
     }
     
-    /* Inputs elegantes oscuros */
+    /* Inputs */
     [data-testid="stTextInput"] input {
         background: #0d1117;
         border: 1px solid rgba(255,255,255,0.06);
@@ -218,88 +202,7 @@ st.markdown("""
         box-shadow: 0 0 0 3px rgba(74, 141, 183, 0.1);
     }
     
-    /* Selectbox elegante oscuro */
-    [data-testid="stSelectbox"] {
-        background: #0d1117;
-        border-radius: 8px;
-    }
-    
-    [data-testid="stSelectbox"] select {
-        color: #f0f6fc;
-    }
-    
-    /* Slider elegante oscuro */
-    [data-testid="stSlider"] {
-        color: #f0f6fc;
-    }
-    
-    [data-testid="stSlider"] .stSlider {
-        color: #4a8db7;
-    }
-    
-    /* Tablas elegantes oscuras */
-    [data-testid="stDataFrame"] {
-        background: transparent;
-    }
-    
-    .dataframe {
-        background: #161b22 !important;
-        border-radius: 10px !important;
-        border: 1px solid rgba(255,255,255,0.04) !important;
-        color: #f0f6fc !important;
-        font-size: 13px !important;
-    }
-    
-    /* Scrollbar elegante */
-    ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-        background: #0d1117;
-        border-radius: 10px;
-    }
-    ::-webkit-scrollbar-thumb {
-        background: linear-gradient(135deg, #4a8db7, #6ba3c9);
-        border-radius: 10px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-        background: #4a8db7;
-    }
-    
-    /* Login elegante oscuro */
-    .login-container {
-        max-width: 420px;
-        margin: 60px auto;
-        padding: 35px 40px 40px 40px;
-        background: #161b22;
-        border-radius: 14px;
-        border: 1px solid rgba(255,255,255,0.04);
-        box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-    }
-    
-    .login-title {
-        text-align: center;
-        color: #f0f6fc;
-        font-size: 26px;
-        font-weight: 300;
-        margin-bottom: 4px;
-    }
-    
-    .login-title span {
-        color: #4a8db7;
-        font-weight: 600;
-    }
-    
-    .login-subtitle {
-        text-align: center;
-        color: #8b949e;
-        font-size: 13px;
-        margin-bottom: 25px;
-        font-weight: 400;
-    }
-    
-    /* Badge elegante */
+    /* Badge */
     .badge {
         background: rgba(74, 141, 183, 0.12);
         color: #4a8db7;
@@ -311,7 +214,7 @@ st.markdown("""
         border: 1px solid rgba(74, 141, 183, 0.08);
     }
     
-    /* Avatar en sidebar */
+    /* Avatar */
     .avatar {
         width: 44px;
         height: 44px;
@@ -353,14 +256,12 @@ st.markdown("""
         font-weight: 400;
     }
     
-    /* Separador elegante */
     .sidebar-divider {
         height: 1px;
         background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
         margin: 12px 0;
     }
     
-    /* Navegación en sidebar */
     .nav-section-title {
         color: #6a7a8a;
         font-size: 9px;
@@ -368,49 +269,6 @@ st.markdown("""
         letter-spacing: 1.5px;
         padding: 8px 0 6px 0;
         opacity: 0.4;
-    }
-    
-    /* Alertas en modo oscuro */
-    .stAlert {
-        border-radius: 8px;
-        border: 1px solid rgba(255,255,255,0.04);
-        background: #161b22;
-    }
-    
-    .stAlert .stMarkdown {
-        color: #f0f6fc;
-    }
-    
-    /* Texto de warnings */
-    .stAlert .stMarkdown p {
-        color: #f0f6fc !important;
-    }
-    
-    /* Estilo para selectbox en modo oscuro */
-    [data-testid="stSelectbox"] label {
-        color: #8b949e;
-    }
-    
-    /* Estilo para sliders en modo oscuro */
-    [data-testid="stSlider"] label {
-        color: #8b949e;
-    }
-    
-    /* Estilo para download button */
-    .stDownloadButton > button {
-        background: #4a8db7;
-        color: #ffffff;
-        border: none;
-        border-radius: 8px;
-        padding: 10px 20px;
-        font-weight: 500;
-        transition: all 0.3s ease;
-    }
-    
-    .stDownloadButton > button:hover {
-        background: #5a9dc7;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 15px rgba(74, 141, 183, 0.3);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -420,16 +278,9 @@ st.markdown("""
 # =============================================================================
 
 def check_password_hybrid():
-    """
-    Autenticación híbrida:
-    - En desarrollo local: usa secrets.toml
-    - En producción (Render): usa variables de entorno
-    """
-    
     if st.session_state.get("authenticated"):
         return True
     
-    # Mostrar login elegante oscuro
     st.markdown("""
     <div style="text-align: center; padding: 20px 0 5px 0;">
         <h1 style="color: #f0f6fc; font-size: 40px; font-weight: 300; letter-spacing: -0.5px; margin: 0;">
@@ -448,7 +299,7 @@ def check_password_hybrid():
         with col2:
             with st.form("login_form"):
                 st.markdown("""
-                <div style="background: #161b22; padding: 28px 30px 32px 30px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.04); box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                <div style="background: #161b22; padding: 28px 30px 32px 30px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.04);">
                 """, unsafe_allow_html=True)
                 
                 username = st.text_input("Usuario", placeholder="Ingresa tu usuario", label_visibility="collapsed")
@@ -464,46 +315,38 @@ def check_password_hybrid():
                         authenticated = False
                         archivo_usuario = None
                         
-                        # 1. PRIMERO: Intentar con secrets.toml (desarrollo local)
                         try:
                             credenciales_validas = st.secrets["inversionistas"]
                             archivos_usuarios = st.secrets["archivos_usuarios"]
-                            
                             if username in credenciales_validas and credenciales_validas[username] == password:
                                 authenticated = True
                                 archivo_usuario = archivos_usuarios.get(username, f"{username}.xlsx")
                         except:
                             pass
                         
-                        # 2. SEGUNDO: Si falló, intentar con variables de entorno (Render)
                         if not authenticated:
                             env_user_var = f"USER_{username.upper()}"
                             env_password = os.getenv(env_user_var)
-                            
                             if env_password and env_password == password:
                                 authenticated = True
                                 env_file_var = f"FILE_{username.upper()}"
                                 archivo_usuario = os.getenv(env_file_var, f"{username}.xlsx")
                         
-                        # 3. Si autenticó correctamente
                         if authenticated and archivo_usuario:
                             st.session_state["authenticated"] = True
                             st.session_state["username"] = username
-                            
                             if archivo_usuario.startswith(("http://", "https://")):
                                 st.session_state["archivo_usuario"] = archivo_usuario
                             else:
                                 st.session_state["archivo_usuario"] = os.path.join("data", archivo_usuario)
-                            
                             st.rerun()
                         else:
                             st.error("❌ Credenciales incorrectas")
                     else:
                         st.warning("⚠️ Completa ambos campos")
     
-    # Footer
     st.markdown("""
-    <div style="position: fixed; bottom: 20px; width: 100%; text-align: center; color: #484f58; font-size: 11px; letter-spacing: 0.5px;">
+    <div style="position: fixed; bottom: 20px; width: 100%; text-align: center; color: #484f58; font-size: 11px;">
         FIFI Investments © 2026
     </div>
     """, unsafe_allow_html=True)
@@ -517,9 +360,7 @@ if not check_password_hybrid():
 # 🚀 CONFIGURACIÓN POST-LOGIN
 # =============================================================================
 
-# Barra lateral elegante oscura
 with st.sidebar:
-    # Logo
     st.markdown("""
     <div class="sidebar-logo">
     """, unsafe_allow_html=True)
@@ -546,7 +387,6 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
     
-    # Información del usuario
     st.markdown(f"""
     <div style="text-align: center; padding: 12px 0 8px 0;">
         <div class="avatar">{st.session_state['username'][0].upper()}</div>
@@ -556,15 +396,11 @@ with st.sidebar:
     """, unsafe_allow_html=True)
     
     st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
-    
-    # Navegación con botones elegantes
     st.markdown('<div class="nav-section-title">Navegación</div>', unsafe_allow_html=True)
     
-    # Estado de la página actual
     if "pagina" not in st.session_state:
         st.session_state["pagina"] = "KPIs"
     
-    # Botones de navegación
     if st.button("📊 KPIs", key="nav_kpis", use_container_width=True):
         st.session_state["pagina"] = "KPIs"
         st.rerun()
@@ -583,22 +419,12 @@ with st.sidebar:
     
     st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
     
-    # Cerrar sesión
     st.markdown('<div class="logout-btn">', unsafe_allow_html=True)
     if st.button("🚪 Cerrar sesión", key="logout", use_container_width=True):
         for key in list(st.session_state.keys()):
             del st.session_state[key]
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Info del archivo
-    try:
-        st.markdown('<div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.03);">', unsafe_allow_html=True)
-        st.caption(f"📁 {os.path.basename(archivo_usuario)}")
-        st.caption(f"📅 {len(df)} registros")
-        st.markdown('</div>', unsafe_allow_html=True)
-    except:
-        pass
 
 # =============================================================================
 # 📁 CARGA DE DATOS
@@ -606,7 +432,6 @@ with st.sidebar:
 
 @st.cache_data(ttl=3600)
 def load_user_data(file_path):
-    """Carga los datos del usuario con manejo robusto de errores."""
     try:
         if file_path.startswith(("http://", "https://")):
             response = requests.get(file_path)
@@ -652,20 +477,16 @@ try:
     if not archivo_usuario:
         st.error("No se ha configurado archivo para este usuario")
         st.stop()
-    
     df = load_user_data(archivo_usuario)
-    
 except Exception as e:
     st.error(f"❌ Error al cargar datos del usuario: {str(e)}")
     st.stop()
 
 # =============================================================================
-# 📌 SECCIÓN DE KPIs - VERSIÓN OSCURA
+# 📌 SECCIÓN DE KPIs
 # =============================================================================
 
 def styled_kpi_dark(title, value, subtitle="", icon="", color="#f0f6fc", tooltip=""):
-    """KPI con diseño oscuro elegante"""
-    
     st.markdown(f"""
     <div class="kpi-card">
         <div class="kpi-title">
@@ -680,8 +501,6 @@ def styled_kpi_dark(title, value, subtitle="", icon="", color="#f0f6fc", tooltip
     """, unsafe_allow_html=True)
 
 def show_dark_kpis():
-    """Muestra los KPIs con diseño oscuro elegante"""
-    
     st.markdown(f"""
     <div class="premium-header">
         <h1>📊 <span>KPI</span> Dashboard</h1>
@@ -690,7 +509,6 @@ def show_dark_kpis():
     </div>
     """, unsafe_allow_html=True)
     
-    # Validación
     required_columns = ["Fecha", "Capital Invertido", "Ganacias/Pérdidas Netas"]
     missing_cols = [col for col in required_columns if col not in df.columns]
     if missing_cols:
@@ -698,7 +516,6 @@ def show_dark_kpis():
         st.stop()
     
     try:
-        # Preprocesamiento
         df_copy = df.copy()
         df_copy["Mes"] = df_copy["Fecha"].dt.to_period("M")
         
@@ -709,10 +526,8 @@ def show_dark_kpis():
         df_copy["MaxAcum"] = df_copy["Acumulado"].cummax()
         df_copy["Drawdown"] = df_copy["Acumulado"] - df_copy["MaxAcum"]
         
-        # Datos básicos
         capital_actual = df_copy["Capital Invertido"].dropna().iloc[-1]
         
-        # CAPITAL INICIAL - Primer valor de "Aumento Capital"
         if "Aumento Capital" in df_copy.columns:
             aumentos_validos = df_copy["Aumento Capital"].dropna()
             aumentos_validos = aumentos_validos[aumentos_validos > 0]
@@ -723,14 +538,12 @@ def show_dark_kpis():
         else:
             capital_inicial = df_copy["Capital Invertido"].dropna().iloc[0]
         
-        # APORTES AL FONDO
         if "Aumento Capital" in df_copy.columns:
             total_aumentos = df_copy["Aumento Capital"].sum()
             aportes_fondo = total_aumentos - capital_inicial
         else:
             aportes_fondo = 0
         
-        # Cálculos
         ganancia_neta_total = df_copy["Ganacias/Pérdidas Netas"].sum()
         total_retiros = df_copy["Retiro de Fondos"].sum() if "Retiro de Fondos" in df_copy.columns else 0
         
@@ -747,7 +560,6 @@ def show_dark_kpis():
         
         max_drawdown = df_copy["Drawdown"].min() if "Drawdown" in df_copy.columns else 0
         
-        # Rating de Riesgo
         if max_drawdown != 0 and capital_actual > 0:
             risk_ratio = abs(max_drawdown / capital_actual)
             if risk_ratio < 0.05:
@@ -769,7 +581,6 @@ def show_dark_kpis():
             rating = "⭐⭐⭐⭐⭐"
             risk_text = "Muy Conservador"
         
-        # Mejor y Peor Mes
         if "Beneficio en %" in df_copy.columns:
             mejor_mes_idx = df_copy["Beneficio en %"].idxmax()
             peor_mes_idx = df_copy["Beneficio en %"].idxmin()
@@ -790,7 +601,7 @@ def show_dark_kpis():
         else:
             cagr = 0
         
-        # ===== FILA 1: KPIs PRINCIPALES =====
+        # FILA 1
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
@@ -835,7 +646,7 @@ def show_dark_kpis():
         
         st.markdown("---")
         
-        # ===== FILA 2: KPIs SECUNDARIOS =====
+        # FILA 2
         col5, col6, col7, col8 = st.columns(4)
         
         with col5:
@@ -880,7 +691,7 @@ def show_dark_kpis():
         
         st.markdown("---")
         
-        # ===== FILA 3: KPIs ADICIONALES =====
+        # FILA 3
         col9, col10, col11, col12 = st.columns(4)
         
         with col9:
@@ -934,11 +745,11 @@ def show_dark_kpis():
         st.stop()
 
 # =============================================================================
-# 📊 SECCIÓN DE GRÁFICOS - VERSIÓN OSCURA
+# 📊 SECCIÓN DE GRÁFICOS - COMPLETA
 # =============================================================================
 
 def show_dark_charts():
-    """Muestra gráficos con diseño oscuro elegante"""
+    """Muestra TODOS los gráficos con diseño oscuro"""
     
     st.markdown("""
     <div class="premium-header">
@@ -958,8 +769,8 @@ def show_dark_charts():
         df_copy["MaxAcum"] = df_copy["Acumulado"].cummax()
         df_copy["Drawdown"] = df_copy["Acumulado"] - df_copy["MaxAcum"]
         
-        # Gráfico 1: Evolución del Capital
-        st.markdown("### 📊 Evolución del Capital")
+        # ===== GRÁFICO 1: Evolución del Capital y Drawdown =====
+        st.markdown("### 📊 Evolución del Capital y Drawdown")
         
         fig1 = go.Figure()
         
@@ -971,6 +782,17 @@ def show_dark_charts():
             line=dict(color='#4a8db7', width=3),
             marker=dict(size=6, color='#4a8db7'),
             hovertemplate='%{x}<br>Capital: $%{y:,.0f}<extra></extra>'
+        ))
+        
+        fig1.add_trace(go.Scatter(
+            x=df_copy["Fecha"],
+            y=df_copy["Drawdown"],
+            mode='lines',
+            name='Drawdown',
+            line=dict(color='#e74c3c', width=2, dash='dash'),
+            fill='tozeroy',
+            fillcolor='rgba(231, 76, 60, 0.15)',
+            hovertemplate='%{x}<br>Drawdown: $%{y:,.0f}<extra></extra>'
         ))
         
         fig1.update_layout(
@@ -1005,7 +827,7 @@ def show_dark_charts():
         st.plotly_chart(fig1, use_container_width=True)
         st.markdown("---")
         
-        # Gráfico 2: Ganancia Neta Acumulada
+        # ===== GRÁFICO 2: Ganancia Neta Acumulada =====
         st.markdown("### 📈 Ganancia Neta Acumulada")
         
         fig2 = go.Figure()
@@ -1054,8 +876,106 @@ def show_dark_charts():
         st.plotly_chart(fig2, use_container_width=True)
         st.markdown("---")
         
-        # Gráfico 3: Rentabilidad Mensual - Heatmap
-        st.markdown("### 🌡️ Rentabilidad Mensual")
+        # ===== GRÁFICO 3: Ganancia Bruta Mensual =====
+        st.markdown("### 📊 Ganancia Bruta Mensual")
+        
+        ganancia_bruta_mensual = df_copy.groupby(df_copy["Fecha"].dt.to_period("M"))["Ganacias/Pérdidas Brutas"].sum().reset_index()
+        ganancia_bruta_mensual["Fecha"] = ganancia_bruta_mensual["Fecha"].astype(str)
+        
+        fig3 = px.bar(
+            ganancia_bruta_mensual,
+            x="Fecha",
+            y="Ganacias/Pérdidas Brutas",
+            title="Ganancia Bruta Mensual",
+            template="plotly_dark"
+        )
+        fig3.update_layout(
+            paper_bgcolor='rgba(22, 27, 34, 0.8)',
+            plot_bgcolor='rgba(22, 27, 34, 0.8)',
+            yaxis=dict(
+                tickformat='$,.0f',
+                gridcolor='rgba(255,255,255,0.04)',
+                color='#8b949e'
+            ),
+            xaxis=dict(
+                gridcolor='rgba(255,255,255,0.04)',
+                color='#8b949e'
+            ),
+            legend=dict(
+                font=dict(color='#c9d1d9')
+            )
+        )
+        st.plotly_chart(fig3, use_container_width=True)
+        st.markdown("---")
+        
+        # ===== GRÁFICO 4: Comisiones Mensuales =====
+        if "Comisiones 10 %" in df_copy.columns:
+            st.markdown("### 📊 Comisiones Mensuales")
+            
+            comisiones_mensuales = df_copy.groupby(df_copy["Fecha"].dt.to_period("M"))["Comisiones 10 %"].sum().reset_index()
+            comisiones_mensuales["Fecha"] = comisiones_mensuales["Fecha"].astype(str)
+            
+            fig4 = px.bar(
+                comisiones_mensuales,
+                x="Fecha",
+                y="Comisiones 10 %",
+                title="Comisiones Mensuales (10%)",
+                template="plotly_dark"
+            )
+            fig4.update_layout(
+                paper_bgcolor='rgba(22, 27, 34, 0.8)',
+                plot_bgcolor='rgba(22, 27, 34, 0.8)',
+                yaxis=dict(
+                    tickformat='$,.0f',
+                    gridcolor='rgba(255,255,255,0.04)',
+                    color='#8b949e'
+                ),
+                xaxis=dict(
+                    gridcolor='rgba(255,255,255,0.04)',
+                    color='#8b949e'
+                ),
+                legend=dict(
+                    font=dict(color='#c9d1d9')
+                )
+            )
+            st.plotly_chart(fig4, use_container_width=True)
+            st.markdown("---")
+        
+        # ===== GRÁFICO 5: Rentabilidad Mensual =====
+        st.markdown("### 📊 Rentabilidad Mensual")
+        
+        if "Beneficio en %" in df_copy.columns:
+            rentabilidad = df_copy.groupby("Mes")["Beneficio en %"].mean().reset_index()
+            rentabilidad["Mes"] = rentabilidad["Mes"].astype(str)
+            rentabilidad["Beneficio en %"] *= 100
+            
+            fig6 = px.bar(
+                rentabilidad,
+                x="Mes",
+                y="Beneficio en %",
+                title="Rentabilidad Mensual (%)",
+                template="plotly_dark"
+            )
+            fig6.update_layout(
+                paper_bgcolor='rgba(22, 27, 34, 0.8)',
+                plot_bgcolor='rgba(22, 27, 34, 0.8)',
+                yaxis=dict(
+                    gridcolor='rgba(255,255,255,0.04)',
+                    color='#8b949e'
+                ),
+                xaxis=dict(
+                    gridcolor='rgba(255,255,255,0.04)',
+                    color='#8b949e'
+                ),
+                legend=dict(
+                    font=dict(color='#c9d1d9')
+                )
+            )
+            st.plotly_chart(fig6, use_container_width=True)
+            st.markdown("---")
+        
+        # ===== GRÁFICO 6: Heatmap de Rentabilidad Mensual =====
+        st.markdown("### 🌡️ Rentabilidad Mensual - Heatmap")
         
         if "Beneficio en %" in df_copy.columns:
             df_copy["Año"] = df_copy["Fecha"].dt.year
@@ -1071,7 +991,7 @@ def show_dark_charts():
             
             pivot_rent.columns = [calendar.month_abbr[i] for i in pivot_rent.columns]
             
-            fig3 = go.Figure(data=go.Heatmap(
+            fig_heat = go.Figure(data=go.Heatmap(
                 z=pivot_rent.values,
                 x=pivot_rent.columns,
                 y=pivot_rent.index,
@@ -1083,7 +1003,7 @@ def show_dark_charts():
                 hovertemplate='<b>%{y}</b><br>%{x}<br>Rentabilidad: %{z:.2f}%<extra></extra>'
             ))
             
-            fig3.update_layout(
+            fig_heat.update_layout(
                 template='plotly_dark',
                 height=350,
                 paper_bgcolor='rgba(22, 27, 34, 0.8)',
@@ -1094,19 +1014,130 @@ def show_dark_charts():
                 yaxis=dict(color='#8b949e')
             )
             
-            st.plotly_chart(fig3, use_container_width=True)
+            st.plotly_chart(fig_heat, use_container_width=True)
+            st.markdown("---")
+        
+        # ===== GRÁFICO 7: Distribución de Retornos =====
+        st.markdown("### 📊 Distribución de Retornos Mensuales")
+        
+        if "Beneficio en %" in df_copy.columns:
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                fig_hist = go.Figure()
+                fig_hist.add_trace(go.Histogram(
+                    x=df_copy["Beneficio en %"] * 100,
+                    nbinsx=20,
+                    marker=dict(
+                        color='#4a8db7',
+                        line=dict(color='#0a0e14', width=1)
+                    ),
+                    hovertemplate='Rentabilidad: %{x:.2f}%<br>Frecuencia: %{y}<extra></extra>'
+                ))
+                fig_hist.update_layout(
+                    template='plotly_dark',
+                    height=350,
+                    paper_bgcolor='rgba(22, 27, 34, 0.8)',
+                    plot_bgcolor='rgba(22, 27, 34, 0.8)',
+                    xaxis_title='Rentabilidad (%)',
+                    yaxis_title='Frecuencia',
+                    showlegend=False,
+                    xaxis=dict(color='#8b949e'),
+                    yaxis=dict(color='#8b949e')
+                )
+                st.plotly_chart(fig_hist, use_container_width=True)
+            
+            with col2:
+                fig_box = go.Figure()
+                fig_box.add_trace(go.Box(
+                    y=df_copy["Beneficio en %"] * 100,
+                    name='Retornos Mensuales',
+                    marker_color='#4a8db7',
+                    boxmean='sd',
+                    hovertemplate='Mediana: %{median:.2f}%<br>Media: %{mean:.2f}%<br>Mín: %{min:.2f}%<br>Máx: %{max:.2f}%<extra></extra>'
+                ))
+                fig_box.update_layout(
+                    template='plotly_dark',
+                    height=350,
+                    paper_bgcolor='rgba(22, 27, 34, 0.8)',
+                    plot_bgcolor='rgba(22, 27, 34, 0.8)',
+                    yaxis_title='Rentabilidad (%)',
+                    showlegend=False,
+                    yaxis=dict(color='#8b949e')
+                )
+                st.plotly_chart(fig_box, use_container_width=True)
+            st.markdown("---")
+        
+        # ===== GRÁFICO 8: Análisis de Comisiones vs Ganancia =====
+        if "Comisiones Pagadas" in df_copy.columns and "Ganacias/Pérdidas Brutas" in df_copy.columns:
+            st.markdown("### 💰 Análisis de Comisiones vs Ganancia Bruta")
+            
+            comisiones_mensuales = df_copy.groupby("Mes").agg({
+                "Comisiones Pagadas": "sum",
+                "Ganacias/Pérdidas Brutas": "sum"
+            }).reset_index()
+            comisiones_mensuales["Mes"] = comisiones_mensuales["Mes"].astype(str)
+            
+            fig_comisiones = go.Figure()
+            
+            fig_comisiones.add_trace(go.Bar(
+                x=comisiones_mensuales["Mes"],
+                y=comisiones_mensuales["Comisiones Pagadas"],
+                name='Comisiones',
+                marker_color='#e74c3c',
+                hovertemplate='%{x}<br>Comisiones: $%{y:,.0f}<extra></extra>'
+            ))
+            
+            fig_comisiones.add_trace(go.Scatter(
+                x=comisiones_mensuales["Mes"],
+                y=comisiones_mensuales["Ganacias/Pérdidas Brutas"],
+                mode='lines+markers',
+                name='Ganancia Bruta',
+                line=dict(color='#2ecc71', width=3),
+                marker=dict(size=8, color='#2ecc71'),
+                hovertemplate='%{x}<br>Ganancia: $%{y:,.0f}<extra></extra>'
+            ))
+            
+            fig_comisiones.update_layout(
+                template='plotly_dark',
+                height=400,
+                hovermode='x unified',
+                paper_bgcolor='rgba(22, 27, 34, 0.8)',
+                plot_bgcolor='rgba(22, 27, 34, 0.8)',
+                legend=dict(
+                    yanchor="top",
+                    y=0.99,
+                    xanchor="left",
+                    x=0.01,
+                    bgcolor='rgba(13, 17, 23, 0.8)',
+                    bordercolor='rgba(255,255,255,0.05)',
+                    borderwidth=1,
+                    font=dict(color='#c9d1d9')
+                ),
+                xaxis_title='Mes',
+                yaxis_title='Valor ($)',
+                yaxis=dict(
+                    tickformat='$,.0f',
+                    gridcolor='rgba(255,255,255,0.04)',
+                    color='#8b949e'
+                ),
+                xaxis=dict(
+                    gridcolor='rgba(255,255,255,0.04)',
+                    color='#8b949e'
+                )
+            )
+            
+            st.plotly_chart(fig_comisiones, use_container_width=True)
             
     except Exception as e:
         st.error(f"❌ Error al generar gráficos: {str(e)}")
         st.stop()
 
 # =============================================================================
-# 📈 SECCIÓN DE PROYECCIONES - VERSIÓN OSCURA
+# 📈 SECCIÓN DE PROYECCIONES
 # =============================================================================
 
 def show_dark_projections():
-    """Muestra proyecciones con diseño oscuro elegante"""
-    
     st.markdown("""
     <div class="premium-header">
         <h1>🚀 <span>Proyección</span> de Inversión</h1>
@@ -1125,13 +1156,13 @@ def show_dark_projections():
             """, unsafe_allow_html=True)
             
             aumento_opcion = st.selectbox(
-                "Aumento de capital",
+                "📈 Aumento de capital",
                 [0, 5, 10, 15, 20, 30, 50],
                 format_func=lambda x: f"{x}%"
             )
             
             beneficio_mensual = st.slider(
-                "Beneficio mensual estimado",
+                "📊 Beneficio mensual estimado",
                 min_value=0.0,
                 max_value=15.0,
                 value=5.0,
@@ -1140,7 +1171,7 @@ def show_dark_projections():
             )
             
             meses_proyeccion = st.slider(
-                "Duración de la inversión",
+                "📅 Duración de la inversión",
                 min_value=1,
                 max_value=60,
                 value=12,
@@ -1232,7 +1263,21 @@ def show_dark_projections():
         
         st.plotly_chart(fig, use_container_width=True)
         
-        # Botón de descarga
+        st.markdown("### 📄 Detalle de Proyección")
+        
+        df_proy_display = df_proy.copy()
+        df_proy_display["Proyección"] = df_proy_display["Proyección"].apply(lambda x: f"${x:,.0f}")
+        df_proy_display["Crecimiento"] = ["0%"] + [
+            f"{(df_proy['Proyección'][i] / df_proy['Proyección'][0] - 1) * 100:.1f}%" 
+            for i in range(1, len(df_proy))
+        ]
+        
+        st.dataframe(
+            df_proy_display,
+            use_container_width=True,
+            hide_index=True
+        )
+        
         output = BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
             resumen = pd.DataFrame({
@@ -1261,7 +1306,7 @@ def show_dark_projections():
         excel_data = output.getvalue()
         
         st.download_button(
-            "📥 Descargar Proyección",
+            "📥 Descargar Proyección en Excel",
             data=excel_data,
             file_name=f"proyeccion_{datetime.now().strftime('%Y%m%d')}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -1273,12 +1318,10 @@ def show_dark_projections():
         st.stop()
 
 # =============================================================================
-# ⚖️ SECCIÓN DE COMPARACIONES - VERSIÓN OSCURA
+# ⚖️ SECCIÓN DE COMPARACIONES
 # =============================================================================
 
 def show_dark_comparisons():
-    """Muestra comparaciones con diseño oscuro elegante"""
-    
     st.markdown("""
     <div class="premium-header">
         <h1>⚖️ <span>Comparaciones</span> Anuales</h1>
@@ -1301,17 +1344,18 @@ def show_dark_comparisons():
         
         años_disponibles = sorted(df_copy["Año"].unique().tolist())
         años_seleccionados = st.multiselect(
-            "Selecciona los años a comparar",
+            "📅 Selecciona los años a comparar",
             años_disponibles,
             default=años_disponibles[-2:] if len(años_disponibles) > 1 else años_disponibles
         )
         
         if not años_seleccionados:
-            st.warning("Selecciona al menos un año para comparar")
+            st.warning("⚠️ Selecciona al menos un año para comparar")
             st.stop()
         
         df_filtrado = df_copy[df_copy["Año"].isin(años_seleccionados)]
         
+        # Gráfico 1: Comparación de Rentabilidad Mensual
         st.markdown("### 📈 Comparación de Rentabilidad Mensual")
         
         if "Beneficio en %" in df_filtrado.columns:
@@ -1368,6 +1412,155 @@ def show_dark_comparisons():
             )
             
             st.plotly_chart(fig1, use_container_width=True)
+            st.markdown("---")
+        
+        # Gráfico 2: Comparación de Ganancia Anual
+        st.markdown("### 💰 Comparación de Ganancia Anual")
+        
+        ganancia_anual = df_filtrado.groupby("Año").agg({
+            "Ganacias/Pérdidas Netas": "sum"
+        }).reset_index()
+        
+        fig2 = go.Figure()
+        
+        fig2.add_trace(go.Bar(
+            x=ganancia_anual["Año"],
+            y=ganancia_anual["Ganacias/Pérdidas Netas"],
+            marker_color=['#2ecc71' if x > 0 else '#e74c3c' for x in ganancia_anual["Ganacias/Pérdidas Netas"]],
+            text=[f"${x:,.0f}" for x in ganancia_anual["Ganacias/Pérdidas Netas"]],
+            textposition='outside',
+            hovertemplate='Año: %{x}<br>Ganancia: $%{y:,.0f}<extra></extra>'
+        ))
+        
+        fig2.update_layout(
+            template='plotly_dark',
+            height=400,
+            paper_bgcolor='rgba(22, 27, 34, 0.8)',
+            plot_bgcolor='rgba(22, 27, 34, 0.8)',
+            xaxis_title='Año',
+            yaxis_title='Ganancia Neta ($)',
+            yaxis=dict(
+                tickformat='$,.0f',
+                gridcolor='rgba(255,255,255,0.04)',
+                color='#8b949e'
+            ),
+            xaxis=dict(
+                gridcolor='rgba(255,255,255,0.04)',
+                color='#8b949e'
+            )
+        )
+        
+        st.plotly_chart(fig2, use_container_width=True)
+        st.markdown("---")
+        
+        # Gráfico 3: Comparación de Drawdown
+        if "Drawdown" in df_filtrado.columns:
+            st.markdown("### 📉 Comparación de Drawdown Máximo")
+            
+            drawdown_anual = df_filtrado.groupby("Año").agg({
+                "Drawdown": "min"
+            }).reset_index()
+            
+            fig3 = go.Figure()
+            
+            fig3.add_trace(go.Bar(
+                x=drawdown_anual["Año"],
+                y=drawdown_anual["Drawdown"],
+                marker_color='#e74c3c',
+                text=[f"${x:,.0f}" for x in drawdown_anual["Drawdown"]],
+                textposition='outside',
+                hovertemplate='Año: %{x}<br>Drawdown: $%{y:,.0f}<extra></extra>'
+            ))
+            
+            fig3.update_layout(
+                template='plotly_dark',
+                height=400,
+                paper_bgcolor='rgba(22, 27, 34, 0.8)',
+                plot_bgcolor='rgba(22, 27, 34, 0.8)',
+                xaxis_title='Año',
+                yaxis_title='Drawdown ($)',
+                yaxis=dict(
+                    tickformat='$,.0f',
+                    gridcolor='rgba(255,255,255,0.04)',
+                    color='#8b949e'
+                ),
+                xaxis=dict(
+                    gridcolor='rgba(255,255,255,0.04)',
+                    color='#8b949e'
+                )
+            )
+            
+            st.plotly_chart(fig3, use_container_width=True)
+            st.markdown("---")
+        
+        # Tabla comparativa
+        st.markdown("### 📊 Tabla Comparativa Anual")
+        
+        tabla_comparativa = df_filtrado.groupby("Año").agg({
+            "Capital Invertido": "last",
+            "Ganacias/Pérdidas Netas": "sum",
+            "Beneficio en %": "mean",
+            "Retiro de Fondos": "sum" if "Retiro de Fondos" in df_filtrado.columns else lambda x: 0
+        }).reset_index()
+        
+        tabla_comparativa["Beneficio en %"] = tabla_comparativa["Beneficio en %"] * 100
+        tabla_comparativa["ROI"] = (tabla_comparativa["Ganacias/Pérdidas Netas"] / tabla_comparativa["Capital Invertido"]) * 100
+        
+        tabla_comparativa_display = tabla_comparativa.copy()
+        tabla_comparativa_display["Capital Invertido"] = tabla_comparativa_display["Capital Invertido"].apply(lambda x: f"${x:,.0f}")
+        tabla_comparativa_display["Ganacias/Pérdidas Netas"] = tabla_comparativa_display["Ganacias/Pérdidas Netas"].apply(lambda x: f"${x:,.0f}")
+        tabla_comparativa_display["Beneficio en %"] = tabla_comparativa_display["Beneficio en %"].apply(lambda x: f"{x:.2f}%")
+        tabla_comparativa_display["ROI"] = tabla_comparativa_display["ROI"].apply(lambda x: f"{x:.2f}%")
+        
+        if "Retiro de Fondos" in tabla_comparativa_display.columns:
+            tabla_comparativa_display["Retiro de Fondos"] = tabla_comparativa_display["Retiro de Fondos"].apply(lambda x: f"${x:,.0f}")
+        
+        column_names = ["Año", "Capital Final", "Ganancia Neta", "Rentabilidad Prom.", "ROI Anual"]
+        if "Retiro de Fondos" in tabla_comparativa_display.columns:
+            column_names.append("Retiros")
+        
+        tabla_comparativa_display.columns = column_names
+        
+        st.dataframe(
+            tabla_comparativa_display,
+            use_container_width=True,
+            hide_index=True
+        )
+        
+        # Estadísticas adicionales
+        st.markdown("### 📈 Análisis de Rendimiento")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            mejor_año = tabla_comparativa.loc[tabla_comparativa["Ganacias/Pérdidas Netas"].idxmax()]
+            st.markdown(f"""
+            <div style="background: #161b22; padding: 20px; border-radius: 10px; border: 1px solid rgba(46, 204, 113, 0.15);">
+                <div style="color: #8b949e; font-size: 14px;">🏆 Mejor Año</div>
+                <div style="color: #2ecc71; font-size: 24px; font-weight: 700;">{int(mejor_año['Año'])}</div>
+                <div style="color: #8b949e; font-size: 13px;">Ganancia: ${mejor_año['Ganacias/Pérdidas Netas']:,.0f}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            peor_año = tabla_comparativa.loc[tabla_comparativa["Ganacias/Pérdidas Netas"].idxmin()]
+            st.markdown(f"""
+            <div style="background: #161b22; padding: 20px; border-radius: 10px; border: 1px solid rgba(231, 76, 60, 0.15);">
+                <div style="color: #8b949e; font-size: 14px;">⚠️ Peor Año</div>
+                <div style="color: #e74c3c; font-size: 24px; font-weight: 700;">{int(peor_año['Año'])}</div>
+                <div style="color: #8b949e; font-size: 13px;">Ganancia: ${peor_año['Ganacias/Pérdidas Netas']:,.0f}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col3:
+            promedio_anual = tabla_comparativa["Ganacias/Pérdidas Netas"].mean()
+            st.markdown(f"""
+            <div style="background: #161b22; padding: 20px; border-radius: 10px; border: 1px solid rgba(74, 141, 183, 0.15);">
+                <div style="color: #8b949e; font-size: 14px;">📊 Ganancia Promedio Anual</div>
+                <div style="color: #4a8db7; font-size: 24px; font-weight: 700;">${promedio_anual:,.0f}</div>
+                <div style="color: #8b949e; font-size: 13px;">Basado en {len(tabla_comparativa)} años</div>
+            </div>
+            """, unsafe_allow_html=True)
             
     except Exception as e:
         st.error(f"❌ Error al generar comparaciones: {str(e)}")
@@ -1377,7 +1570,6 @@ def show_dark_comparisons():
 # 🏁 MENÚ PRINCIPAL
 # =============================================================================
 
-# Mostrar sección seleccionada
 if st.session_state["pagina"] == "KPIs":
     show_dark_kpis()
 elif st.session_state["pagina"] == "Gráficos":
