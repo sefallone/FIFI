@@ -12,7 +12,7 @@ from io import BytesIO
 import calendar
 
 # =============================================================================
-# 🎨 CONFIGURACIÓN DE PÁGINA Y ESTILOS - VERSIÓN LEGIBLE
+# 🎨 CONFIGURACIÓN DE PÁGINA Y ESTILOS - VERSIÓN OSCURA ELEGANTE
 # =============================================================================
 
 st.set_page_config(
@@ -22,37 +22,36 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# CSS personalizado - Estilo elegante y LEGIBLE
+# CSS personalizado - Estilo oscuro elegante tipo Bloomberg/Inversión
 st.markdown("""
 <style>
-    /* Fondo principal - Blanco puro para máxima legibilidad */
+    /* Fondo principal - Negro profundo */
     .stApp {
-        background: #ffffff;
+        background: #0a0e14;
     }
     
-    /* Sidebar elegante - Azul profundo */
+    /* Sidebar elegante */
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #0f1a2e 0%, #1a2a3f 100%);
-        border-right: 1px solid rgba(255,255,255,0.05);
+        background: linear-gradient(180deg, #0d1117 0%, #161b22 100%);
+        border-right: 1px solid rgba(255,255,255,0.04);
         padding-top: 20px;
     }
     
     [data-testid="stSidebar"] [data-testid="stMarkdown"] {
-        color: #e8e8e8;
+        color: #c9d1d9;
     }
     
     [data-testid="stSidebar"] .stCaption {
-        color: #a0b0c0;
+        color: #8b949e;
     }
     
-    /* Tarjetas de KPI - Blancas con sombra sutil */
+    /* Tarjetas de KPI - Oscuras con bordes sutiles */
     .kpi-card {
-        background: #ffffff;
+        background: #161b22;
         border-radius: 10px;
         padding: 14px 18px 16px 18px;
         margin: 5px 0;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        border: 1px solid #eef0f2;
+        border: 1px solid rgba(255,255,255,0.05);
         transition: all 0.3s ease;
         position: relative;
         overflow: hidden;
@@ -66,18 +65,18 @@ st.markdown("""
         left: 0;
         right: 0;
         height: 2.5px;
-        background: linear-gradient(90deg, #2c6e8f, #4a8db7);
-        opacity: 0.7;
+        background: linear-gradient(90deg, #4a8db7, #6ba3c9);
+        opacity: 0.6;
     }
     
     .kpi-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(44, 110, 143, 0.10);
-        border-color: rgba(44, 110, 143, 0.15);
+        border-color: rgba(74, 141, 183, 0.3);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.5);
     }
     
     .kpi-title {
-        color: #6b7a8a;
+        color: #8b949e;
         font-size: 10.5px;
         font-weight: 600;
         letter-spacing: 0.8px;
@@ -89,21 +88,21 @@ st.markdown("""
     }
     
     .kpi-title .help-icon {
-        color: #a0b0c0;
+        color: #8b949e;
         font-size: 12px;
         cursor: help;
         margin-left: 6px;
-        opacity: 0.5;
+        opacity: 0.4;
         transition: opacity 0.3s ease;
     }
     
     .kpi-title .help-icon:hover {
         opacity: 1;
-        color: #2c6e8f;
+        color: #4a8db7;
     }
     
     .kpi-value {
-        color: #1a2634;
+        color: #f0f6fc;
         font-size: 22px;
         font-weight: 700;
         margin: 2px 0 2px 0;
@@ -111,7 +110,7 @@ st.markdown("""
     }
     
     .kpi-sub {
-        color: #8a9aa8;
+        color: #8b949e;
         font-size: 11px;
         font-weight: 400;
         margin-top: 2px;
@@ -122,18 +121,18 @@ st.markdown("""
         margin-right: 5px;
     }
     
-    /* Header elegante */
+    /* Header elegante oscuro */
     .premium-header {
-        background: #f8f9fa;
+        background: #161b22;
         padding: 18px 28px;
         border-radius: 10px;
-        border: 1px solid #eef0f2;
+        border: 1px solid rgba(255,255,255,0.04);
         margin-bottom: 22px;
         text-align: center;
     }
     
     .premium-header h1 {
-        color: #1a2634;
+        color: #f0f6fc;
         font-weight: 300;
         font-size: 26px;
         letter-spacing: -0.3px;
@@ -141,12 +140,12 @@ st.markdown("""
     }
     
     .premium-header h1 span {
-        color: #2c6e8f;
+        color: #4a8db7;
         font-weight: 600;
     }
     
     .premium-header p {
-        color: #6b7a8a;
+        color: #8b949e;
         font-size: 14px;
         margin-top: 4px;
         font-weight: 400;
@@ -154,16 +153,17 @@ st.markdown("""
     
     .premium-header .sub-info {
         font-size: 12px;
-        color: #8a9aa8;
+        color: #8b949e;
         margin-top: 2px;
+        opacity: 0.7;
     }
     
     /* Botones elegantes en sidebar */
     .stButton > button {
         background: transparent;
-        color: #c8d0d8;
+        color: #8b949e;
         font-weight: 400;
-        border: 1px solid rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.04);
         border-radius: 8px;
         padding: 9px 16px;
         transition: all 0.3s ease;
@@ -171,74 +171,82 @@ st.markdown("""
         letter-spacing: 0.3px;
         width: 100%;
         text-align: left;
-        font-family: 'Inter', sans-serif;
     }
     
     .stButton > button:hover {
-        background: rgba(255,255,255,0.06);
-        border-color: rgba(255,255,255,0.12);
+        background: rgba(255,255,255,0.04);
+        border-color: rgba(255,255,255,0.08);
         transform: translateX(3px);
-        color: #ffffff;
+        color: #f0f6fc;
     }
     
     .stButton > button:active {
-        background: rgba(255,255,255,0.10);
+        background: rgba(255,255,255,0.06);
     }
     
     /* Botón activo en sidebar */
     .stButton > button[data-testid="baseButton-secondary"] {
-        background: rgba(255,255,255,0.06);
-        border-color: rgba(255,255,255,0.12);
-        color: #ffffff;
+        background: rgba(74, 141, 183, 0.1);
+        border-color: rgba(74, 141, 183, 0.2);
+        color: #f0f6fc;
     }
     
     /* Botón de cerrar sesión */
     .logout-btn > button {
-        color: #d4a0a0;
-        border-color: rgba(212, 160, 160, 0.08);
+        color: #e8a090;
+        border-color: rgba(232, 160, 144, 0.06);
     }
     
     .logout-btn > button:hover {
-        background: rgba(212, 160, 160, 0.06);
-        border-color: rgba(212, 160, 160, 0.15);
-        color: #d4a0a0;
+        background: rgba(232, 160, 144, 0.05);
+        border-color: rgba(232, 160, 144, 0.12);
+        color: #e8a090;
     }
     
-    /* Inputs elegantes */
+    /* Inputs elegantes oscuros */
     [data-testid="stTextInput"] input {
-        background: #f8f9fa;
-        border: 1px solid #e8eaec;
+        background: #0d1117;
+        border: 1px solid rgba(255,255,255,0.06);
         border-radius: 8px;
-        color: #1a2634;
+        color: #f0f6fc;
         padding: 10px 14px;
         font-size: 14px;
     }
     
     [data-testid="stTextInput"] input:focus {
-        border-color: #2c6e8f;
-        box-shadow: 0 0 0 3px rgba(44, 110, 143, 0.08);
+        border-color: #4a8db7;
+        box-shadow: 0 0 0 3px rgba(74, 141, 183, 0.1);
     }
     
-    /* Selectbox elegante */
+    /* Selectbox elegante oscuro */
     [data-testid="stSelectbox"] {
-        background: #f8f9fa;
+        background: #0d1117;
         border-radius: 8px;
     }
     
     [data-testid="stSelectbox"] select {
-        color: #1a2634;
+        color: #f0f6fc;
     }
     
-    /* Tablas elegantes */
+    /* Slider elegante oscuro */
+    [data-testid="stSlider"] {
+        color: #f0f6fc;
+    }
+    
+    [data-testid="stSlider"] .stSlider {
+        color: #4a8db7;
+    }
+    
+    /* Tablas elegantes oscuras */
     [data-testid="stDataFrame"] {
         background: transparent;
     }
     
     .dataframe {
-        background: #ffffff !important;
+        background: #161b22 !important;
         border-radius: 10px !important;
-        border: 1px solid #eef0f2 !important;
-        color: #1a2634 !important;
+        border: 1px solid rgba(255,255,255,0.04) !important;
+        color: #f0f6fc !important;
         font-size: 13px !important;
     }
     
@@ -248,44 +256,44 @@ st.markdown("""
         height: 6px;
     }
     ::-webkit-scrollbar-track {
-        background: #f0f0f0;
+        background: #0d1117;
         border-radius: 10px;
     }
     ::-webkit-scrollbar-thumb {
-        background: linear-gradient(135deg, #2c6e8f, #4a8db7);
+        background: linear-gradient(135deg, #4a8db7, #6ba3c9);
         border-radius: 10px;
     }
     ::-webkit-scrollbar-thumb:hover {
-        background: #2c6e8f;
+        background: #4a8db7;
     }
     
-    /* Login elegante y legible */
+    /* Login elegante oscuro */
     .login-container {
         max-width: 420px;
         margin: 60px auto;
         padding: 35px 40px 40px 40px;
-        background: #ffffff;
+        background: #161b22;
         border-radius: 14px;
-        border: 1px solid #eef0f2;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.06);
+        border: 1px solid rgba(255,255,255,0.04);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.4);
     }
     
     .login-title {
         text-align: center;
-        color: #1a2634;
+        color: #f0f6fc;
         font-size: 26px;
         font-weight: 300;
         margin-bottom: 4px;
     }
     
     .login-title span {
-        color: #2c6e8f;
+        color: #4a8db7;
         font-weight: 600;
     }
     
     .login-subtitle {
         text-align: center;
-        color: #6b7a8a;
+        color: #8b949e;
         font-size: 13px;
         margin-bottom: 25px;
         font-weight: 400;
@@ -293,14 +301,14 @@ st.markdown("""
     
     /* Badge elegante */
     .badge {
-        background: rgba(44, 110, 143, 0.08);
-        color: #2c6e8f;
+        background: rgba(74, 141, 183, 0.12);
+        color: #4a8db7;
         padding: 2px 12px;
         border-radius: 12px;
         font-size: 10.5px;
         font-weight: 500;
         display: inline-block;
-        border: 1px solid rgba(44, 110, 143, 0.08);
+        border: 1px solid rgba(74, 141, 183, 0.08);
     }
     
     /* Avatar en sidebar */
@@ -308,7 +316,7 @@ st.markdown("""
         width: 44px;
         height: 44px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #2c6e8f, #4a8db7);
+        background: linear-gradient(135deg, #4a8db7, #6ba3c9);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -322,7 +330,7 @@ st.markdown("""
     .sidebar-logo {
         text-align: center;
         padding: 8px 0 16px 0;
-        border-bottom: 1px solid rgba(255,255,255,0.04);
+        border-bottom: 1px solid rgba(255,255,255,0.03);
         margin-bottom: 16px;
     }
     
@@ -333,7 +341,7 @@ st.markdown("""
     }
     
     .sidebar-logo .logo-text {
-        color: #c8d0d8;
+        color: #8b949e;
         font-size: 15px;
         font-weight: 300;
         margin-top: 4px;
@@ -341,14 +349,14 @@ st.markdown("""
     }
     
     .sidebar-logo .logo-text span {
-        color: #5a9abb;
+        color: #4a8db7;
         font-weight: 400;
     }
     
     /* Separador elegante */
     .sidebar-divider {
         height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
         margin: 12px 0;
     }
     
@@ -359,28 +367,50 @@ st.markdown("""
         text-transform: uppercase;
         letter-spacing: 1.5px;
         padding: 8px 0 6px 0;
-        opacity: 0.5;
+        opacity: 0.4;
     }
     
-    /* Estilo para sliders */
-    [data-testid="stSlider"] {
-        color: #1a2634;
-    }
-    
-    [data-testid="stSlider"] .stSlider {
-        color: #2c6e8f;
-    }
-    
-    /* Mensajes de error/warning */
+    /* Alertas en modo oscuro */
     .stAlert {
         border-radius: 8px;
-        border: 1px solid #eef0f2;
+        border: 1px solid rgba(255,255,255,0.04);
+        background: #161b22;
     }
     
-    /* Tablas en proyecciones */
-    .stDataFrame {
-        border-radius: 10px;
-        overflow: hidden;
+    .stAlert .stMarkdown {
+        color: #f0f6fc;
+    }
+    
+    /* Texto de warnings */
+    .stAlert .stMarkdown p {
+        color: #f0f6fc !important;
+    }
+    
+    /* Estilo para selectbox en modo oscuro */
+    [data-testid="stSelectbox"] label {
+        color: #8b949e;
+    }
+    
+    /* Estilo para sliders en modo oscuro */
+    [data-testid="stSlider"] label {
+        color: #8b949e;
+    }
+    
+    /* Estilo para download button */
+    .stDownloadButton > button {
+        background: #4a8db7;
+        color: #ffffff;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .stDownloadButton > button:hover {
+        background: #5a9dc7;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(74, 141, 183, 0.3);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -399,16 +429,16 @@ def check_password_hybrid():
     if st.session_state.get("authenticated"):
         return True
     
-    # Mostrar login elegante
+    # Mostrar login elegante oscuro
     st.markdown("""
     <div style="text-align: center; padding: 20px 0 5px 0;">
-        <h1 style="color: #1a2634; font-size: 40px; font-weight: 300; letter-spacing: -0.5px; margin: 0;">
-            🏛️ <span style="font-weight: 600; color: #2c6e8f;">FIFI</span>
+        <h1 style="color: #f0f6fc; font-size: 40px; font-weight: 300; letter-spacing: -0.5px; margin: 0;">
+            🏛️ <span style="font-weight: 600; color: #4a8db7;">FIFI</span>
         </h1>
-        <p style="color: #6b7a8a; font-size: 15px; font-weight: 400; margin: 4px 0 0 0;">
+        <p style="color: #8b949e; font-size: 15px; font-weight: 400; margin: 4px 0 0 0;">
             Investment Dashboard
         </p>
-        <div style="width: 40px; height: 2px; background: linear-gradient(90deg, #2c6e8f, #4a8db7); margin: 10px auto;"></div>
+        <div style="width: 40px; height: 2px; background: linear-gradient(90deg, #4a8db7, #6ba3c9); margin: 10px auto;"></div>
     </div>
     """, unsafe_allow_html=True)
     
@@ -418,7 +448,7 @@ def check_password_hybrid():
         with col2:
             with st.form("login_form"):
                 st.markdown("""
-                <div style="background: #ffffff; padding: 28px 30px 32px 30px; border-radius: 12px; border: 1px solid #eef0f2; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+                <div style="background: #161b22; padding: 28px 30px 32px 30px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.04); box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
                 """, unsafe_allow_html=True)
                 
                 username = st.text_input("Usuario", placeholder="Ingresa tu usuario", label_visibility="collapsed")
@@ -473,7 +503,7 @@ def check_password_hybrid():
     
     # Footer
     st.markdown("""
-    <div style="position: fixed; bottom: 20px; width: 100%; text-align: center; color: #c0b8b0; font-size: 11px; letter-spacing: 0.5px;">
+    <div style="position: fixed; bottom: 20px; width: 100%; text-align: center; color: #484f58; font-size: 11px; letter-spacing: 0.5px;">
         FIFI Investments © 2026
     </div>
     """, unsafe_allow_html=True)
@@ -487,7 +517,7 @@ if not check_password_hybrid():
 # 🚀 CONFIGURACIÓN POST-LOGIN
 # =============================================================================
 
-# Barra lateral elegante
+# Barra lateral elegante oscura
 with st.sidebar:
     # Logo
     st.markdown("""
@@ -504,11 +534,11 @@ with st.sidebar:
             """, unsafe_allow_html=True)
         else:
             st.markdown("""
-            <div style="color: #c8d0d8; font-size: 28px; font-weight: 300;">🏛️</div>
+            <div style="color: #8b949e; font-size: 28px; font-weight: 300;">🏛️</div>
             """, unsafe_allow_html=True)
     except:
         st.markdown("""
-        <div style="color: #c8d0d8; font-size: 28px; font-weight: 300;">🏛️</div>
+        <div style="color: #8b949e; font-size: 28px; font-weight: 300;">🏛️</div>
         """, unsafe_allow_html=True)
     
     st.markdown("""
@@ -520,7 +550,7 @@ with st.sidebar:
     st.markdown(f"""
     <div style="text-align: center; padding: 12px 0 8px 0;">
         <div class="avatar">{st.session_state['username'][0].upper()}</div>
-        <div style="color: #ffffff; font-size: 14px; font-weight: 400;">{st.session_state['username']}</div>
+        <div style="color: #f0f6fc; font-size: 14px; font-weight: 400;">{st.session_state['username']}</div>
         <div style="margin-top: 3px;"><span class="badge">● Activo</span></div>
     </div>
     """, unsafe_allow_html=True)
@@ -630,11 +660,11 @@ except Exception as e:
     st.stop()
 
 # =============================================================================
-# 📌 SECCIÓN DE KPIs - VERSIÓN LEGIBLE
+# 📌 SECCIÓN DE KPIs - VERSIÓN OSCURA
 # =============================================================================
 
-def styled_kpi_elegant(title, value, subtitle="", icon="", color="#1a2634", tooltip=""):
-    """KPI con diseño elegante y legible"""
+def styled_kpi_dark(title, value, subtitle="", icon="", color="#f0f6fc", tooltip=""):
+    """KPI con diseño oscuro elegante"""
     
     st.markdown(f"""
     <div class="kpi-card">
@@ -649,8 +679,8 @@ def styled_kpi_elegant(title, value, subtitle="", icon="", color="#1a2634", tool
     </div>
     """, unsafe_allow_html=True)
 
-def show_elegant_kpis():
-    """Muestra los KPIs con diseño elegante y legible"""
+def show_dark_kpis():
+    """Muestra los KPIs con diseño oscuro elegante"""
     
     st.markdown(f"""
     <div class="premium-header">
@@ -693,7 +723,7 @@ def show_elegant_kpis():
         else:
             capital_inicial = df_copy["Capital Invertido"].dropna().iloc[0]
         
-        # APORTES AL FONDO (NUEVO KPI)
+        # APORTES AL FONDO
         if "Aumento Capital" in df_copy.columns:
             total_aumentos = df_copy["Aumento Capital"].sum()
             aportes_fondo = total_aumentos - capital_inicial
@@ -764,42 +794,42 @@ def show_elegant_kpis():
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            styled_kpi_elegant(
+            styled_kpi_dark(
                 "Capital Actual",
                 f"${capital_actual:,.0f}",
                 f"▲ +{((capital_actual/capital_inicial - 1) * 100):.1f}%",
                 "💰",
-                "#1a2634",
+                "#f0f6fc",
                 "Valor total del capital invertido al día de hoy."
             )
         
         with col2:
-            styled_kpi_elegant(
+            styled_kpi_dark(
                 "Rentabilidad Total",
                 f"{roi:.1f}%",
                 f"CAGR {cagr:.1f}% anual",
                 "📈",
-                "#2c6e8f" if roi > 0 else "#c0392b",
+                "#4a8db7" if roi > 0 else "#e74c3c",
                 "Retorno sobre la inversión total (ROI)."
             )
         
         with col3:
-            styled_kpi_elegant(
+            styled_kpi_dark(
                 "Drawdown Máximo",
                 f"${abs(max_drawdown):,.0f}",
                 f"{abs(max_drawdown/capital_actual * 100):.1f}% del capital",
                 "📉",
-                "#c0392b",
+                "#e74c3c",
                 "Peor pérdida acumulada desde un punto máximo."
             )
         
         with col4:
-            styled_kpi_elegant(
+            styled_kpi_dark(
                 "Rating de Riesgo",
                 rating,
                 risk_text,
                 "🛡️",
-                "#2c6e8f",
+                "#4a8db7",
                 "Nivel de riesgo basado en el drawdown máximo."
             )
         
@@ -809,42 +839,42 @@ def show_elegant_kpis():
         col5, col6, col7, col8 = st.columns(4)
         
         with col5:
-            styled_kpi_elegant(
+            styled_kpi_dark(
                 "Rentabilidad Mensual Prom",
                 f"{avg_monthly_return:.2f}%",
                 f"{total_meses} meses",
                 "📊",
-                "#4a8db7",
+                "#6ba3c9",
                 "Promedio de los rendimientos mensuales."
             )
         
         with col6:
-            styled_kpi_elegant(
+            styled_kpi_dark(
                 "Capital Inicial",
                 f"${capital_inicial:,.0f}",
                 f"{df_copy['Fecha'].min().strftime('%b %Y')}",
                 "🏦",
-                "#6b7a8a",
+                "#8b949e",
                 "Primer aporte de capital registrado."
             )
         
         with col7:
-            styled_kpi_elegant(
+            styled_kpi_dark(
                 "Aportes al Fondo",
                 f"${aportes_fondo:,.0f}",
                 "Nuevos aportes realizados",
                 "💳",
-                "#27ae60",
+                "#2ecc71",
                 "Suma de todos los aumentos de capital adicionales."
             )
         
         with col8:
-            styled_kpi_elegant(
+            styled_kpi_dark(
                 "Retiros Totales",
                 f"${total_retiros:,.0f}",
                 f"{total_retiros/capital_actual * 100:.1f}% del capital",
                 "💸",
-                "#e67e22",
+                "#f39c12",
                 "Total de dinero retirado del fondo."
             )
         
@@ -854,22 +884,22 @@ def show_elegant_kpis():
         col9, col10, col11, col12 = st.columns(4)
         
         with col9:
-            styled_kpi_elegant(
+            styled_kpi_dark(
                 "Mejor Mes",
                 mejor_mes,
                 f"▲ {mejor_mes_valor:.2f}%",
                 "🏆",
-                "#27ae60",
+                "#2ecc71",
                 "Mes con la mayor rentabilidad porcentual."
             )
         
         with col10:
-            styled_kpi_elegant(
+            styled_kpi_dark(
                 "Peor Mes",
                 peor_mes,
                 f"▼ {peor_mes_valor:.2f}%",
                 "⚠️",
-                "#c0392b",
+                "#e74c3c",
                 "Mes con la peor rentabilidad porcentual."
             )
         
@@ -880,22 +910,22 @@ def show_elegant_kpis():
             else:
                 sharpe_display = "N/A"
             
-            styled_kpi_elegant(
+            styled_kpi_dark(
                 "Ratio Sharpe",
                 sharpe_display,
                 "Rendimiento / Riesgo",
                 "📐",
-                "#6b7a8a",
+                "#8b949e",
                 "Mide la rentabilidad por unidad de riesgo."
             )
         
         with col12:
-            styled_kpi_elegant(
+            styled_kpi_dark(
                 "Días en el Mercado",
                 f"{(df_copy['Fecha'].max() - df_copy['Fecha'].min()).days}",
                 f"Desde {df_copy['Fecha'].min().strftime('%d/%m/%Y')}",
                 "📅",
-                "#4a8db7",
+                "#6ba3c9",
                 "Días desde el inicio de la inversión."
             )
             
@@ -904,11 +934,11 @@ def show_elegant_kpis():
         st.stop()
 
 # =============================================================================
-# 📊 SECCIÓN DE GRÁFICOS - VERSIÓN LEGIBLE
+# 📊 SECCIÓN DE GRÁFICOS - VERSIÓN OSCURA
 # =============================================================================
 
-def show_premium_charts():
-    """Muestra gráficos con diseño elegante y legible"""
+def show_dark_charts():
+    """Muestra gráficos con diseño oscuro elegante"""
     
     st.markdown("""
     <div class="premium-header">
@@ -938,30 +968,38 @@ def show_premium_charts():
             y=df_copy["Capital Invertido"],
             mode='lines+markers',
             name='Capital Invertido',
-            line=dict(color='#2c6e8f', width=3),
-            marker=dict(size=6, color='#2c6e8f'),
+            line=dict(color='#4a8db7', width=3),
+            marker=dict(size=6, color='#4a8db7'),
             hovertemplate='%{x}<br>Capital: $%{y:,.0f}<extra></extra>'
         ))
         
         fig1.update_layout(
-            template='plotly_white',
+            template='plotly_dark',
             height=450,
             hovermode='x unified',
+            paper_bgcolor='rgba(22, 27, 34, 0.8)',
+            plot_bgcolor='rgba(22, 27, 34, 0.8)',
             legend=dict(
                 yanchor="top",
                 y=0.99,
                 xanchor="left",
                 x=0.01,
-                bgcolor='rgba(255,255,255,0.95)',
-                bordercolor='#eef0f2',
-                borderwidth=1
+                bgcolor='rgba(13, 17, 23, 0.8)',
+                bordercolor='rgba(255,255,255,0.05)',
+                borderwidth=1,
+                font=dict(color='#c9d1d9')
             ),
-            paper_bgcolor='rgba(255,255,255,0)',
-            plot_bgcolor='rgba(255,255,255,0)',
             xaxis_title='Fecha',
             yaxis_title='Valor ($)',
-            yaxis=dict(tickformat='$,.0f', gridcolor='#f0f2f4'),
-            xaxis=dict(gridcolor='#f0f2f4')
+            yaxis=dict(
+                tickformat='$,.0f',
+                gridcolor='rgba(255,255,255,0.04)',
+                color='#8b949e'
+            ),
+            xaxis=dict(
+                gridcolor='rgba(255,255,255,0.04)',
+                color='#8b949e'
+            )
         )
         
         st.plotly_chart(fig1, use_container_width=True)
@@ -977,32 +1015,40 @@ def show_premium_charts():
             y=df_copy["Acumulado"],
             mode='lines+markers',
             name='Ganancia Acumulada',
-            line=dict(color='#27ae60', width=3),
-            marker=dict(size=6, color='#27ae60'),
+            line=dict(color='#2ecc71', width=3),
+            marker=dict(size=6, color='#2ecc71'),
             fill='tozeroy',
-            fillcolor='rgba(39, 174, 96, 0.08)',
+            fillcolor='rgba(46, 204, 113, 0.08)',
             hovertemplate='%{x}<br>Ganancia: $%{y:,.0f}<extra></extra>'
         ))
         
         fig2.update_layout(
-            template='plotly_white',
+            template='plotly_dark',
             height=400,
             hovermode='x unified',
+            paper_bgcolor='rgba(22, 27, 34, 0.8)',
+            plot_bgcolor='rgba(22, 27, 34, 0.8)',
             legend=dict(
                 yanchor="top",
                 y=0.99,
                 xanchor="left",
                 x=0.01,
-                bgcolor='rgba(255,255,255,0.95)',
-                bordercolor='#eef0f2',
-                borderwidth=1
+                bgcolor='rgba(13, 17, 23, 0.8)',
+                bordercolor='rgba(255,255,255,0.05)',
+                borderwidth=1,
+                font=dict(color='#c9d1d9')
             ),
-            paper_bgcolor='rgba(255,255,255,0)',
-            plot_bgcolor='rgba(255,255,255,0)',
             xaxis_title='Fecha',
             yaxis_title='Ganancia ($)',
-            yaxis=dict(tickformat='$,.0f', gridcolor='#f0f2f4'),
-            xaxis=dict(gridcolor='#f0f2f4')
+            yaxis=dict(
+                tickformat='$,.0f',
+                gridcolor='rgba(255,255,255,0.04)',
+                color='#8b949e'
+            ),
+            xaxis=dict(
+                gridcolor='rgba(255,255,255,0.04)',
+                color='#8b949e'
+            )
         )
         
         st.plotly_chart(fig2, use_container_width=True)
@@ -1033,18 +1079,19 @@ def show_premium_charts():
                 zmid=0,
                 text=pivot_rent.values.round(2),
                 texttemplate='%{text}%',
-                textfont={"size": 11, "color": "#1a2634"},
+                textfont={"size": 11, "color": "#ffffff"},
                 hovertemplate='<b>%{y}</b><br>%{x}<br>Rentabilidad: %{z:.2f}%<extra></extra>'
             ))
             
             fig3.update_layout(
-                template='plotly_white',
+                template='plotly_dark',
                 height=350,
-                paper_bgcolor='rgba(255,255,255,0)',
-                plot_bgcolor='rgba(255,255,255,0)',
+                paper_bgcolor='rgba(22, 27, 34, 0.8)',
+                plot_bgcolor='rgba(22, 27, 34, 0.8)',
                 xaxis_title='Mes',
                 yaxis_title='Año',
-                xaxis=dict(side='top')
+                xaxis=dict(side='top', color='#8b949e'),
+                yaxis=dict(color='#8b949e')
             )
             
             st.plotly_chart(fig3, use_container_width=True)
@@ -1054,11 +1101,11 @@ def show_premium_charts():
         st.stop()
 
 # =============================================================================
-# 📈 SECCIÓN DE PROYECCIONES
+# 📈 SECCIÓN DE PROYECCIONES - VERSIÓN OSCURA
 # =============================================================================
 
-def show_premium_projections():
-    """Muestra proyecciones con diseño elegante"""
+def show_dark_projections():
+    """Muestra proyecciones con diseño oscuro elegante"""
     
     st.markdown("""
     <div class="premium-header">
@@ -1074,7 +1121,7 @@ def show_premium_projections():
         
         with col1:
             st.markdown("""
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; border: 1px solid #eef0f2;">
+            <div style="background: #161b22; padding: 20px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.04);">
             """, unsafe_allow_html=True)
             
             aumento_opcion = st.selectbox(
@@ -1107,18 +1154,18 @@ def show_premium_projections():
             proyeccion = [capital_proyectado * ((1 + beneficio_mensual / 100) ** i) for i in range(meses_proyeccion + 1)]
             
             st.markdown(f"""
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; border: 1px solid #eef0f2; height: 100%;">
+            <div style="background: #161b22; padding: 20px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.04); height: 100%;">
                 <div style="margin-bottom: 10px;">
-                    <div style="color: #6b7a8a; font-size: 12px;">Capital Actual</div>
-                    <div style="color: #1a2634; font-size: 22px; font-weight: 600;">${capital_actual:,.0f}</div>
+                    <div style="color: #8b949e; font-size: 12px;">Capital Actual</div>
+                    <div style="color: #f0f6fc; font-size: 22px; font-weight: 600;">${capital_actual:,.0f}</div>
                 </div>
                 <div style="margin-bottom: 10px;">
-                    <div style="color: #6b7a8a; font-size: 12px;">Capital Proyectado</div>
-                    <div style="color: #2c6e8f; font-size: 22px; font-weight: 600;">${capital_proyectado:,.0f}</div>
+                    <div style="color: #8b949e; font-size: 12px;">Capital Proyectado</div>
+                    <div style="color: #4a8db7; font-size: 22px; font-weight: 600;">${capital_proyectado:,.0f}</div>
                 </div>
                 <div>
-                    <div style="color: #6b7a8a; font-size: 12px;">Valor Estimado Final</div>
-                    <div style="color: #27ae60; font-size: 26px; font-weight: 600;">${proyeccion[-1]:,.0f}</div>
+                    <div style="color: #8b949e; font-size: 12px;">Valor Estimado Final</div>
+                    <div style="color: #2ecc71; font-size: 26px; font-weight: 600;">${proyeccion[-1]:,.0f}</div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -1137,10 +1184,10 @@ def show_premium_projections():
             y=df_proy["Proyección"],
             mode='lines+markers',
             name='Proyección',
-            line=dict(color='#2c6e8f', width=3),
-            marker=dict(size=8, color='#2c6e8f'),
+            line=dict(color='#4a8db7', width=3),
+            marker=dict(size=8, color='#4a8db7'),
             fill='tozeroy',
-            fillcolor='rgba(44, 110, 143, 0.06)',
+            fillcolor='rgba(74, 141, 183, 0.06)',
             hovertemplate='Mes %{x}<br>Capital: $%{y:,.0f}<extra></extra>'
         ))
         
@@ -1151,28 +1198,36 @@ def show_premium_projections():
             y=p(df_proy["Mes"]),
             mode='lines',
             name='Tendencia',
-            line=dict(color='rgba(44, 110, 143, 0.25)', width=2, dash='dash')
+            line=dict(color='rgba(74, 141, 183, 0.2)', width=2, dash='dash')
         ))
         
         fig.update_layout(
-            template='plotly_white',
+            template='plotly_dark',
             height=400,
             hovermode='x unified',
+            paper_bgcolor='rgba(22, 27, 34, 0.8)',
+            plot_bgcolor='rgba(22, 27, 34, 0.8)',
             legend=dict(
                 yanchor="top",
                 y=0.99,
                 xanchor="left",
                 x=0.01,
-                bgcolor='rgba(255,255,255,0.95)',
-                bordercolor='#eef0f2',
-                borderwidth=1
+                bgcolor='rgba(13, 17, 23, 0.8)',
+                bordercolor='rgba(255,255,255,0.05)',
+                borderwidth=1,
+                font=dict(color='#c9d1d9')
             ),
-            paper_bgcolor='rgba(255,255,255,0)',
-            plot_bgcolor='rgba(255,255,255,0)',
             xaxis_title='Meses',
             yaxis_title='Capital Proyectado ($)',
-            yaxis=dict(tickformat='$,.0f', gridcolor='#f0f2f4'),
-            xaxis=dict(gridcolor='#f0f2f4')
+            yaxis=dict(
+                tickformat='$,.0f',
+                gridcolor='rgba(255,255,255,0.04)',
+                color='#8b949e'
+            ),
+            xaxis=dict(
+                gridcolor='rgba(255,255,255,0.04)',
+                color='#8b949e'
+            )
         )
         
         st.plotly_chart(fig, use_container_width=True)
@@ -1218,11 +1273,11 @@ def show_premium_projections():
         st.stop()
 
 # =============================================================================
-# ⚖️ SECCIÓN DE COMPARACIONES
+# ⚖️ SECCIÓN DE COMPARACIONES - VERSIÓN OSCURA
 # =============================================================================
 
-def show_premium_comparisons():
-    """Muestra comparaciones con diseño elegante"""
+def show_dark_comparisons():
+    """Muestra comparaciones con diseño oscuro elegante"""
     
     st.markdown("""
     <div class="premium-header">
@@ -1268,7 +1323,7 @@ def show_premium_comparisons():
             
             fig1 = go.Figure()
             
-            colores = ['#2c6e8f', '#4a8db7', '#6ba3c9', '#8ab8d9', '#aacce6']
+            colores = ['#4a8db7', '#6ba3c9', '#8ab8d9', '#aacce6', '#5a9dc7']
             
             for i, año in enumerate(años_seleccionados):
                 data_año = comparacion[comparacion["Año"] == año]
@@ -1283,23 +1338,33 @@ def show_premium_comparisons():
                 ))
             
             fig1.update_layout(
-                template='plotly_white',
+                template='plotly_dark',
                 height=400,
                 hovermode='x unified',
+                paper_bgcolor='rgba(22, 27, 34, 0.8)',
+                plot_bgcolor='rgba(22, 27, 34, 0.8)',
                 legend=dict(
                     yanchor="top",
                     y=0.99,
                     xanchor="left",
                     x=0.01,
-                    bgcolor='rgba(255,255,255,0.95)',
-                    bordercolor='#eef0f2',
-                    borderwidth=1
+                    bgcolor='rgba(13, 17, 23, 0.8)',
+                    bordercolor='rgba(255,255,255,0.05)',
+                    borderwidth=1,
+                    font=dict(color='#c9d1d9')
                 ),
-                paper_bgcolor='rgba(255,255,255,0)',
-                plot_bgcolor='rgba(255,255,255,0)',
                 xaxis_title='Mes',
                 yaxis_title='Rentabilidad (%)',
-                xaxis=dict(categoryorder='array', categoryarray=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'])
+                yaxis=dict(
+                    gridcolor='rgba(255,255,255,0.04)',
+                    color='#8b949e'
+                ),
+                xaxis=dict(
+                    categoryorder='array',
+                    categoryarray=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+                    gridcolor='rgba(255,255,255,0.04)',
+                    color='#8b949e'
+                )
             )
             
             st.plotly_chart(fig1, use_container_width=True)
@@ -1314,10 +1379,10 @@ def show_premium_comparisons():
 
 # Mostrar sección seleccionada
 if st.session_state["pagina"] == "KPIs":
-    show_elegant_kpis()
+    show_dark_kpis()
 elif st.session_state["pagina"] == "Gráficos":
-    show_premium_charts()
+    show_dark_charts()
 elif st.session_state["pagina"] == "Proyecciones":
-    show_premium_projections()
+    show_dark_projections()
 elif st.session_state["pagina"] == "Comparaciones":
-    show_premium_comparisons()
+    show_dark_comparisons()
