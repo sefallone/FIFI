@@ -274,31 +274,28 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # =============================================================================
-# 🔐 SISTEMA DE AUTENTICACIÓN - VERSIÓN STREAMLIT PURO
+# 🔐 SISTEMA DE AUTENTICACIÓN - CON LOGO REAL
 # =============================================================================
 
 def check_password_hybrid():
     """
-    Autenticación con diseño usando Streamlit puro
+    Autenticación con diseño usando Streamlit puro y logo real
     """
     
     if st.session_state.get("authenticated"):
         return True
     
-    # CSS para el login - Solo estilos básicos
+    # CSS para el login
     st.markdown("""
     <style>
-        /* Ocultar elementos de Streamlit */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         header {visibility: hidden;}
         
-        /* Fondo de la página de login */
         .stApp {
             background: linear-gradient(135deg, #0a0e14 0%, #1a2634 100%) !important;
         }
         
-        /* Centrar todo */
         .main > div {
             display: flex;
             justify-content: center;
@@ -307,7 +304,6 @@ def check_password_hybrid():
             padding: 20px;
         }
         
-        /* Estilo para el contenedor del login */
         .login-container {
             background: linear-gradient(145deg, #161b22, #0d1117);
             border-radius: 20px;
@@ -337,7 +333,24 @@ def check_password_hybrid():
             50% { background-position: 100% 50%; }
         }
         
-        /* Estilos para los inputs de Streamlit */
+        /* Estilos para el logo */
+        .login-logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .login-logo img {
+            max-width: 80px;
+            height: auto;
+            filter: brightness(0.95);
+            transition: all 0.3s ease;
+        }
+        
+        .login-logo img:hover {
+            filter: brightness(1.1);
+            transform: scale(1.02);
+        }
+        
         .stTextInput > div > div > input {
             background: #0d1117 !important;
             border: 1px solid rgba(255,255,255,0.06) !important;
@@ -356,7 +369,15 @@ def check_password_hybrid():
             color: #484f58 !important;
         }
         
-        /* Botón de login */
+        .stTextInput > label {
+            color: #8b949e !important;
+            font-size: 12px !important;
+            font-weight: 500 !important;
+            letter-spacing: 0.5px !important;
+            text-transform: uppercase !important;
+            margin-bottom: 4px !important;
+        }
+        
         .stButton > button {
             width: 100% !important;
             padding: 13px !important;
@@ -377,17 +398,6 @@ def check_password_hybrid():
             box-shadow: 0 8px 25px rgba(74, 141, 183, 0.3) !important;
         }
         
-        /* Estilo para los labels */
-        .stTextInput > label {
-            color: #8b949e !important;
-            font-size: 12px !important;
-            font-weight: 500 !important;
-            letter-spacing: 0.5px !important;
-            text-transform: uppercase !important;
-            margin-bottom: 4px !important;
-        }
-        
-        /* Mensajes de error */
         .stAlert {
             background: rgba(231, 76, 60, 0.08) !important;
             border: 1px solid rgba(231, 76, 60, 0.15) !important;
@@ -399,7 +409,6 @@ def check_password_hybrid():
             color: #e74c3c !important;
         }
         
-        /* Métricas (features) */
         .stMetric {
             background: rgba(255,255,255,0.02) !important;
             border-radius: 8px !important;
@@ -426,7 +435,6 @@ def check_password_hybrid():
             font-size: 20px !important;
         }
         
-        /* Separador */
         hr {
             border-color: rgba(255,255,255,0.03) !important;
             margin: 15px 0 !important;
@@ -434,16 +442,34 @@ def check_password_hybrid():
     </style>
     """, unsafe_allow_html=True)
     
-    # Contenido del login usando Streamlit puro
+    # Contenido del login
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
-        # Contenedor del login
         with st.container():
             # Logo y título
+            st.markdown('<div class="login-logo">', unsafe_allow_html=True)
+            
+            # Cargar el logo desde el archivo
+            try:
+                logo_path = os.path.join("logo.jpg")
+                if os.path.exists(logo_path):
+                    with open(logo_path, "rb") as f:
+                        logo_b64 = base64.b64encode(f.read()).decode()
+                    st.markdown(f"""
+                        <img src='data:image/jpeg;base64,{logo_b64}' alt='FIFI Logo'/>
+                    """, unsafe_allow_html=True)
+                else:
+                    # Si no encuentra el logo, muestra el emoji como fallback
+                    st.markdown('<div style="font-size: 48px; text-align: center;">🏛️</div>', unsafe_allow_html=True)
+            except:
+                # Si hay error, muestra el emoji como fallback
+                st.markdown('<div style="font-size: 48px; text-align: center;">🏛️</div>', unsafe_allow_html=True)
+            
+            st.markdown('</div>', unsafe_allow_html=True)
+            
             st.markdown("""
             <div style="text-align: center; margin-bottom: 25px;">
-                <div style="font-size: 40px;">🏛️</div>
                 <h1 style="color: #f0f6fc; font-size: 26px; font-weight: 300; letter-spacing: 2px; margin: 4px 0 0 0;">
                     FALLONE <span style="color: #4a8db7; font-weight: 600;">INVESTMENT</span>
                 </h1>
@@ -528,7 +554,7 @@ def check_password_hybrid():
             # Separador
             st.markdown("<hr>", unsafe_allow_html=True)
             
-            # Features grid usando columnas
+            # Features grid
             st.markdown("""
             <div style="margin-top: 5px;">
             """, unsafe_allow_html=True)
