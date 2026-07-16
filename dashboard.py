@@ -274,7 +274,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # =============================================================================
-# 🔐 SISTEMA DE AUTENTICACIÓN - VERSIÓN PREMIUM (ESTILO IMAGEN)
+# 🔐 SISTEMA DE AUTENTICACIÓN - VERSIÓN CORREGIDA
 # =============================================================================
 
 def check_password_hybrid():
@@ -285,7 +285,7 @@ def check_password_hybrid():
     if st.session_state.get("authenticated"):
         return True
     
-    # Login con diseño premium - Estilo imagen
+    # Login con diseño premium - Versión corregida
     st.markdown("""
     <style>
         /* Ocultar elementos de Streamlit */
@@ -310,8 +310,8 @@ def check_password_hybrid():
         .login-box {
             background: linear-gradient(145deg, #161b22, #0d1117);
             border-radius: 20px;
-            padding: 50px 45px 40px 45px;
-            max-width: 440px;
+            padding: 40px 40px 35px 40px;
+            max-width: 420px;
             width: 100%;
             border: 1px solid rgba(255,255,255,0.04);
             box-shadow: 0 30px 80px rgba(0,0,0,0.6);
@@ -339,20 +339,20 @@ def check_password_hybrid():
         /* Logo y título */
         .login-logo {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
         
         .login-logo .icon {
-            font-size: 48px;
+            font-size: 40px;
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
         
         .login-logo h1 {
             color: #f0f6fc;
-            font-size: 28px;
+            font-size: 26px;
             font-weight: 300;
-            letter-spacing: 3px;
+            letter-spacing: 2px;
             margin: 0;
         }
         
@@ -363,26 +363,26 @@ def check_password_hybrid():
         
         .login-logo .subtitle {
             color: #8b949e;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 400;
             letter-spacing: 6px;
             text-transform: uppercase;
-            margin-top: 4px;
+            margin-top: 2px;
         }
         
         .login-logo .divider {
             width: 40px;
             height: 2px;
             background: linear-gradient(90deg, #4a8db7, #6ba3c9);
-            margin: 12px auto 0 auto;
+            margin: 10px auto 0 auto;
             border-radius: 2px;
         }
         
-        /* Estrategia y descripción */
+        /* Estrategia y descripción - CORREGIDO */
         .login-strategy {
             text-align: center;
-            margin-bottom: 28px;
-            padding: 12px;
+            margin-bottom: 25px;
+            padding: 12px 16px;
             background: rgba(74, 141, 183, 0.04);
             border-radius: 10px;
             border: 1px solid rgba(255,255,255,0.02);
@@ -390,9 +390,9 @@ def check_password_hybrid():
         
         .login-strategy .main-text {
             color: #f0f6fc;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 400;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
         }
         
         .login-strategy .main-text span {
@@ -404,12 +404,13 @@ def check_password_hybrid():
             color: #8b949e;
             font-size: 12px;
             font-weight: 300;
-            margin-top: 2px;
+            margin-top: 3px;
+            letter-spacing: 0.5px;
         }
         
         /* Campos de entrada */
         .login-input {
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
         
         .login-input label {
@@ -419,55 +420,56 @@ def check_password_hybrid():
             letter-spacing: 0.5px;
             text-transform: uppercase;
             display: block;
-            margin-bottom: 6px;
+            margin-bottom: 5px;
         }
         
-        .login-input input {
+        /* Streamlit input override */
+        .stTextInput > div > div > input {
             width: 100%;
-            padding: 12px 16px;
-            background: #0d1117;
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 10px;
-            color: #f0f6fc;
-            font-size: 15px;
-            transition: all 0.3s ease;
-            box-sizing: border-box;
+            padding: 12px 16px !important;
+            background: #0d1117 !important;
+            border: 1px solid rgba(255,255,255,0.06) !important;
+            border-radius: 10px !important;
+            color: #f0f6fc !important;
+            font-size: 15px !important;
+            transition: all 0.3s ease !important;
         }
         
-        .login-input input::placeholder {
-            color: #484f58;
+        .stTextInput > div > div > input::placeholder {
+            color: #484f58 !important;
         }
         
-        .login-input input:focus {
-            border-color: #4a8db7;
-            box-shadow: 0 0 0 3px rgba(74, 141, 183, 0.08);
-            outline: none;
+        .stTextInput > div > div > input:focus {
+            border-color: #4a8db7 !important;
+            box-shadow: 0 0 0 3px rgba(74, 141, 183, 0.08) !important;
+            outline: none !important;
         }
         
         /* Botón de ingreso */
-        .login-btn {
+        .stButton > button {
             width: 100%;
-            padding: 13px;
-            background: linear-gradient(135deg, #4a8db7, #6ba3c9);
-            border: none;
-            border-radius: 10px;
-            color: #ffffff;
-            font-size: 16px;
-            font-weight: 600;
-            letter-spacing: 1px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 6px;
-            text-transform: uppercase;
+            padding: 13px !important;
+            background: linear-gradient(135deg, #4a8db7, #6ba3c9) !important;
+            border: none !important;
+            border-radius: 10px !important;
+            color: #ffffff !important;
+            font-size: 16px !important;
+            font-weight: 600 !important;
+            letter-spacing: 2px !important;
+            cursor: pointer !important;
+            transition: all 0.3s ease !important;
+            margin-top: 6px !important;
+            text-transform: uppercase !important;
         }
         
-        .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(74, 141, 183, 0.3);
+        .stButton > button:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 25px rgba(74, 141, 183, 0.3) !important;
+            background: linear-gradient(135deg, #5a9dc7, #7bb3d9) !important;
         }
         
-        .login-btn:active {
-            transform: translateY(0);
+        .stButton > button:active {
+            transform: translateY(0) !important;
         }
         
         /* Texto de seguridad */
@@ -476,7 +478,7 @@ def check_password_hybrid():
             color: #484f58;
             font-size: 11px;
             letter-spacing: 0.5px;
-            margin-top: 16px;
+            margin-top: 14px;
         }
         
         .login-security span {
@@ -487,15 +489,15 @@ def check_password_hybrid():
         .login-features {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 20px;
-            padding-top: 20px;
+            gap: 8px;
+            margin-top: 18px;
+            padding-top: 18px;
             border-top: 1px solid rgba(255,255,255,0.03);
         }
         
         .login-feature {
             text-align: center;
-            padding: 10px 8px;
+            padding: 10px 6px;
             background: rgba(255,255,255,0.02);
             border-radius: 8px;
             border: 1px solid rgba(255,255,255,0.02);
@@ -517,18 +519,17 @@ def check_password_hybrid():
             color: #8b949e;
             font-size: 9px;
             font-weight: 500;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
             text-transform: uppercase;
         }
         
         /* Mensajes de error */
         .stAlert {
-            background: rgba(231, 76, 60, 0.08);
-            border: 1px solid rgba(231, 76, 60, 0.15);
-            border-radius: 10px;
-            color: #e74c3c;
-            padding: 10px 14px;
-            margin-top: 12px;
+            background: rgba(231, 76, 60, 0.08) !important;
+            border: 1px solid rgba(231, 76, 60, 0.15) !important;
+            border-radius: 10px !important;
+            padding: 10px 14px !important;
+            margin-top: 12px !important;
         }
         
         .stAlert .stMarkdown {
@@ -538,6 +539,30 @@ def check_password_hybrid():
         .stAlert .stMarkdown p {
             color: #e74c3c !important;
         }
+        
+        /* Ajustes para móviles */
+        @media (max-width: 480px) {
+            .login-box {
+                padding: 30px 20px 25px 20px;
+                margin: 10px;
+            }
+            
+            .login-logo h1 {
+                font-size: 20px;
+            }
+            
+            .login-features {
+                gap: 6px;
+            }
+            
+            .login-feature {
+                padding: 8px 4px;
+            }
+            
+            .login-feature .label {
+                font-size: 8px;
+            }
+        }
     </style>
     
     <div class="login-wrapper">
@@ -546,7 +571,7 @@ def check_password_hybrid():
             <div class="login-logo">
                 <span class="icon">🏛️</span>
                 <h1>FALLONE <span>INVESTMENT</span></h1>
-                <div class="subtitle">Inversión</div>
+                <div class="subtitle">INVERSIÓN</div>
                 <div class="divider"></div>
             </div>
             
@@ -558,8 +583,8 @@ def check_password_hybrid():
                 <div class="sub-text">Inversión a largo plazo</div>
             </div>
             
-            <!-- Campos de entrada (los crea Streamlit) -->
-            <div style="margin-top: 10px;">
+            <!-- Campos de entrada -->
+            <div style="margin-top: 6px;">
     """, unsafe_allow_html=True)
     
     # Campos de entrada con Streamlit
@@ -568,21 +593,21 @@ def check_password_hybrid():
     with col2:
         st.markdown("""
         <div class="login-input">
-            <label>Usuario</label>
+            <label>👤 Usuario</label>
         </div>
         """, unsafe_allow_html=True)
         
         username = st.text_input("", placeholder="Ingresa tu usuario", label_visibility="collapsed", key="login_user")
         
         st.markdown("""
-        <div class="login-input" style="margin-top: 12px;">
-            <label>Contraseña</label>
+        <div class="login-input" style="margin-top: 10px;">
+            <label>🔑 Contraseña</label>
         </div>
         """, unsafe_allow_html=True)
         
         password = st.text_input("", type="password", placeholder="Ingresa tu contraseña", label_visibility="collapsed", key="login_pass")
         
-        # Botón de ingreso con Streamlit
+        # Botón de ingreso
         submitted = st.button("INGRESAR", use_container_width=True, key="login_btn")
         
         if submitted:
@@ -659,6 +684,8 @@ def check_password_hybrid():
     """, unsafe_allow_html=True)
     
     return False
+
+
 if not check_password_hybrid():
     st.stop()
 
