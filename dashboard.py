@@ -274,18 +274,18 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # =============================================================================
-# 🔐 SISTEMA DE AUTENTICACIÓN - VERSIÓN CORREGIDA
+# 🔐 SISTEMA DE AUTENTICACIÓN - VERSIÓN STREAMLIT PURO
 # =============================================================================
 
 def check_password_hybrid():
     """
-    Autenticación híbrida con diseño premium estilo imagen
+    Autenticación con diseño usando Streamlit puro
     """
     
     if st.session_state.get("authenticated"):
         return True
     
-    # Login con diseño premium - Versión corregida
+    # CSS para el login - Solo estilos básicos
     st.markdown("""
     <style>
         /* Ocultar elementos de Streamlit */
@@ -298,8 +298,8 @@ def check_password_hybrid():
             background: linear-gradient(135deg, #0a0e14 0%, #1a2634 100%) !important;
         }
         
-        /* Contenedor principal del login */
-        .login-wrapper {
+        /* Centrar todo */
+        .main > div {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -307,19 +307,19 @@ def check_password_hybrid():
             padding: 20px;
         }
         
-        .login-box {
+        /* Estilo para el contenedor del login */
+        .login-container {
             background: linear-gradient(145deg, #161b22, #0d1117);
             border-radius: 20px;
-            padding: 40px 40px 35px 40px;
+            padding: 40px 45px 35px 45px;
             max-width: 420px;
             width: 100%;
             border: 1px solid rgba(255,255,255,0.04);
             box-shadow: 0 30px 80px rgba(0,0,0,0.6);
             position: relative;
-            overflow: hidden;
         }
         
-        .login-box::before {
+        .login-container::before {
             content: '';
             position: absolute;
             top: 0;
@@ -329,6 +329,7 @@ def check_password_hybrid():
             background: linear-gradient(90deg, #4a8db7, #6ba3c9, #4a8db7);
             background-size: 200% 100%;
             animation: gradientMove 3s ease-in-out infinite;
+            border-radius: 20px 20px 0 0;
         }
         
         @keyframes gradientMove {
@@ -336,118 +337,28 @@ def check_password_hybrid():
             50% { background-position: 100% 50%; }
         }
         
-        /* Logo y título */
-        .login-logo {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-        
-        .login-logo .icon {
-            font-size: 40px;
-            display: block;
-            margin-bottom: 4px;
-        }
-        
-        .login-logo h1 {
-            color: #f0f6fc;
-            font-size: 26px;
-            font-weight: 300;
-            letter-spacing: 2px;
-            margin: 0;
-        }
-        
-        .login-logo h1 span {
-            color: #4a8db7;
-            font-weight: 600;
-        }
-        
-        .login-logo .subtitle {
-            color: #8b949e;
-            font-size: 12px;
-            font-weight: 400;
-            letter-spacing: 6px;
-            text-transform: uppercase;
-            margin-top: 2px;
-        }
-        
-        .login-logo .divider {
-            width: 40px;
-            height: 2px;
-            background: linear-gradient(90deg, #4a8db7, #6ba3c9);
-            margin: 10px auto 0 auto;
-            border-radius: 2px;
-        }
-        
-        /* Estrategia y descripción - CORREGIDO */
-        .login-strategy {
-            text-align: center;
-            margin-bottom: 25px;
-            padding: 12px 16px;
-            background: rgba(74, 141, 183, 0.04);
-            border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.02);
-        }
-        
-        .login-strategy .main-text {
-            color: #f0f6fc;
-            font-size: 15px;
-            font-weight: 400;
-            letter-spacing: 0.3px;
-        }
-        
-        .login-strategy .main-text span {
-            color: #4a8db7;
-            font-weight: 600;
-        }
-        
-        .login-strategy .sub-text {
-            color: #8b949e;
-            font-size: 12px;
-            font-weight: 300;
-            margin-top: 3px;
-            letter-spacing: 0.5px;
-        }
-        
-        /* Campos de entrada */
-        .login-input {
-            margin-bottom: 14px;
-        }
-        
-        .login-input label {
-            color: #8b949e;
-            font-size: 12px;
-            font-weight: 500;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            display: block;
-            margin-bottom: 5px;
-        }
-        
-        /* Streamlit input override */
+        /* Estilos para los inputs de Streamlit */
         .stTextInput > div > div > input {
-            width: 100%;
-            padding: 12px 16px !important;
             background: #0d1117 !important;
             border: 1px solid rgba(255,255,255,0.06) !important;
             border-radius: 10px !important;
             color: #f0f6fc !important;
+            padding: 12px 16px !important;
             font-size: 15px !important;
-            transition: all 0.3s ease !important;
+        }
+        
+        .stTextInput > div > div > input:focus {
+            border-color: #4a8db7 !important;
+            box-shadow: 0 0 0 3px rgba(74, 141, 183, 0.08) !important;
         }
         
         .stTextInput > div > div > input::placeholder {
             color: #484f58 !important;
         }
         
-        .stTextInput > div > div > input:focus {
-            border-color: #4a8db7 !important;
-            box-shadow: 0 0 0 3px rgba(74, 141, 183, 0.08) !important;
-            outline: none !important;
-        }
-        
-        /* Botón de ingreso */
+        /* Botón de login */
         .stButton > button {
-            width: 100%;
+            width: 100% !important;
             padding: 13px !important;
             background: linear-gradient(135deg, #4a8db7, #6ba3c9) !important;
             border: none !important;
@@ -456,71 +367,24 @@ def check_password_hybrid():
             font-size: 16px !important;
             font-weight: 600 !important;
             letter-spacing: 2px !important;
-            cursor: pointer !important;
-            transition: all 0.3s ease !important;
-            margin-top: 6px !important;
             text-transform: uppercase !important;
+            transition: all 0.3s ease !important;
+            margin-top: 10px !important;
         }
         
         .stButton > button:hover {
             transform: translateY(-2px) !important;
             box-shadow: 0 8px 25px rgba(74, 141, 183, 0.3) !important;
-            background: linear-gradient(135deg, #5a9dc7, #7bb3d9) !important;
         }
         
-        .stButton > button:active {
-            transform: translateY(0) !important;
-        }
-        
-        /* Texto de seguridad */
-        .login-security {
-            text-align: center;
-            color: #484f58;
-            font-size: 11px;
-            letter-spacing: 0.5px;
-            margin-top: 14px;
-        }
-        
-        .login-security span {
-            color: #4a8db7;
-        }
-        
-        /* Features grid */
-        .login-features {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-top: 18px;
-            padding-top: 18px;
-            border-top: 1px solid rgba(255,255,255,0.03);
-        }
-        
-        .login-feature {
-            text-align: center;
-            padding: 10px 6px;
-            background: rgba(255,255,255,0.02);
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.02);
-            transition: all 0.3s ease;
-        }
-        
-        .login-feature:hover {
-            background: rgba(74, 141, 183, 0.04);
-            border-color: rgba(74, 141, 183, 0.08);
-        }
-        
-        .login-feature .icon {
-            font-size: 18px;
-            display: block;
-            margin-bottom: 2px;
-        }
-        
-        .login-feature .label {
-            color: #8b949e;
-            font-size: 9px;
-            font-weight: 500;
-            letter-spacing: 0.3px;
-            text-transform: uppercase;
+        /* Estilo para los labels */
+        .stTextInput > label {
+            color: #8b949e !important;
+            font-size: 12px !important;
+            font-weight: 500 !important;
+            letter-spacing: 0.5px !important;
+            text-transform: uppercase !important;
+            margin-bottom: 4px !important;
         }
         
         /* Mensajes de error */
@@ -528,11 +392,6 @@ def check_password_hybrid():
             background: rgba(231, 76, 60, 0.08) !important;
             border: 1px solid rgba(231, 76, 60, 0.15) !important;
             border-radius: 10px !important;
-            padding: 10px 14px !important;
-            margin-top: 12px !important;
-        }
-        
-        .stAlert .stMarkdown {
             color: #e74c3c !important;
         }
         
@@ -540,141 +399,155 @@ def check_password_hybrid():
             color: #e74c3c !important;
         }
         
-        /* Ajustes para móviles */
-        @media (max-width: 480px) {
-            .login-box {
-                padding: 30px 20px 25px 20px;
-                margin: 10px;
-            }
-            
-            .login-logo h1 {
-                font-size: 20px;
-            }
-            
-            .login-features {
-                gap: 6px;
-            }
-            
-            .login-feature {
-                padding: 8px 4px;
-            }
-            
-            .login-feature .label {
-                font-size: 8px;
-            }
+        /* Métricas (features) */
+        .stMetric {
+            background: rgba(255,255,255,0.02) !important;
+            border-radius: 8px !important;
+            padding: 10px !important;
+            border: 1px solid rgba(255,255,255,0.02) !important;
+        }
+        
+        .stMetric:hover {
+            background: rgba(74, 141, 183, 0.04) !important;
+            border-color: rgba(74, 141, 183, 0.08) !important;
+        }
+        
+        .stMetric label {
+            color: #8b949e !important;
+            font-size: 9px !important;
+            font-weight: 500 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.3px !important;
+            text-align: center !important;
+        }
+        
+        .stMetric .stMetricValue {
+            text-align: center !important;
+            font-size: 20px !important;
+        }
+        
+        /* Separador */
+        hr {
+            border-color: rgba(255,255,255,0.03) !important;
+            margin: 15px 0 !important;
         }
     </style>
-    
-    <div class="login-wrapper">
-        <div class="login-box">
-            <!-- Logo y título -->
-            <div class="login-logo">
-                <span class="icon">🏛️</span>
-                <h1>FALLONE <span>INVESTMENT</span></h1>
-                <div class="subtitle">INVERSIÓN</div>
-                <div class="divider"></div>
-            </div>
-            
-            <!-- Estrategia -->
-            <div class="login-strategy">
-                <div class="main-text">
-                    Estrategia: <span>Disciplina</span> · <span>Crecimiento</span>
-                </div>
-                <div class="sub-text">Inversión a largo plazo</div>
-            </div>
-            
-            <!-- Campos de entrada -->
-            <div style="margin-top: 6px;">
     """, unsafe_allow_html=True)
     
-    # Campos de entrada con Streamlit
-    col1, col2, col3 = st.columns([1, 6, 1])
+    # Contenido del login usando Streamlit puro
+    col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
-        st.markdown("""
-        <div class="login-input">
-            <label>👤 Usuario</label>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        username = st.text_input("", placeholder="Ingresa tu usuario", label_visibility="collapsed", key="login_user")
-        
-        st.markdown("""
-        <div class="login-input" style="margin-top: 10px;">
-            <label>🔑 Contraseña</label>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        password = st.text_input("", type="password", placeholder="Ingresa tu contraseña", label_visibility="collapsed", key="login_pass")
-        
-        # Botón de ingreso
-        submitted = st.button("INGRESAR", use_container_width=True, key="login_btn")
-        
-        if submitted:
-            if username and password:
-                authenticated = False
-                archivo_usuario = None
-                
-                try:
-                    credenciales_validas = st.secrets["inversionistas"]
-                    archivos_usuarios = st.secrets["archivos_usuarios"]
-                    if username in credenciales_validas and credenciales_validas[username] == password:
-                        authenticated = True
-                        archivo_usuario = archivos_usuarios.get(username, f"{username}.xlsx")
-                except:
-                    pass
-                
-                if not authenticated:
-                    env_user_var = f"USER_{username.upper()}"
-                    env_password = os.getenv(env_user_var)
-                    if env_password and env_password == password:
-                        authenticated = True
-                        env_file_var = f"FILE_{username.upper()}"
-                        archivo_usuario = os.getenv(env_file_var, f"{username}.xlsx")
-                
-                if authenticated and archivo_usuario:
-                    st.session_state["authenticated"] = True
-                    st.session_state["username"] = username
-                    if archivo_usuario.startswith(("http://", "https://")):
-                        st.session_state["archivo_usuario"] = archivo_usuario
+        # Contenedor del login
+        with st.container():
+            # Logo y título
+            st.markdown("""
+            <div style="text-align: center; margin-bottom: 25px;">
+                <div style="font-size: 40px;">🏛️</div>
+                <h1 style="color: #f0f6fc; font-size: 26px; font-weight: 300; letter-spacing: 2px; margin: 4px 0 0 0;">
+                    FALLONE <span style="color: #4a8db7; font-weight: 600;">INVESTMENT</span>
+                </h1>
+                <p style="color: #8b949e; font-size: 12px; letter-spacing: 6px; text-transform: uppercase; margin: 2px 0 10px 0;">
+                    INVERSIÓN
+                </p>
+                <div style="width: 40px; height: 2px; background: linear-gradient(90deg, #4a8db7, #6ba3c9); margin: 0 auto; border-radius: 2px;"></div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Estrategia
+            st.markdown("""
+            <div style="text-align: center; margin-bottom: 25px; padding: 12px 16px; background: rgba(74, 141, 183, 0.04); border-radius: 10px; border: 1px solid rgba(255,255,255,0.02);">
+                <div style="color: #f0f6fc; font-size: 15px; font-weight: 400;">
+                    Estrategia: <span style="color: #4a8db7; font-weight: 600;">Disciplina</span> · <span style="color: #4a8db7; font-weight: 600;">Crecimiento</span>
+                </div>
+                <div style="color: #8b949e; font-size: 12px; font-weight: 300; margin-top: 3px;">
+                    Inversión a largo plazo
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Campos de usuario y contraseña
+            username = st.text_input(
+                "👤 Usuario",
+                placeholder="Ingresa tu usuario",
+                key="login_user"
+            )
+            
+            password = st.text_input(
+                "🔑 Contraseña",
+                type="password",
+                placeholder="Ingresa tu contraseña",
+                key="login_pass"
+            )
+            
+            # Botón de ingreso
+            submitted = st.button("INGRESAR", use_container_width=True, key="login_btn")
+            
+            if submitted:
+                if username and password:
+                    authenticated = False
+                    archivo_usuario = None
+                    
+                    try:
+                        credenciales_validas = st.secrets["inversionistas"]
+                        archivos_usuarios = st.secrets["archivos_usuarios"]
+                        if username in credenciales_validas and credenciales_validas[username] == password:
+                            authenticated = True
+                            archivo_usuario = archivos_usuarios.get(username, f"{username}.xlsx")
+                    except:
+                        pass
+                    
+                    if not authenticated:
+                        env_user_var = f"USER_{username.upper()}"
+                        env_password = os.getenv(env_user_var)
+                        if env_password and env_password == password:
+                            authenticated = True
+                            env_file_var = f"FILE_{username.upper()}"
+                            archivo_usuario = os.getenv(env_file_var, f"{username}.xlsx")
+                    
+                    if authenticated and archivo_usuario:
+                        st.session_state["authenticated"] = True
+                        st.session_state["username"] = username
+                        if archivo_usuario.startswith(("http://", "https://")):
+                            st.session_state["archivo_usuario"] = archivo_usuario
+                        else:
+                            st.session_state["archivo_usuario"] = os.path.join("data", archivo_usuario)
+                        st.rerun()
                     else:
-                        st.session_state["archivo_usuario"] = os.path.join("data", archivo_usuario)
-                    st.rerun()
+                        st.error("❌ Credenciales incorrectas. Por favor, verifica tus datos.")
                 else:
-                    st.error("❌ Credenciales incorrectas. Por favor, verifica tus datos.")
-            else:
-                st.warning("⚠️ Por favor, completa ambos campos.")
-        
-        # Texto de seguridad
-        st.markdown("""
-        <div class="login-security">
-            🔒 Acceso seguro y confidencial
-        </div>
-        """, unsafe_allow_html=True)
-    
-    # Features grid
-    st.markdown("""
-        <div class="login-features">
-            <div class="login-feature">
-                <span class="icon">📊</span>
-                <span class="label">Gestión Profesional</span>
+                    st.warning("⚠️ Por favor, completa ambos campos.")
+            
+            # Texto de seguridad
+            st.markdown("""
+            <div style="text-align: center; color: #484f58; font-size: 11px; letter-spacing: 0.5px; margin-top: 12px;">
+                🔒 Acceso seguro y confidencial
             </div>
-            <div class="login-feature">
-                <span class="icon">📈</span>
-                <span class="label">Rentabilidad Sostenible</span>
-            </div>
-            <div class="login-feature">
-                <span class="icon">🌍</span>
-                <span class="label">Diversificación Inteligente</span>
-            </div>
-            <div class="login-feature">
-                <span class="icon">🔭</span>
-                <span class="label">Visión Global</span>
-            </div>
-        </div>
-    </div>
-    </div>
-    """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
+            
+            # Separador
+            st.markdown("<hr>", unsafe_allow_html=True)
+            
+            # Features grid usando columnas
+            st.markdown("""
+            <div style="margin-top: 5px;">
+            """, unsafe_allow_html=True)
+            
+            col_a, col_b, col_c, col_d = st.columns(4)
+            
+            with col_a:
+                st.metric(label="Gestión Profesional", value="📊", delta=None)
+            
+            with col_b:
+                st.metric(label="Rentabilidad Sostenible", value="📈", delta=None)
+            
+            with col_c:
+                st.metric(label="Diversificación Inteligente", value="🌍", delta=None)
+            
+            with col_d:
+                st.metric(label="Visión Global", value="🔭", delta=None)
+            
+            st.markdown("</div>", unsafe_allow_html=True)
     
     # Footer
     st.markdown("""
