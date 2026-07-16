@@ -274,12 +274,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # =============================================================================
-# 🔐 SISTEMA DE AUTENTICACIÓN - CON LOGO REAL
+# 🔐 SISTEMA DE AUTENTICACIÓN - VERSIÓN FINAL ELEGANTE
 # =============================================================================
 
 def check_password_hybrid():
     """
-    Autenticación con diseño usando Streamlit puro y logo real
+    Autenticación con diseño elegante - Logo pequeño y features minimalistas
     """
     
     if st.session_state.get("authenticated"):
@@ -307,7 +307,7 @@ def check_password_hybrid():
         .login-container {
             background: linear-gradient(145deg, #161b22, #0d1117);
             border-radius: 20px;
-            padding: 40px 45px 35px 45px;
+            padding: 35px 45px 30px 45px;
             max-width: 420px;
             width: 100%;
             border: 1px solid rgba(255,255,255,0.04);
@@ -333,14 +333,14 @@ def check_password_hybrid():
             50% { background-position: 100% 50%; }
         }
         
-        /* Estilos para el logo */
+        /* Logo - Tamaño más pequeño */
         .login-logo {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         
         .login-logo img {
-            max-width: 80px;
+            max-width: 55px;
             height: auto;
             filter: brightness(0.95);
             transition: all 0.3s ease;
@@ -348,16 +348,80 @@ def check_password_hybrid():
         
         .login-logo img:hover {
             filter: brightness(1.1);
-            transform: scale(1.02);
+            transform: scale(1.03);
         }
         
+        /* Títulos */
+        .login-title {
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        
+        .login-title h1 {
+            color: #f0f6fc;
+            font-size: 24px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            margin: 0;
+        }
+        
+        .login-title h1 span {
+            color: #4a8db7;
+            font-weight: 600;
+        }
+        
+        .login-title .subtitle {
+            color: #8b949e;
+            font-size: 11px;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+        
+        .login-title .divider {
+            width: 40px;
+            height: 2px;
+            background: linear-gradient(90deg, #4a8db7, #6ba3c9);
+            margin: 8px auto 0 auto;
+            border-radius: 2px;
+        }
+        
+        /* Estrategia */
+        .login-strategy {
+            text-align: center;
+            margin-bottom: 22px;
+            padding: 10px 16px;
+            background: rgba(74, 141, 183, 0.04);
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.02);
+        }
+        
+        .login-strategy .main-text {
+            color: #f0f6fc;
+            font-size: 14px;
+            font-weight: 400;
+        }
+        
+        .login-strategy .main-text span {
+            color: #4a8db7;
+            font-weight: 600;
+        }
+        
+        .login-strategy .sub-text {
+            color: #8b949e;
+            font-size: 11px;
+            font-weight: 300;
+            margin-top: 2px;
+        }
+        
+        /* Inputs */
         .stTextInput > div > div > input {
             background: #0d1117 !important;
             border: 1px solid rgba(255,255,255,0.06) !important;
             border-radius: 10px !important;
             color: #f0f6fc !important;
-            padding: 12px 16px !important;
-            font-size: 15px !important;
+            padding: 11px 16px !important;
+            font-size: 14px !important;
         }
         
         .stTextInput > div > div > input:focus {
@@ -371,26 +435,27 @@ def check_password_hybrid():
         
         .stTextInput > label {
             color: #8b949e !important;
-            font-size: 12px !important;
+            font-size: 11px !important;
             font-weight: 500 !important;
             letter-spacing: 0.5px !important;
             text-transform: uppercase !important;
             margin-bottom: 4px !important;
         }
         
+        /* Botón */
         .stButton > button {
             width: 100% !important;
-            padding: 13px !important;
+            padding: 12px !important;
             background: linear-gradient(135deg, #4a8db7, #6ba3c9) !important;
             border: none !important;
             border-radius: 10px !important;
             color: #ffffff !important;
-            font-size: 16px !important;
+            font-size: 15px !important;
             font-weight: 600 !important;
             letter-spacing: 2px !important;
             text-transform: uppercase !important;
             transition: all 0.3s ease !important;
-            margin-top: 10px !important;
+            margin-top: 8px !important;
         }
         
         .stButton > button:hover {
@@ -398,6 +463,7 @@ def check_password_hybrid():
             box-shadow: 0 8px 25px rgba(74, 141, 183, 0.3) !important;
         }
         
+        /* Alertas */
         .stAlert {
             background: rgba(231, 76, 60, 0.08) !important;
             border: 1px solid rgba(231, 76, 60, 0.15) !important;
@@ -409,35 +475,80 @@ def check_password_hybrid():
             color: #e74c3c !important;
         }
         
-        .stMetric {
-            background: rgba(255,255,255,0.02) !important;
-            border-radius: 8px !important;
-            padding: 10px !important;
-            border: 1px solid rgba(255,255,255,0.02) !important;
+        /* Security text */
+        .login-security {
+            text-align: center;
+            color: #484f58;
+            font-size: 10.5px;
+            letter-spacing: 0.5px;
+            margin-top: 12px;
         }
         
-        .stMetric:hover {
-            background: rgba(74, 141, 183, 0.04) !important;
-            border-color: rgba(74, 141, 183, 0.08) !important;
+        .login-security span {
+            color: #4a8db7;
         }
         
-        .stMetric label {
-            color: #8b949e !important;
-            font-size: 9px !important;
-            font-weight: 500 !important;
-            text-transform: uppercase !important;
-            letter-spacing: 0.3px !important;
-            text-align: center !important;
+        /* Features - Versión elegante sin íconos */
+        .login-features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.03);
         }
         
-        .stMetric .stMetricValue {
-            text-align: center !important;
-            font-size: 20px !important;
+        .login-feature {
+            text-align: center;
+            padding: 8px 6px;
+            background: rgba(255,255,255,0.015);
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.015);
+            transition: all 0.3s ease;
         }
         
+        .login-feature:hover {
+            background: rgba(74, 141, 183, 0.03);
+            border-color: rgba(74, 141, 183, 0.06);
+        }
+        
+        .login-feature .label {
+            color: #6b7a8a;
+            font-size: 8.5px;
+            font-weight: 500;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            line-height: 1.4;
+        }
+        
+        /* Separador */
         hr {
-            border-color: rgba(255,255,255,0.03) !important;
-            margin: 15px 0 !important;
+            border-color: rgba(255,255,255,0.02) !important;
+            margin: 12px 0 !important;
+        }
+        
+        /* Responsive */
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 25px 20px 20px 20px;
+            }
+            
+            .login-title h1 {
+                font-size: 20px;
+            }
+            
+            .login-logo img {
+                max-width: 45px;
+            }
+            
+            .login-features {
+                gap: 4px;
+            }
+            
+            .login-feature .label {
+                font-size: 7px;
+                letter-spacing: 1px;
+            }
         }
     </style>
     """, unsafe_allow_html=True)
@@ -447,10 +558,9 @@ def check_password_hybrid():
     
     with col2:
         with st.container():
-            # Logo y título
+            # Logo - Tamaño pequeño
             st.markdown('<div class="login-logo">', unsafe_allow_html=True)
             
-            # Cargar el logo desde el archivo
             try:
                 logo_path = os.path.join("logo.jpg")
                 if os.path.exists(logo_path):
@@ -460,39 +570,32 @@ def check_password_hybrid():
                         <img src='data:image/jpeg;base64,{logo_b64}' alt='FIFI Logo'/>
                     """, unsafe_allow_html=True)
                 else:
-                    # Si no encuentra el logo, muestra el emoji como fallback
-                    st.markdown('<div style="font-size: 48px; text-align: center;">🏛️</div>', unsafe_allow_html=True)
+                    st.markdown('<div style="font-size: 32px; text-align: center;">🏛️</div>', unsafe_allow_html=True)
             except:
-                # Si hay error, muestra el emoji como fallback
-                st.markdown('<div style="font-size: 48px; text-align: center;">🏛️</div>', unsafe_allow_html=True)
+                st.markdown('<div style="font-size: 32px; text-align: center;">🏛️</div>', unsafe_allow_html=True)
             
             st.markdown('</div>', unsafe_allow_html=True)
             
+            # Título
             st.markdown("""
-            <div style="text-align: center; margin-bottom: 25px;">
-                <h1 style="color: #f0f6fc; font-size: 26px; font-weight: 300; letter-spacing: 2px; margin: 4px 0 0 0;">
-                    FALLONE <span style="color: #4a8db7; font-weight: 600;">INVESTMENT</span>
-                </h1>
-                <p style="color: #8b949e; font-size: 12px; letter-spacing: 6px; text-transform: uppercase; margin: 2px 0 10px 0;">
-                    INVERSIÓN
-                </p>
-                <div style="width: 40px; height: 2px; background: linear-gradient(90deg, #4a8db7, #6ba3c9); margin: 0 auto; border-radius: 2px;"></div>
+            <div class="login-title">
+                <h1>FALLONE <span>INVESTMENT</span></h1>
+                <div class="subtitle">INVERSIÓN</div>
+                <div class="divider"></div>
             </div>
             """, unsafe_allow_html=True)
             
             # Estrategia
             st.markdown("""
-            <div style="text-align: center; margin-bottom: 25px; padding: 12px 16px; background: rgba(74, 141, 183, 0.04); border-radius: 10px; border: 1px solid rgba(255,255,255,0.02);">
-                <div style="color: #f0f6fc; font-size: 15px; font-weight: 400;">
-                    Estrategia: <span style="color: #4a8db7; font-weight: 600;">Disciplina</span> · <span style="color: #4a8db7; font-weight: 600;">Crecimiento</span>
+            <div class="login-strategy">
+                <div class="main-text">
+                    Estrategia: <span>Disciplina</span> · <span>Crecimiento</span>
                 </div>
-                <div style="color: #8b949e; font-size: 12px; font-weight: 300; margin-top: 3px;">
-                    Inversión a largo plazo
-                </div>
+                <div class="sub-text">Inversión a largo plazo</div>
             </div>
             """, unsafe_allow_html=True)
             
-            # Campos de usuario y contraseña
+            # Campos
             username = st.text_input(
                 "👤 Usuario",
                 placeholder="Ingresa tu usuario",
@@ -506,7 +609,7 @@ def check_password_hybrid():
                 key="login_pass"
             )
             
-            # Botón de ingreso
+            # Botón
             submitted = st.button("INGRESAR", use_container_width=True, key="login_btn")
             
             if submitted:
@@ -544,9 +647,9 @@ def check_password_hybrid():
                 else:
                     st.warning("⚠️ Por favor, completa ambos campos.")
             
-            # Texto de seguridad
+            # Seguridad
             st.markdown("""
-            <div style="text-align: center; color: #484f58; font-size: 11px; letter-spacing: 0.5px; margin-top: 12px;">
+            <div class="login-security">
                 🔒 Acceso seguro y confidencial
             </div>
             """, unsafe_allow_html=True)
@@ -554,30 +657,27 @@ def check_password_hybrid():
             # Separador
             st.markdown("<hr>", unsafe_allow_html=True)
             
-            # Features grid
+            # Features elegantes - SIN ÍCONOS
             st.markdown("""
-            <div style="margin-top: 5px;">
+            <div class="login-features">
+                <div class="login-feature">
+                    <div class="label">Gestión Profesional</div>
+                </div>
+                <div class="login-feature">
+                    <div class="label">Rentabilidad Sostenible</div>
+                </div>
+                <div class="login-feature">
+                    <div class="label">Diversificación Inteligente</div>
+                </div>
+                <div class="login-feature">
+                    <div class="label">Visión Global</div>
+                </div>
+            </div>
             """, unsafe_allow_html=True)
-            
-            col_a, col_b, col_c, col_d = st.columns(4)
-            
-            with col_a:
-                st.metric(label="Gestión Profesional", value="📊", delta=None)
-            
-            with col_b:
-                st.metric(label="Rentabilidad Sostenible", value="📈", delta=None)
-            
-            with col_c:
-                st.metric(label="Diversificación Inteligente", value="🌍", delta=None)
-            
-            with col_d:
-                st.metric(label="Visión Global", value="🔭", delta=None)
-            
-            st.markdown("</div>", unsafe_allow_html=True)
     
     # Footer
     st.markdown("""
-    <div style="position: fixed; bottom: 15px; width: 100%; text-align: center; color: #2a3038; font-size: 11px; letter-spacing: 0.5px;">
+    <div style="position: fixed; bottom: 15px; width: 100%; text-align: center; color: #2a3038; font-size: 10px; letter-spacing: 0.5px;">
         FIFI Investments © 2026
     </div>
     """, unsafe_allow_html=True)
